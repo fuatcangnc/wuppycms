@@ -33,12 +33,13 @@ async function readTemplateFile(
 	branch: string,
 ): Promise<{ path: string; sha: string; content: string }> {
 	let lastError: unknown;
-	for (let attempt = 0; attempt < 15; attempt += 1) {
+	// GitHub şablon üretimi büyük repolarda geç yayılır; 30 sn'ye kadar bekle.
+	for (let attempt = 0; attempt < 30; attempt += 1) {
 		try {
 			return await getFile(token, fullName, path, branch);
 		} catch (error) {
 			lastError = error;
-			await new Promise((resolve) => setTimeout(resolve, 700));
+			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 	}
 	throw lastError instanceof Error ? lastError : new Error(`Template dosyası okunamadı: ${path}`);
@@ -141,6 +142,14 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		throw lastError instanceof Error
 			? lastError
 			: new Error("Depo şablondan üretilemedi.");
+	}
+
+	// Repo iskeleti hazır olmadan dosya okumaya çalışma: package.json görünene
+	// kadar bekle (büyük şablonlarda generate birkaç saniye sürebilir).
+	try {
+		await readTemplateFile(token, generated.fullName, "package.json", generated.defaultBranch || "main");
+	} catch {
+		// package.json yoksa aşağıdaki okumalar kendi hatasını verir
 	}
 
 	let branch = generated.defaultBranch || "main";
