@@ -6,6 +6,22 @@
 
 ---
 
+## Canlıya alma (2026-10-29)
+
++ `wuppycms.com` statik site + `app.wuppycms.com` builder canlıda (Lightsail 2 GB, Caddy + `wrangler dev --local`, kalıcı D1/R2 state)
++ GitHub App (ID `5528068`, slug `wuppycms`): installation token çözümü, imzalı kurulum state'i, webhook doğrulaması, sahipsiz kurulumları OAuth ile sahiplenme (ADR 0019)
++ `/projects` kurulum durumu + "Install GitHub App" kartı; With AI hedef hesap seçimi
++ Canlı uçtan uca doğrulandı: App ile repo üretimi → proje kaydı → admin editöründe açılış; üretilen test repoları App yetkisiyle silindi
++ İlk admin hesabı canlıda açıldı (`admin@wuppycms.com`; parola kullanıcıya iletildi)
++ Kapılar: typecheck 0 · vitest 142/142 · Playwright 45/45 · brand check 0
+- GitHub App ayarları (GitHub UI, bir kez): Setup URL `https://app.wuppycms.com/api/github/app/setup`, Pages izni (RW), webhook zaten ayarlı
+- AI sağlayıcısı (BYO anahtar) canlı admin → Ajan → Sağlayıcı ekranından girilecek
+- `cigce.com.tr` / `aracprojem.com.tr` A kayıtları hâlâ eski sunucuyu (`13.51.118.124`) gösteriyor — yeni sunucuya taşı ya da kaldır
+- `732401078829` hesabı organizasyonda değil; kapatma ayrı root/hesap erişimi gerektiriyor
+- Üretilen siteler için otomatik preview/deploy URL stratejisi (GitHub Pages izni sonrası)
+
+---
+
 ## Altyapı / Mimari
 
 + Astro 7 + Tailwind 4 + TS strict monorepo (`apps/builder` Workers + `workers/*`)
