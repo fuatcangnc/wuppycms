@@ -1,0 +1,149 @@
+[
+  {
+    "name": "wuppycms.com.",
+    "sourceId": "Z07738792TZ7ZAO365YVG",
+    "records": [
+      {
+        "Name": "wuppycms.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "app.wuppycms.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "docs.wuppycms.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "test.wuppycms.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "www.wuppycms.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "cigce.com.tr.",
+    "sourceId": "Z010025724NFF22P5ABP5",
+    "records": [
+      {
+        "Name": "cigce.com.tr.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "4brssjajnruz4ihctiydzlazg5e4g4c3._domainkey.cigce.com.tr.",
+        "Type": "CNAME",
+        "TTL": 1800,
+        "ResourceRecords": [
+          {
+            "Value": "4brssjajnruz4ihctiydzlazg5e4g4c3.dkim.amazonses.com"
+          }
+        ]
+      },
+      {
+        "Name": "hm3fjh2ntpylynjeurtxwvurvelh2afs._domainkey.cigce.com.tr.",
+        "Type": "CNAME",
+        "TTL": 1800,
+        "ResourceRecords": [
+          {
+            "Value": "hm3fjh2ntpylynjeurtxwvurvelh2afs.dkim.amazonses.com"
+          }
+        ]
+      },
+      {
+        "Name": "igfkjsh7gcx74jmg2aduu67qjgs43kja._domainkey.cigce.com.tr.",
+        "Type": "CNAME",
+        "TTL": 1800,
+        "ResourceRecords": [
+          {
+            "Value": "igfkjsh7gcx74jmg2aduu67qjgs43kja.dkim.amazonses.com"
+          }
+        ]
+      },
+      {
+        "Name": "docs.cigce.com.tr.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "musteri1.cigce.com.tr.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "musteri2.cigce.com.tr.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "13.51.118.124"
+          }
+        ]
+      },
+      {
+        "Name": "www.cigce.com.tr.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "cigce.com.tr"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "aracprojem.com.tr.",
+    "sourceId": "Z09278251S5ZXIYFPQX13",
+    "records": []
+  }
+]
