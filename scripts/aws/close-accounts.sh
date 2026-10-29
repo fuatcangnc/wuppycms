@@ -11,9 +11,10 @@
 # PENDING_CLOSURE and AWS may keep them recoverable for a grace period.
 set -euo pipefail
 
+# Organization member accounts only. 732401078829 (reeywp) is not in this
+# organization; it must be closed separately from its own root account.
 ACCOUNTS=(
   "842422316871"
-  "732401078829"
   "266380778167"
 )
 
