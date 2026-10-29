@@ -14,11 +14,11 @@
 + Canlı uçtan uca doğrulandı: App ile repo üretimi → proje kaydı → admin editöründe açılış; üretilen test repoları App yetkisiyle silindi
 + İlk admin hesabı canlıda açıldı (`admin@wuppycms.com`; parola kullanıcıya iletildi)
 + Kapılar: typecheck 0 · vitest 142/142 · Playwright 45/45 · brand check 0
-- GitHub App ayarları (GitHub UI, bir kez): Setup URL `https://app.wuppycms.com/api/github/app/setup`, Pages izni (RW), webhook zaten ayarlı
+- ~~GitHub App ayarları: Setup URL~~ (eklendi) — Pages izni opsiyonel: public repolarda `deploy.yml` workflow'u açar (ADR 0020)
 - AI sağlayıcısı (BYO anahtar) canlı admin → Ajan → Sağlayıcı ekranından girilecek
 - `cigce.com.tr` / `aracprojem.com.tr` A kayıtları hâlâ eski sunucuyu (`13.51.118.124`) gösteriyor — yeni sunucuya taşı ya da kaldır
 - `732401078829` hesabı organizasyonda değil; kapatma ayrı root/hesap erişimi gerektiriyor
-- Üretilen siteler için otomatik preview/deploy URL stratejisi (GitHub Pages izni sonrası)
++ Üretilen public siteler için otomatik yayın: `deploy.yml` + Pages URL (ADR 0020); private repolar bilinçli olarak URLsiz
 
 ---
 

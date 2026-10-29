@@ -145,11 +145,12 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	const pagesUrl = isUserSite
 		? `https://${owner}.github.io/`
 		: `https://${owner}.github.io/${repoName}/`;
-	// Pages izni App'te yoksa sunucu token'ıyla dene (varsa); ikisi de
-	// başarısızsa site URL'i yazılmaz, repo yine kullanılabilir kalır.
+	// Pages'i sırayla dene: repo oluşturan token, diğer adaylar (OAuth) ve
+	// sunucu token'ı. Hiçbiri açamazsa public repolarda workflow'un
+	// `configure-pages` adımı açar; private repolarda URL yazılmaz.
 	let pagesEnabled = false;
-	for (const candidateToken of [token, c.env.GITHUB_TOKEN]) {
-		if (!candidateToken) continue;
+	const pageTokens = [...new Set([token, ...candidates.map((entry) => entry.token), c.env.GITHUB_TOKEN].filter(Boolean))];
+	for (const candidateToken of pageTokens) {
 		if (await enablePages(candidateToken, repo.fullName)) {
 			pagesEnabled = true;
 			break;
@@ -198,7 +199,9 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		if (!/"version"\s*:/.test(sites)) {
 			sites = sites.replace(/^\s*\{/, `{\n\t"version": 1,`);
 		}
-		if (pagesEnabled) {
+		// Public repolarda Pages workflow'un ilk koşusunda açılır; URL baştan
+		// yazılabilsin. Private repolarda ücretsiz plan Pages vermez.
+		if (pagesEnabled || !repo.private) {
 			sites = sites.replace(
 				/("name":\s*"[^"]*",)/,
 				`$1\n\t\t\t"url": ${JSON.stringify(pagesUrl)},`,

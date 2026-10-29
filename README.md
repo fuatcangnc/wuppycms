@@ -28,8 +28,9 @@ token kopyalamaz. App'in GitHub tarafındaki ayarları (bir kez):
 - **Webhook URL:** `https://app.wuppycms.com/api/github/app/webhook`
   (`GITHUB_APP_WEBHOOK_SECRET` ile aynı secret)
 - **İzinler:** Contents (RW), Administration (RW — repo oluşturma/silme),
-  Pages (RW — otomatik yayın), Pull requests (RW), Metadata (R),
-  Actions/Workflows (RW — üretilen sitenin CI'ı)
+  Pull requests (RW), Metadata (R), Actions/Workflows (RW — üretilen sitenin
+  CI'ı). Pages (RW) opsiyoneldir: yoksa public repolarda Pages’i şablonun
+  `deploy.yml` workflow’u açar (ADR 0020)
 - **Env:** `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY_B64` (PEM'in ya da DER'in
   base64'ü), `GITHUB_APP_SLUG`, `GITHUB_APP_WEBHOOK_SECRET`
 
