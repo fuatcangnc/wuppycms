@@ -101,8 +101,12 @@ export default function AgentWidget() {
 
 	const siteUrl = useMemo(() => {
 		const entry = currentSiteEntry();
-		return withProtocol(scan?.siteUrl ?? entry?.url ?? "");
-	}, [scan?.siteUrl, scan?.setup]);
+		const raw = withProtocol(scan?.siteUrl ?? entry?.url ?? "");
+		// Yer tutucu adresler gerçek önizleme değildir (eski projelerde kalmış
+		// olabilir); boş bırakıp "önizleme yok" durumunu göster.
+		if (!raw || /^https?:\/\/(www\.)?example\.(com|org|net)\/?$/i.test(raw)) return "";
+		return raw;
+	}, [scan?.siteUrl, scan?.setup, sites]);
 	const branch = sites.find((entry) => entry.repoFullName === site)?.branch || "main";
 
 	const [open, setOpen] = useState(() => sessionRead(KEY_OPEN) === "1");

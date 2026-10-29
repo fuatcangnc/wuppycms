@@ -60,7 +60,12 @@ site.get("/scan", async (c) => {
 	if (astroConfig) {
 		try {
 			const source = (await getFile(token, fullName, astroConfig.path, ref)).content;
-			siteUrl = source.match(/site\s*:\s*["']([^"']+)["']/)?.[1] ?? null;
+			const candidate = source.match(/site\s*:\s*["']([^"']+)["']/)?.[1] ?? null;
+			// Şablonun yer tutucusu gerçek bir adres değildir; önizlemeyi
+			// `example.com`a düşürmektense boş bırak.
+			siteUrl = candidate && !/^https?:\/\/(www\.)?example\.(com|org|net)\/?$/i.test(candidate)
+				? candidate
+				: null;
 		} catch {
 			// adres çıkmazsa sihirbaz boş doldurur
 		}

@@ -95,9 +95,17 @@ async function accessToken(env: AppEnv, db?: SqlDatabase): Promise<string | null
 		access_token?: string;
 		expires_in?: number;
 		refresh_token?: string;
+		error?: string;
+		error_description?: string;
 	};
 	if (!res.ok || !data.access_token) {
-		throw new PagesError(res.status, "Cloudflare OAuth token yenilenemedi.");
+		// invalid_grant: refresh zinciri başka bir istemcide (ör. wrangler CLI)
+		// tüketilmiş demektir. Kalıcı çözüm API token'ıdır; burada yalnızca
+		// eyleme dönük bir mesaj üretiriz.
+		const detail = data.error === "invalid_grant"
+			? "Cloudflare yenileme anahtarı geçersiz (başka bir istemcide yenilenmiş olabilir). CLOUDFLARE_API_TOKEN ekleyin."
+			: data.error_description ?? "Cloudflare OAuth token yenilenemedi.";
+		throw new PagesError(res.status, detail);
 	}
 	// Cloudflare refresh token'ı her yenilemede değiştirir; yenisi D1'e yazılır.
 	await storeRefreshToken(env, db, data.refresh_token).catch(() => undefined);
