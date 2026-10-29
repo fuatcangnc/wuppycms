@@ -61,7 +61,7 @@ aws lightsail put-instance-public-ports --region "$REGION" --instance-name "$NAM
 
 echo "== SSH key"
 mkdir -p "$HOME/.ssh"
-aws lightsail download-default-key-pair --region "$REGION" --query 'privateKeyBase64' --output text | base64 -d > "$KEY_PATH"
+aws lightsail download-default-key-pair --region "$REGION" --query 'privateKeyBase64' --output text > "$KEY_PATH"
 chmod 600 "$KEY_PATH"
 
 echo "== DNS A records -> $IP"
