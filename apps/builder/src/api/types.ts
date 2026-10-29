@@ -36,6 +36,13 @@ export interface AppEnv {
 	GITHUB_APP_SLUG?: string;
 	/** "With AI" yeni site üretiminde kullanılan public GitHub template repo. */
 	SITE_TEMPLATE_REPO?: string;
+	/** Cloudflare Pages — üretilen sitelerin barındırma hesabı. */
+	CLOUDFLARE_ACCOUNT_ID?: string;
+	/** Tercih edilen: yalnız Pages:Edit kapsamlı API token'ı. */
+	CLOUDFLARE_API_TOKEN?: string;
+	/** API token yoksa wrangler OAuth yenileme token'ı (local/live). */
+	CLOUDFLARE_OAUTH_REFRESH_TOKEN?: string;
+	CLOUDFLARE_OAUTH_CLIENT_ID?: string;
 	/**
 	 * R2 medya kitaplığı — kovası bağlıysa medya ekranında "R2" sekmesi açılır.
 	 * Site bazlı önek/public URL `.wuppycms/sites.jsonc` içinde tutulur.

@@ -5,6 +5,11 @@
 import { Hono } from "hono";
 import { commitFiles, getFile, getRepo } from "../lib/git";
 import { getInstallationToken } from "../lib/git/github/app";
+import {
+	ensurePagesProject,
+	pagesConfigured,
+	triggerPagesDeployment,
+} from "../lib/deploy/cloudflare-pages";
 import { listInstallations } from "../lib/git/github/installations";
 import { createRepoFromTemplate, enablePages, getViewer } from "../lib/git/github/repo";
 import type { AppEnv } from "./types";
@@ -138,24 +143,48 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		}
 	}
 
-	const files: { path: string; content: string }[] = [];
+	// Yayın hedefi: önce Cloudflare Pages (GitHub Actions gerekmez). Pages
+	// yapılandırılmamışsa/başarısızsa public repolarda GitHub Pages'e düşülür.
+	let pagesTarget: Awaited<ReturnType<typeof ensurePagesProject>> | null = null;
+	if (pagesConfigured(c.env)) {
+		try {
+			pagesTarget = await ensurePagesProject(c.env, {
+				repoFullName: repo.fullName,
+				branch,
+			});
+		} catch (error) {
+			console.warn("[build] Cloudflare Pages projesi kurulamadı:", error);
+		}
+	}
+
 	const repoName = repo.fullName.split("/").pop() ?? payload.repoName;
 	const isUserSite = repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`;
 	const pagesBase = isUserSite ? "/" : `/${repoName}/`;
-	const pagesUrl = isUserSite
+	const githubPagesUrl = isUserSite
 		? `https://${owner}.github.io/`
 		: `https://${owner}.github.io/${repoName}/`;
-	// Pages'i sırayla dene: repo oluşturan token, diğer adaylar (OAuth) ve
-	// sunucu token'ı. Hiçbiri açamazsa public repolarda workflow'un
-	// `configure-pages` adımı açar; private repolarda URL yazılmaz.
-	let pagesEnabled = false;
-	const pageTokens = [...new Set([token, ...candidates.map((entry) => entry.token), c.env.GITHUB_TOKEN].filter(Boolean))];
-	for (const candidateToken of pageTokens) {
-		if (await enablePages(candidateToken, repo.fullName)) {
-			pagesEnabled = true;
-			break;
+	let deployUrl: string | null = pagesTarget?.url ?? null;
+
+	// Cloudflare yoksa GitHub Pages'i dene (public repolarda workflow da açar).
+	if (!deployUrl) {
+		let pagesEnabled = false;
+		const pageTokens = [
+			...new Set(
+				[token, ...candidates.map((entry) => entry.token), c.env.GITHUB_TOKEN].filter(
+					(value): value is string => Boolean(value),
+				),
+			),
+		];
+		for (const candidateToken of pageTokens) {
+			if (await enablePages(candidateToken, repo.fullName)) {
+				pagesEnabled = true;
+				break;
+			}
 		}
+		if (pagesEnabled || !repo.private) deployUrl = githubPagesUrl;
 	}
+
+	const files: { path: string; content: string }[] = [];
 
 	// site.ts — marka/tagline/description/iletişim/GitHub bağlantısı.
 	const siteFile = await readTemplateFile(token, repo.fullName, "src/data/site.ts", branch);
@@ -167,13 +196,19 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	site = site.replace(/github:\s*"[^"]*"/, `github: ${JSON.stringify(repo.htmlUrl)}`);
 	files.push({ path: "src/data/site.ts", content: site });
 
-	// Astro Pages base/site — GitHub Pages alt yolunda doğru linkler için.
+	// Astro `site`/`base`: Cloudflare Pages kökte yayınlar (base yok); GitHub
+	// Pages alt yolda yayınladığı için base gerekir.
 	try {
 		const configFile = await readTemplateFile(token, repo.fullName, "astro.config.mjs", branch);
-		const config = configFile.content.replace(
-			/export default defineConfig\(\{/,
-			`export default defineConfig({\n\tsite: ${JSON.stringify(`https://${owner}.github.io`)},\n\tbase: ${JSON.stringify(pagesBase)},`,
-		);
+		const config = pagesTarget
+			? configFile.content.replace(
+					/export default defineConfig\(\{/,
+					`export default defineConfig({\n\tsite: ${JSON.stringify(pagesTarget.url)},`,
+				)
+			: configFile.content.replace(
+					/export default defineConfig\(\{/,
+					`export default defineConfig({\n\tsite: ${JSON.stringify(`https://${owner}.github.io`)},\n\tbase: ${JSON.stringify(pagesBase)},`,
+				);
 		files.push({ path: "astro.config.mjs", content: config });
 	} catch {
 		// config yoksa atla
@@ -199,12 +234,10 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		if (!/"version"\s*:/.test(sites)) {
 			sites = sites.replace(/^\s*\{/, `{\n\t"version": 1,`);
 		}
-		// Public repolarda Pages workflow'un ilk koşusunda açılır; URL baştan
-		// yazılabilsin. Private repolarda ücretsiz plan Pages vermez.
-		if (pagesEnabled || !repo.private) {
+		if (deployUrl) {
 			sites = sites.replace(
 				/("name":\s*"[^"]*",)/,
-				`$1\n\t\t\t"url": ${JSON.stringify(pagesUrl)},`,
+				`$1\n\t\t\t"url": ${JSON.stringify(deployUrl)},`,
 			);
 		}
 		files.push({ path: ".wuppycms/sites.jsonc", content: sites });
@@ -219,6 +252,12 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		files,
 		`Build with AI: ${payload.siteName} (via WuppyCMS)`,
 	);
+
+	// Cloudflare bağlı depoyu kendi build runner'ında derler; tetikleme
+	// başarısız olsa da push webhook'u bir sonraki fırsatta derler.
+	if (pagesTarget) {
+		await triggerPagesDeployment(c.env, pagesTarget.projectName, branch);
+	}
 
 	const existing = await db
 		.prepare("SELECT id FROM projects WHERE user_id = ? AND repo_full_name = ?")
@@ -246,6 +285,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		repoFullName: repo.fullName,
 		branch,
 		color,
+		url: deployUrl,
 	});
 });
 
