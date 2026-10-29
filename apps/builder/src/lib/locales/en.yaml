@@ -526,6 +526,11 @@ project:
 
 build:
   kicker: With AI
+  templateKicker: Design
+  templateTitle: Which design should we start from?
+  templateSubtitle: Pick a design skeleton; the agent will write the content for your business.
+  templateContinue: Continue
+  templateSelected: Selected
   title: Build a site that's yours
   subtitle: Describe your idea. WuppyCMS builds an Astro site from our boilerplate and pushes it to your GitHub.
   placeholder: Describe the site you want to build…

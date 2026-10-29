@@ -529,6 +529,11 @@ project:
 
 build:
   kicker: With AI
+  templateKicker: Tasarım
+  templateTitle: Hangi tasarımla başlayalım?
+  templateSubtitle: Tasarım iskeletini seç; içeriği ajan senin işine göre yazacak.
+  templateContinue: Devam
+  templateSelected: Seçili
   title: Build a site that's yours
   subtitle: Fikrinizi anlatın. WuppyCMS Astro boilerplate'ten bir site kurup GitHub'ınıza gönderir.
   placeholder: Kurmak istediğiniz siteyi anlatın…

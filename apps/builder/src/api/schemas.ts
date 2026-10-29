@@ -218,6 +218,8 @@ export const buildSiteSchema = z.object({
 		.max(100)
 		.regex(/^[A-Za-z0-9._-]+$/, "geçersiz hesap adı")
 		.optional(),
+	/** `karakas` | `starter` — boşsa ilk şablon. */
+	template: z.string().trim().max(40).optional(),
 	private: z.boolean().optional(),
 	color: z
 		.string()

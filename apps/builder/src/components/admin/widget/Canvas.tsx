@@ -1,6 +1,8 @@
 /** Canvas: önizleme pencereleri (en fazla iki) — etkin olan etkileşimli. */
 
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/admin/parts";
+import { Skeleton } from "@/components/ui-react/skeleton";
 import { t } from "@/lib/i18n";
 import type { Tab } from "./types";
 
@@ -21,6 +23,12 @@ function withNonce(url: string, nonce: number): string {
 }
 
 export function Canvas({ tabs, activeUrl, frameRef, reloadNonce, onLoad, onActivate }: CanvasProps) {
+	// Sayfa yüklenene kadar boş beyaz iframe yerine iskelet göster.
+	const [loaded, setLoaded] = useState(false);
+	useEffect(() => {
+		setLoaded(false);
+	}, [activeUrl, reloadNonce]);
+
 	if (!tabs.length) {
 		return (
 			<div className="flex min-h-0 flex-1 items-center justify-center p-8">
@@ -69,12 +77,42 @@ export function Canvas({ tabs, activeUrl, frameRef, reloadNonce, onLoad, onActiv
 							) : null}
 						</button>
 						<div className="relative min-h-0 flex-1 bg-white">
+							{active && !loaded ? (
+								<div className="absolute inset-0 z-10 overflow-hidden bg-background p-5" aria-hidden="true">
+									<div className="mx-auto flex h-full max-w-4xl flex-col gap-5">
+										<div className="flex items-center justify-between gap-4">
+											<Skeleton className="h-6 w-36" />
+											<div className="hidden gap-2 sm:flex">
+												<Skeleton className="h-5 w-14" />
+												<Skeleton className="h-5 w-14" />
+												<Skeleton className="h-5 w-14" />
+											</div>
+										</div>
+										<div className="space-y-3">
+											<Skeleton className="h-3 w-24" />
+											<Skeleton className="h-10 w-3/4" />
+											<Skeleton className="h-10 w-2/3" />
+											<Skeleton className="h-3 w-full" />
+											<Skeleton className="h-3 w-4/5" />
+										</div>
+										<div className="grid gap-3 sm:grid-cols-3">
+											{[0, 1, 2].map((index) => (
+												<div key={index} className="space-y-2 rounded-lg border border-border p-3">
+													<Skeleton className="h-20 w-full rounded-md" />
+													<Skeleton className="h-4 w-2/3" />
+													<Skeleton className="h-3 w-full" />
+												</div>
+											))}
+										</div>
+									</div>
+								</div>
+							) : null}
 							<iframe
 								key={`${tab.url}:${active ? reloadNonce : 0}`}
 								ref={active ? frameRef : undefined}
 								src={withNonce(tab.url, active ? reloadNonce : 0)}
 								title={tab.title}
-								onLoad={active ? onLoad : undefined}
+								onLoad={active ? () => { setLoaded(true); onLoad(); } : undefined}
 								className={`h-full w-full border-0 ${active ? "" : "pointer-events-none"}`}
 								referrerPolicy="no-referrer"
 							/>

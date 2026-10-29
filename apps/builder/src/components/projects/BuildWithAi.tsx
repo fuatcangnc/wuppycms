@@ -13,10 +13,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui-react/dropdown-menu";
 import { Input } from "@/components/ui-react/input";
+import { Skeleton } from "@/components/ui-react/skeleton";
 import { Textarea } from "@/components/ui-react/textarea";
 import { t } from "@/lib/i18n";
 
-type Step = "prompt" | "questions" | "design" | "creating";
+type Step = "template" | "prompt" | "questions" | "design" | "creating";
 
 interface BuildOption {
 	value: string;
@@ -41,6 +42,15 @@ interface BuildResult {
 	repoFullName: string;
 	branch: string;
 }
+
+type SiteTemplate = {
+	id: string;
+	name: string;
+	description: string;
+	repo: string;
+	preview: string;
+	tags: string[];
+};
 
 type Installation = {
 	installation_id: string;
@@ -82,7 +92,9 @@ function answerText(answer: Answer | undefined): string {
 }
 
 export function BuildWithAi({ onClose }: { onClose(): void }) {
-	const [step, setStep] = useState<Step>("prompt");
+	const [step, setStep] = useState<Step>("template");
+	const [templates, setTemplates] = useState<SiteTemplate[]>([]);
+	const [templateId, setTemplateId] = useState("karakas");
 	const [prompt, setPrompt] = useState("");
 	const [questionIndex, setQuestionIndex] = useState(0);
 	const [answers, setAnswers] = useState<Record<string, Answer>>({});
@@ -99,6 +111,24 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 	const [creating, setCreating] = useState(false);
 	const [installations, setInstallations] = useState<Installation[]>([]);
 	const [owner, setOwner] = useState("");
+
+	// Şablon listesi (görselli kartlar) — ilk şablon varsayılan.
+	useEffect(() => {
+		void (async () => {
+			try {
+				const res = await fetch("/api/build/templates", { credentials: "same-origin" });
+				if (!res.ok) return;
+				const data = (await res.json()) as { templates?: SiteTemplate[] };
+				const list = data.templates ?? [];
+				setTemplates(list);
+				setTemplateId((current) =>
+					list.some((entry) => entry.id === current) ? current : (list[0]?.id ?? "karakas"),
+				);
+			} catch {
+				// şablon listesi alınamazsa varsayılanla devam
+			}
+		})();
+	}, []);
 
 	// GitHub App kurulumları — site hangi hesapta oluşturulacak? Kişisel hesap
 	// için OAuth yolu da var; kurulum varsa varsayılan onun hesabıdır.
@@ -269,6 +299,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 						siteName: name,
 						tagline: tagline.trim() || "A site built with WuppyCMS",
 						repoName: slug,
+						template: templateId,
 						owner: owner || undefined,
 						private: privateRepo,
 						color,
@@ -313,6 +344,87 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 					{t("build.kicker")}
 				</span>
 			</div>
+
+			{step === "template" ? (
+				<section className="rounded-2xl border border-border bg-card p-5 shadow-lg">
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">{t("build.templateKicker")}</p>
+							<h2 className="mt-1 text-lg font-semibold">{t("build.templateTitle")}</h2>
+							<p className="mt-1 text-sm text-muted-foreground">{t("build.templateSubtitle")}</p>
+						</div>
+						<span className="rounded-full border border-border px-2.5 py-1 text-[10px] text-muted-foreground">
+							{templateId}
+						</span>
+					</div>
+
+					<div className="mt-5 grid gap-3 sm:grid-cols-2">
+						{templates.length === 0
+							? [0, 1].map((index) => (
+									<div key={index} className="overflow-hidden rounded-xl border border-border">
+										<Skeleton className="aspect-[16/10] w-full" />
+										<div className="space-y-2 p-4">
+											<Skeleton className="h-4 w-2/3" />
+											<Skeleton className="h-3 w-full" />
+											<Skeleton className="h-3 w-4/5" />
+										</div>
+									</div>
+								))
+							: templates.map((entry) => {
+									const active = entry.id === templateId;
+									return (
+										<button
+											key={entry.id}
+											type="button"
+											onClick={() => setTemplateId(entry.id)}
+											aria-pressed={active}
+											className={`group overflow-hidden rounded-xl border text-left transition-colors ${
+												active
+													? "border-primary ring-2 ring-primary/30"
+													: "border-border hover:border-primary/50"
+											}`}
+										>
+											<div className="relative aspect-[16/10] overflow-hidden bg-muted">
+												<img
+													src={entry.preview}
+													alt={`${entry.name} şablon önizlemesi`}
+													className="size-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
+													loading="lazy"
+												/>
+												{active ? (
+													<span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+														{t("build.templateSelected")}
+													</span>
+												) : null}
+											</div>
+											<div className="p-4">
+												<h3 className="text-sm font-semibold">{entry.name}</h3>
+												<p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+													{entry.description}
+												</p>
+												<div className="mt-2 flex flex-wrap gap-1">
+													{entry.tags.map((tag) => (
+														<span
+															key={tag}
+															className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+														>
+															{tag}
+														</span>
+													))}
+												</div>
+											</div>
+										</button>
+									);
+								})}
+					</div>
+
+					<div className="mt-5 flex justify-end border-t border-border pt-4">
+						<Button type="button" onClick={() => setStep("prompt")}>
+							{t("build.templateContinue")} →
+						</Button>
+					</div>
+				</section>
+			) : null}
 
 			{step === "prompt" ? (
 				<section className="relative overflow-hidden rounded-3xl border border-border bg-card px-6 py-14 text-center shadow-xl sm:px-12">
@@ -549,10 +661,46 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 			) : null}
 
 			{step === "creating" ? (
-				<section className="rounded-2xl border border-border bg-card px-6 py-16 text-center shadow-lg">
-					<div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-					<h2 className="mt-5 text-lg font-semibold">{t("build.creating")}</h2>
-					<p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("build.creatingHint")}</p>
+				<section className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+					<div className="border-b border-border px-5 py-4">
+						<h2 className="text-lg font-semibold">{t("build.creating")}</h2>
+						<p className="mt-1 text-sm text-muted-foreground">{t("build.creatingHint")}</p>
+					</div>
+					{/* Bejamas Skeleton — site iskeleti oluşturulurken boş ekran yerine */}
+					<div className="space-y-5 p-5" aria-busy="true" aria-live="polite">
+						<div className="flex items-center justify-between gap-4">
+							<Skeleton className="h-7 w-40" />
+							<div className="hidden gap-2 sm:flex">
+								<Skeleton className="h-7 w-16" />
+								<Skeleton className="h-7 w-16" />
+								<Skeleton className="h-7 w-16" />
+							</div>
+						</div>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<div className="space-y-3">
+								<Skeleton className="h-3 w-24" />
+								<Skeleton className="h-9 w-full" />
+								<Skeleton className="h-9 w-4/5" />
+								<Skeleton className="h-3 w-full" />
+								<Skeleton className="h-3 w-3/4" />
+								<div className="flex gap-2 pt-2">
+									<Skeleton className="h-9 w-32" />
+									<Skeleton className="h-9 w-28" />
+								</div>
+							</div>
+							<Skeleton className="aspect-[4/3] w-full rounded-xl" />
+						</div>
+						<div className="grid gap-3 sm:grid-cols-3">
+							{[0, 1, 2].map((index) => (
+								<div key={index} className="space-y-2 rounded-xl border border-border p-3">
+									<Skeleton className="h-24 w-full rounded-lg" />
+									<Skeleton className="h-4 w-2/3" />
+									<Skeleton className="h-3 w-full" />
+									<Skeleton className="h-3 w-4/5" />
+								</div>
+							))}
+						</div>
+					</div>
 				</section>
 			) : null}
 		</main>

@@ -36,6 +36,8 @@ export interface AppEnv {
 	GITHUB_APP_SLUG?: string;
 	/** "With AI" yeni site üretiminde kullanılan public GitHub template repo. */
 	SITE_TEMPLATE_REPO?: string;
+	/** İlk sıradaki Karakas şablonunun public template repo'su. */
+	SITE_TEMPLATE_KARAKAS_REPO?: string;
 	/** Cloudflare Pages — üretilen sitelerin barındırma hesabı. */
 	CLOUDFLARE_ACCOUNT_ID?: string;
 	/** Tercih edilen: yalnız Pages:Edit kapsamlı API token'ı. */

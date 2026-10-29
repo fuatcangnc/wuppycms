@@ -11,12 +11,20 @@ import {
 	triggerPagesDeployment,
 } from "../lib/deploy/cloudflare-pages";
 import { listInstallations } from "../lib/git/github/installations";
+import { listSiteTemplates, resolveSiteTemplate } from "../lib/build/templates";
 import { createRepoFromTemplate, getViewer } from "../lib/git/github/repo";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveOAuthToken, unauthorized } from "./helpers";
 import { body, buildSiteSchema } from "./schemas";
 
 const build = new Hono<{ Bindings: AppEnv }>();
+
+// GET /api/build/templates — With AI şablon seçimi (görselli kartlar).
+build.get("/templates", async (c) => {
+	const user = await requireUser(c);
+	if (!user) return c.json({ error: "unauthenticated" }, 401);
+	return c.json({ templates: listSiteTemplates(c.env) });
+});
 
 async function readTemplateFile(
 	token: string,
@@ -51,7 +59,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	if (!db) return c.json({ error: "not_configured", message: "D1 bağlı değil." }, 503);
 
 	const payload = c.req.valid("json");
-	const template = c.env.SITE_TEMPLATE_REPO || "fuatcangnc/wuppycms-tailwind-starter";
+	const template = resolveSiteTemplate(c.env, payload.template);
 	const color = payload.color ?? "#dd641e";
 
 	// Repo sahibi seçimi: istenen sahip bir GitHub App kurulumuysa installation
@@ -112,7 +120,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	let lastError: unknown;
 	for (const candidate of candidates) {
 		try {
-			generated = await createRepoFromTemplate(candidate.token, template, {
+			generated = await createRepoFromTemplate(candidate.token, template.repo, {
 				owner: candidate.owner,
 				name: payload.repoName,
 				description: payload.tagline,
@@ -164,25 +172,55 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 
 	const files: { path: string; content: string }[] = [];
 
-	// site.ts — marka/tagline/description/iletişim/GitHub bağlantısı.
-	const siteFile = await readTemplateFile(token, repo.fullName, "src/data/site.ts", branch);
-	let site = siteFile.content;
-	site = site.replace(/brandName:\s*"[^"]*"/, `brandName: ${JSON.stringify(payload.siteName)}`);
-	site = site.replace(/tagline:\s*"[^"]*"/, `tagline: ${JSON.stringify(payload.tagline)}`);
-	site = site.replace(/description:\s*"[^"]*"/, `description: ${JSON.stringify(payload.prompt.slice(0, 300))}`);
-	site = site.replace(/email:\s*"[^"]*"/, 'email: "hello@example.com"');
-	site = site.replace(/github:\s*"[^"]*"/, `github: ${JSON.stringify(repo.htmlUrl)}`);
-	files.push({ path: "src/data/site.ts", content: site });
+	// Marka bilgisi — iki şablon ailesi de desteklenir:
+	//  - Starter: `src/data/site.ts` içindeki alanlar,
+	//  - Karakas: `src/data/site-settings.json`.
+	try {
+		const siteFile = await readTemplateFile(token, repo.fullName, "src/data/site.ts", branch);
+		let site = siteFile.content;
+		site = site.replace(/brandName:\s*"[^"]*"/, `brandName: ${JSON.stringify(payload.siteName)}`);
+		site = site.replace(/tagline:\s*"[^"]*"/, `tagline: ${JSON.stringify(payload.tagline)}`);
+		site = site.replace(/description:\s*"[^"]*"/, `description: ${JSON.stringify(payload.prompt.slice(0, 300))}`);
+		site = site.replace(/email:\s*"[^"]*"/, 'email: "hello@example.com"');
+		site = site.replace(/github:\s*"[^"]*"/, `github: ${JSON.stringify(repo.htmlUrl)}`);
+		files.push({ path: "src/data/site.ts", content: site });
+	} catch {
+		// site.ts yoksa JSON ayarları denenir
+	}
+	try {
+		const settingsFile = await readTemplateFile(
+			token,
+			repo.fullName,
+			"src/data/site-settings.json",
+			branch,
+		);
+		const settings = JSON.parse(settingsFile.content) as Record<string, unknown>;
+		settings.brandName = payload.siteName;
+		settings.email = "hello@example.com";
+		settings.heroDescription = payload.tagline;
+		files.push({
+			path: "src/data/site-settings.json",
+			content: `${JSON.stringify(settings, null, 2)}\n`,
+		});
+	} catch {
+		// JSON ayar dosyası yoksa atla
+	}
 
-	// Astro `site` — Cloudflare Pages kökte yayınlar; base gerekmez.
+	// Astro `site` — varsa mevcut değeri değiştir, yoksa ekle.
 	try {
 		const configFile = await readTemplateFile(token, repo.fullName, "astro.config.mjs", branch);
-		const config = pagesTarget
-			? configFile.content.replace(
+		let config = configFile.content;
+		if (pagesTarget) {
+			const siteLine = `site: ${JSON.stringify(pagesTarget.url)}`;
+			if (/site:\s*["'][^"']*["']/.test(config)) {
+				config = config.replace(/site:\s*["'][^"']*["']/, siteLine);
+			} else {
+				config = config.replace(
 					/export default defineConfig\(\{/,
-					`export default defineConfig({\n\tsite: ${JSON.stringify(pagesTarget.url)},`,
-				)
-			: configFile.content;
+					`export default defineConfig({\n\t${siteLine},`,
+				);
+			}
+		}
 		files.push({ path: "astro.config.mjs", content: config });
 	} catch {
 		// config yoksa atla
