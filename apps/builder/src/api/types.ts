@@ -26,6 +26,14 @@ export interface AppEnv {
 	/** GitHub OAuth App — sosyal giriş ve repo erişimi için. */
 	GITHUB_CLIENT_ID?: string;
 	GITHUB_CLIENT_SECRET?: string;
+	/** GitHub App — kurulum ve installation token'ları için. */
+	GITHUB_APP_ID?: string;
+	GITHUB_APP_CLIENT_ID?: string;
+	GITHUB_APP_CLIENT_SECRET?: string;
+	/** PKCS#8 PEM'in base64'ü; GitHub App private key. */
+	GITHUB_APP_PRIVATE_KEY_B64?: string;
+	GITHUB_APP_WEBHOOK_SECRET?: string;
+	GITHUB_APP_SLUG?: string;
 	/** "With AI" yeni site üretiminde kullanılan public GitHub template repo. */
 	SITE_TEMPLATE_REPO?: string;
 	/**
