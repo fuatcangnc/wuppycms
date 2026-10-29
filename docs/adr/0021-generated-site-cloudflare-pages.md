@@ -29,6 +29,14 @@ hesabına sahip; siteleri Cloudflare Pages'te barındırmak daha doğal.
 6. **Hata durumu:** Pages projesi kurulamazsa site URL'siz kalır; sahte bir
    GitHub Pages adresi yazılmaz. Build yine başarılıdır (repo kullanılabilir).
 
+## Önizleme köprüsü
+
+`*.pages.dev` bazı ağlarda (ör. TR ISP'leri) çözümlenmiyor. Bu yüzden
+`/preview/<proje>/*` route'u Pages çıktısını admin ile aynı origin'den proxy'ler
+ve HTML/CSS içindeki kök göreli URL'leri önekle yeniden yazar. `.wuppycms/
+sites.jsonc` içindeki `url` bu erişilebilir önizleme adresidir; kanonik site
+adresi (`astro.config.mjs site`) `pages.dev` olarak kalır.
+
 ## Sonuçlar
 
 - Üretilen site, Cloudflare'in ücretsiz build kotasıyla yayınlanır; müşteri

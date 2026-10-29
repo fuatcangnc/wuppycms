@@ -28,11 +28,24 @@ token kopyalamaz. App'in GitHub tarafındaki ayarları (bir kez):
 - **Webhook URL:** `https://app.wuppycms.com/api/github/app/webhook`
   (`GITHUB_APP_WEBHOOK_SECRET` ile aynı secret)
 - **İzinler:** Contents (RW), Administration (RW — repo oluşturma/silme),
-  Pull requests (RW), Metadata (R), Actions/Workflows (RW — üretilen sitenin
-  CI'ı). Pages (RW) gerekmez: üretilen siteler Cloudflare Pages'te yayınlanır
-  (ADR 0021); `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` gerekir
+  Pull requests (RW), Metadata (R). Actions/Pages izinleri gerekmez: üretilen
+  siteler Cloudflare Pages'te yayınlanır (ADR 0021).
 - **Env:** `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY_B64` (PEM'in ya da DER'in
   base64'ü), `GITHUB_APP_SLUG`, `GITHUB_APP_WEBHOOK_SECRET`
+
+### Cloudflare Pages
+
+Üretilen her site için Git bağlantılı bir Pages projesi açılır
+(`wuppy-<owner>-<repo>-<hash>`); Cloudflare `pnpm build` ile `dist` üretir.
+Gerekli env:
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN` (Pages:Edit) **veya** `CLOUDFLARE_OAUTH_REFRESH_TOKEN`
+  (`wrangler login` sonrası; rotasyon D1'de şifreli saklanır)
+
+Kanonik adres `https://<proje>.pages.dev`. `pages.dev` bazı ağlarda
+engellendiği için admin önizlemesi `https://app.wuppycms.com/preview/<proje>/`
+köprüsünden geçer; HTML/CSS kök göreli URL'leri yeniden yazılır.
 
 Kurulum dönüşünde `/api/github/app/setup` installation'ı oturumdaki kullanıcıya
 bağlar; `installation` silme webhook'u kaydı temizler. Yerelde GitHub App
