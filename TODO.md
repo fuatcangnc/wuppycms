@@ -19,6 +19,7 @@
 - `cigce.com.tr` / `aracprojem.com.tr` A kayıtları hâlâ eski sunucuyu (`13.51.118.124`) gösteriyor — yeni sunucuya taşı ya da kaldır
 - `732401078829` hesabı organizasyonda değil; kapatma ayrı root/hesap erişimi gerektiriyor
 + Üretilen siteler Cloudflare Pages'e bağlanıyor (ADR 0021): proje + `*.pages.dev` URL + commit sonrası deploy tetiği; GitHub Actions kaldırıldı
++ Karakas tasarımı ilk şablon oldu (`wuppycms-karakas-starter`); With AI görselli şablon seçimi + Bejamas Skeleton yükleme ekranları
 - **Kalıcı Cloudflare kimliği:** şu an `wrangler login` OAuth refresh token'ı kullanılıyor (rotasyon D1'de); tercihen `CLOUDFLARE_API_TOKEN` (Pages:Edit) ile değiştirilmeli
 - **Özel alan adı:** `pages.dev` TR ağlarında engelli; önizleme `/preview/` köprüsüyle çalışıyor, üretim için `*.wuppycms.com`/müşteri alan adı stratejisi belirlenmeli
 

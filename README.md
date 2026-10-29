@@ -33,6 +33,18 @@ token kopyalamaz. App'in GitHub tarafındaki ayarları (bir kez):
 - **Env:** `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY_B64` (PEM'in ya da DER'in
   base64'ü), `GITHUB_APP_SLUG`, `GITHUB_APP_WEBHOOK_SECRET`
 
+### Şablonlar
+
+“With AI” akışı görselli bir şablon seçimiyle başlar:
+
+- **Karakas** (varsayılan) — `fuatcangnc/wuppycms-karakas-starter`; mühendislik/araç
+  projeleri için kurumsal tasarım (Astro + Tailwind 4 + Bejamas).
+- **WuppyCMS Starter** — `SITE_TEMPLATE_REPO`; sade endüstriyel başlangıç.
+
+Şablon kaydı `src/lib/build/templates.ts`; önizleme görselleri
+`apps/builder/public/templates/`. Yeni şablon eklemek için public bir GitHub
+template repo’su + kayıt + görsel yeterli.
+
 ### Cloudflare Pages
 
 Üretilen her site için Git bağlantılı bir Pages projesi açılır
