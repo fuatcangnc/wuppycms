@@ -157,6 +157,10 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		}
 	}
 	const deployUrl: string | null = pagesTarget?.url ?? null;
+	// Admin önizlemesi aynı origin'deki proxy'den geçer (pages.dev bazı
+	// ağlarda engelli). Kanonik site adresi yine Pages URL'sidir.
+	const previewOrigin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
+	const previewUrl = pagesTarget ? `${previewOrigin}/preview/${pagesTarget.projectName}/` : null;
 
 	const files: { path: string; content: string }[] = [];
 
@@ -204,10 +208,10 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		if (!/"version"\s*:/.test(sites)) {
 			sites = sites.replace(/^\s*\{/, `{\n\t"version": 1,`);
 		}
-		if (deployUrl) {
+		if (previewUrl) {
 			sites = sites.replace(
 				/("name":\s*"[^"]*",)/,
-				`$1\n\t\t\t"url": ${JSON.stringify(deployUrl)},`,
+				`$1\n\t\t\t"url": ${JSON.stringify(previewUrl)},`,
 			);
 		}
 		files.push({ path: ".wuppycms/sites.jsonc", content: sites });
@@ -256,6 +260,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		branch,
 		color,
 		url: deployUrl,
+		previewUrl,
 	});
 });
 

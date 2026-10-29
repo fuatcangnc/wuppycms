@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { cf } from "@astrojs/cloudflare/hono";
 import server from "@astrojs/cloudflare/entrypoints/server";
 import { api } from "./api/app";
+import { preview } from "./api/preview";
 import { runScheduled } from "./api/schedule";
 import type { AppEnv } from "./api/types";
 
@@ -28,6 +29,7 @@ app.use("*", async (c, next) => {
 app.use(cf());
 
 app.route("/api", api);
+app.route("/preview", preview);
 
 app.all("*", (c) => server.fetch(c.req.raw, c.env, c.executionCtx));
 
