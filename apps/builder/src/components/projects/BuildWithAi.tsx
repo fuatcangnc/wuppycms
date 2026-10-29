@@ -161,6 +161,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 				question: question.question,
 				selected: answer.selected,
 				custom: answer.custom,
+				answer: answerText(answer),
 			};
 		});
 

@@ -122,7 +122,8 @@ const CONTENT_TOOL: ToolSpec = {
 			industry: { type: "string", description: "One word/short phrase, e.g. kombi, kuaför." },
 			automotive: {
 				type: "boolean",
-				description: "True only when the business is about vehicles (auto/motorcycle).",
+				description:
+					"True ONLY when the business is directly about vehicles (auto project, car repair, motorcycle, camper van). For all other businesses (computers, IT, electronics, boiler/plumbing, food, health, salon, etc.) it MUST be false.",
 			},
 			heroEyebrow: { type: "string", description: "Short uppercase kicker, max 8 words." },
 			heroTitle: { type: "string", description: "Big headline, max 12 words." },
@@ -352,21 +353,22 @@ function normalizeContent(input: unknown): SiteContent | null {
 	for (const entry of servicesRaw.slice(0, 12)) {
 		if (!entry || typeof entry !== "object") continue;
 		const item = entry as Record<string, unknown>;
-		const title = clamp(item.title, 120);
-		const summary = clamp(item.summary, 300);
-		const category = clamp(item.category, 60);
+		const title = clamp(item.title || item.shortTitle || item.short_title || item.name, 120);
+		const shortTitle = clamp(item.shortTitle || item.short_title || item.title || item.name, 60);
+		const summary = clamp(item.summary || item.description || item.detail, 300);
+		const category = clamp(item.category || item.group || item.type, 60) || "Hizmetler";
 		if (!title || !summary) continue;
-		const slug = slugify(clamp(item.slug, 80) || title);
+		const slug = slugify(clamp(item.slug, 80) || shortTitle || title);
 		if (!slug || services.some((existing) => existing.slug === slug)) continue;
 		services.push({
 			title,
-			shortTitle: clamp(item.shortTitle, 60) || title,
+			shortTitle: shortTitle || title,
 			slug,
 			summary,
-			category: category || "Hizmetler",
+			category,
 		});
 	}
-	if (services.length < 3) return null;
+	if (services.length < 2) return null;
 
 	const faq: SiteContent["faq"] = [];
 	for (const entry of Array.isArray(raw.faq) ? raw.faq.slice(0, 6) : []) {
@@ -394,17 +396,19 @@ function normalizeContent(input: unknown): SiteContent | null {
 	return {
 		industry: clamp(raw.industry, 60) || "işletme",
 		automotive: raw.automotive === true,
-		heroEyebrow: clamp(raw.heroEyebrow, 90),
-		heroTitle: clamp(raw.heroTitle, 140),
-		heroDescription: clamp(raw.heroDescription, 320),
-		highlights: strings(raw.highlights, 4),
+		heroEyebrow: clamp(raw.heroEyebrow || raw.hero_eyebrow, 90) || "PROFESYONEL HİZMET",
+		heroTitle: clamp(raw.heroTitle || raw.hero_title, 140) || "Hızlı ve Güvenilir Çözümler",
+		heroDescription:
+			clamp(raw.heroDescription || raw.hero_description, 320) ||
+			"Uzman kadromuzla kaliteli ve garantili hizmet sunuyoruz.",
+		highlights: strings(raw.highlights ?? raw.trust_chips, 4),
 		metrics,
-		aboutTitle: clamp(raw.aboutTitle, 140),
-		aboutText: clamp(raw.aboutText, 700),
+		aboutTitle: clamp(raw.aboutTitle || raw.about_title, 140) || "Hakkımızda",
+		aboutText: clamp(raw.aboutText || raw.about_text, 700) || "",
 		categories,
 		services,
 		faq,
-		ctaLabel: clamp(raw.ctaLabel, 40) || "Teklif Al",
+		ctaLabel: clamp(raw.ctaLabel || raw.cta_label, 40) || "Teklif Al",
 	};
 }
 

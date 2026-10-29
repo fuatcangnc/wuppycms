@@ -427,7 +427,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	css = css.replace(/--primary-dark:\s*#[0-9a-f]{6};/i, `--primary-dark: ${darken(color)};`);
 	css = css.replace(/--color-primary:\s*#[0-9a-f]{6};/i, `--color-primary: ${color};`);
 	css = css.replace(/--color-primary-dark:\s*#[0-9a-f]{6};/i, `--color-primary-dark: ${darken(color)};`);
-	files.push({ path: "src/styles/global.css", content: css });
+	files.push({ path: template.stylesPath, content: css });
 
 	// Site başlığı — admin boot bu dosyadan okur.
 	try {

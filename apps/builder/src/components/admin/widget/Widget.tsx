@@ -298,27 +298,36 @@ export default function AgentWidget() {
 				siteName?: string;
 				tagline?: string;
 				color?: string;
-				answers?: Array<{ question: string; answer: string }>;
+				answers?: Array<{
+					question: string;
+					answer?: string;
+					selected?: string[];
+					custom?: string;
+				}>;
 			};
+			const answerLines = (data.answers ?? []).map((entry) => {
+				const val =
+					entry.answer ||
+					[...(entry.selected ?? []), entry.custom?.trim()].filter(Boolean).join(", ");
+				return `- ${entry.question}: ${val || "belirtilmedi"}`;
+			});
 			const text = [
-				"Build this site from the current WuppyCMS Astro boilerplate.",
-				`Site name: ${data.siteName ?? ""}`,
-				`Tagline: ${data.tagline ?? ""}`,
-				`Primary color: ${data.color ?? ""}`,
+				`Site "${data.siteName ?? "yeni site"}" için oluşturuldu.`,
+				`Slogan: ${data.tagline ?? ""}`,
+				`Renk: ${data.color ?? ""}`,
 				"",
 				"Brief:",
 				data.prompt ?? "",
 				"",
-				"Answers:",
-				...(data.answers ?? []).map((entry) => `- ${entry.question}: ${entry.answer}`),
+				"Cevaplar:",
+				...answerLines,
 				"",
-				"Replace the WuppyCMS marketing copy and sections with content for this site. Keep the Astro/Tailwind/Bejamas design system and the content collections. Use the selected primary color. Commit the result.",
+				"İlk içerikler, hizmetler ve başlıklar siteye otomatik işlendi. Sitede gereksiz 64 adımlık dosya taraması yapma; yalnızca dosyaları doğrula ve kullanıcıya ne hazırlandığını tek mesajda Türkçe özetle.",
 			].join("\n");
 			setOpen(true);
-			chat.setDraft(text);
-			// "With AI" akışından gelindiyse brief'i otomatik başlat.
+			chat.setDraft("");
+			// "With AI" akışından gelindiyse özeti başlat.
 			window.setTimeout(() => {
-				chat.setDraft("");
 				chat.send(text);
 			}, 700);
 		} catch {
