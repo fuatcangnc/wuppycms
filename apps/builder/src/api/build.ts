@@ -3,7 +3,7 @@
 // Ajan brief'i istemcide saklanır; burada yalnızca iskelet + token'lar kurulur.
 
 import { Hono } from "hono";
-import { commitFiles, getFile, getRepo } from "../lib/git";
+import { commitFiles, getFile, getRepo, listTree } from "../lib/git";
 import { getInstallationToken } from "../lib/git/github/app";
 import {
 	ensurePagesProject,
@@ -84,6 +84,51 @@ function darken(hex: string, amount = 0.12): string {
 	const g = Math.max(0, Math.round(parseInt(value.slice(2, 4), 16) * (1 - amount)));
 	const b = Math.max(0, Math.round(parseInt(value.slice(4, 6), 16) * (1 - amount)));
 	return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Şablonun sabit marka metinlerini site adıyla değiştirir (tek commit). */
+async function rebrandTemplate(
+	token: string,
+	fullName: string,
+	branch: string,
+	siteName: string,
+): Promise<number> {
+	const PLACEHOLDER = "Yeni Site";
+	const TEXT_EXT = /\.(astro|mdx?|json|ts|html)$/i;
+	const SKIP = /^(public|node_modules|dist|\.astro|pnpm-lock\.yaml)/;
+	const tree = await listTree(token, fullName, branch, true);
+	const candidates = tree.entries
+		.filter(
+			(entry) =>
+				entry.type === "blob" &&
+				TEXT_EXT.test(entry.path) &&
+				!SKIP.test(entry.path) &&
+				(entry.size ?? 0) < 200_000,
+		)
+		.slice(0, 80);
+
+	const changed: { path: string; content: string }[] = [];
+	for (const entry of candidates) {
+		try {
+			const file = await getFile(token, fullName, entry.path, branch);
+			if (!file.content.includes(PLACEHOLDER)) continue;
+			changed.push({
+				path: entry.path,
+				content: file.content.split(PLACEHOLDER).join(siteName),
+			});
+		} catch {
+			// okunamayan dosya atlanır
+		}
+	}
+	if (!changed.length) return 0;
+	await commitFiles(
+		token,
+		fullName,
+		branch,
+		changed,
+		`chore: marka metinleri ${siteName} (via WuppyCMS)`,
+	);
+	return changed.length;
 }
 
 build.post("/site", body(buildSiteSchema), async (c) => {
@@ -413,6 +458,18 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		files,
 		`Build with AI: ${payload.siteName} (via WuppyCMS)`,
 	);
+
+	// Marka geçişi: şablonun sabit metinlerinde (başlık, footer, yasal sayfalar)
+	// kalan şablon adını site adıyla değiştir. Her dosyayı tek tek elle
+	// düzenlemek yerine tek bir marka commit'i atılır.
+	try {
+		const replaced = await rebrandTemplate(token, repo.fullName, branch, payload.siteName);
+		if (replaced > 0) {
+			console.info(`[build] ${replaced} dosyada şablon adı güncellendi`);
+		}
+	} catch (error) {
+		console.warn("[build] marka geçişi atlandı:", error);
+	}
 
 	// Cloudflare bağlı depoyu kendi build runner'ında derler; tetikleme
 	// başarısız olsa da push webhook'u bir sonraki fırsatta derler.
