@@ -16,12 +16,7 @@
 			"migrations_dir": "db/migrations"
 		}
 	],
-	"routes": [
-		{ "pattern": "turancms.com", "custom_domain": true },
-		{ "pattern": "www.turancms.com", "custom_domain": true }
-	],
 	"vars": {
-		"BETTER_AUTH_URL": "https://turancms.com",
 		"SITE_TEMPLATE_REPO": "fuatcangnc/wuppycms-tailwind-starter"
 	},
 	"r2_buckets": [

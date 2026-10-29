@@ -27,7 +27,9 @@ githubApp.get("/install", async (c) => {
 githubApp.get("/setup", async (c) => {
 	const user = await requireUser(c);
 	if (!user) {
-		return c.redirect(`/login?next=${encodeURIComponent(c.req.url)}`);
+		const base = (c.env.BETTER_AUTH_URL || new URL(c.req.url).origin).replace(/\/+$/, "");
+		const next = `${base}/api/github/app/setup?${new URL(c.req.url).searchParams.toString()}`;
+		return c.redirect(`/login?next=${encodeURIComponent(next)}`);
 	}
 	const installationId = c.req.query("installation_id");
 	if (!installationId) {
