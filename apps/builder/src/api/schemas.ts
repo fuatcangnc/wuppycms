@@ -210,6 +210,14 @@ export const buildSiteSchema = z.object({
 		.min(1)
 		.max(100)
 		.regex(/^[A-Za-z0-9._-]+$/, "repo adı yalnızca harf, rakam, nokta, tire ve alt çizgi içerebilir"),
+	/** GitHub App kurulumunun hesabı (ör. bir organizasyon); yoksa ilk kurulum. */
+	owner: z
+		.string()
+		.trim()
+		.min(1)
+		.max(100)
+		.regex(/^[A-Za-z0-9._-]+$/, "geçersiz hesap adı")
+		.optional(),
 	private: z.boolean().optional(),
 	color: z
 		.string()

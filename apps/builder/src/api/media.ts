@@ -128,7 +128,7 @@ media.get("/alt", async (c) => {
 	const user = await requireUser(c);
 	if (!user) return loginRequired(c);
 	const fullName = c.req.query("full_name") ?? "";
-	const token = await resolveGitToken(c);
+	const token = await resolveGitToken(c, fullName);
 	if (!fullName || !token) {
 		return c.json({ error: "invalid", message: "full_name zorunlu." }, 400);
 	}
@@ -154,7 +154,7 @@ media.put("/alt", body(mediaAltSchema), async (c) => {
 	if (!user) return loginRequired(c);
 	const payload = c.req.valid("json");
 	const { full_name: fullName, path } = payload;
-	const token = await resolveGitToken(c);
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return c.json({ error: "unauthenticated", message: "GitHub bağlantısı gerekli." }, 401);
 	const branch = c.req.query("ref") || (await getRepo(token, fullName)).defaultBranch;
 
@@ -229,7 +229,7 @@ media.post("/move", body(mediaMoveSchema), async (c) => {
 		return c.json({ error: "invalid", message: "full_name, branch ve from zorunlu." }, 400);
 	}
 	if (from === to) return c.json({ error: "invalid", message: "Hedef kaynakla aynı." }, 400);
-	const token = await resolveGitToken(c);
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return c.json({ error: "unauthenticated", message: "GitHub bağlantısı gerekli." }, 401);
 
 	const { entries, truncated } = await listTree(token, fullName, branch);
@@ -271,7 +271,7 @@ media.get("/usage", async (c) => {
 	const path = (c.req.query("path") ?? "").trim();
 	const ref = c.req.query("ref") || "main";
 	if (!fullName || !path) return c.json({ error: "invalid", message: "full_name ve path zorunlu." }, 400);
-	const token = await resolveGitToken(c);
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return c.json({ error: "unauthenticated", message: "GitHub bağlantısı gerekli." }, 401);
 
 	const { entries, truncated } = await listTree(token, fullName, ref);

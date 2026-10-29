@@ -256,6 +256,25 @@ export function createMockGitHub({ fullName = "mock/site", branch = "main", toke
 				if (req.headers.authorization !== `Bearer ${token}`) return json(res, 401, { message: "Bad credentials" });
 			}
 
+			// Kullanıcı uçları repo yolundan ÖNCE gelir: `/user/repos` aksi hâlde
+			// `/repos/:owner/:repo` kalıbına takılıp 404 dönerdi.
+			if (path === "/user" && method === "GET") {
+				return json(res, 200, { login: fullName.split("/")[0], name: "Mock" });
+			}
+			if (path === "/user/repos" && method === "GET") {
+				const headSha = refs.get(branch);
+				return json(res, 200, [
+					{
+						full_name: fullName,
+						private: true,
+						default_branch: branch,
+						description: "WuppyCMS E2E mock deposu",
+						pushed_at: (headSha && commits.get(headSha)?.date) || new Date().toISOString(),
+						html_url: `https://github.com/${fullName}`,
+					},
+				]);
+			}
+
 			const repoMatch = /^\/repos\/([^/]+)\/([^/]+)(\/.*)?$/.exec(path);
 			if (!repoMatch) return json(res, 404, { message: "Not Found" });
 			const [, owner, repo, rest = ""] = repoMatch;
@@ -270,18 +289,6 @@ export function createMockGitHub({ fullName = "mock/site", branch = "main", toke
 					private: true,
 					html_url: `https://github.com/${fullName}`,
 				});
-			}
-			if (path === "/user/repos" && method === "GET") {
-				return json(res, 200, [
-					{
-						full_name: fullName,
-						private: true,
-						default_branch: branch,
-						description: "WuppyCMS E2E mock deposu",
-						pushed_at: commits.get(head)?.date ?? new Date().toISOString(),
-						html_url: `https://github.com/${fullName}`,
-					},
-				]);
 			}
 			if (rest === "/branches" && method === "GET") {
 				return json(res, 200, [...refs.entries()].filter(([, sha]) => sha).map(([name, sha]) => ({ name, commit: { sha } })));

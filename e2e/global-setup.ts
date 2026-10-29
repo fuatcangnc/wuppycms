@@ -190,6 +190,7 @@ export default async function globalSetup(): Promise<void> {
 		token: "mock-token",
 		logFile: resolve(OUT_DIR, "logs/app.log"),
 		skipConflictCheck: true,
+		githubApp: true,
 	});
 	stopEnv = env.stop;
 

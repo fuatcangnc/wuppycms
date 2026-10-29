@@ -42,9 +42,9 @@ function decisionOf(reviews: ReviewSummary[]): "approved" | "changes_requested" 
 review.get("/list", async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = c.req.query("full_name") ?? "";
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const state = c.req.query("state") === "all" ? "all" : "open";
 	const pulls = await listPullRequests(token, fullName, state);
 	const withReviews = await Promise.all(
@@ -60,10 +60,10 @@ review.get("/list", async (c) => {
 review.post("/start", body(reviewStartSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const payload = c.req.valid("json");
 	const { full_name: fullName, path } = payload;
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 
 	const repo = await getRepo(token, fullName);
 	const base = repo.defaultBranch;
@@ -92,9 +92,9 @@ review.post("/start", body(reviewStartSchema), async (c) => {
 review.post("/decision", body(reviewDecisionSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const { full_name: fullName, number, event, body: note } = c.req.valid("json");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	await submitReview(token, fullName, number, event, note ?? "");
 	return c.json({ ok: true });
 });
@@ -103,9 +103,9 @@ review.post("/decision", body(reviewDecisionSchema), async (c) => {
 review.post("/merge", body(reviewNumberSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const { full_name: fullName, number } = c.req.valid("json");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const result = await mergePullRequest(token, fullName, number);
 	return c.json({ ok: Boolean(result.merged), ...result });
 });
@@ -114,9 +114,9 @@ review.post("/merge", body(reviewNumberSchema), async (c) => {
 review.post("/close", body(reviewNumberSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const { full_name: fullName, number } = c.req.valid("json");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	await closePullRequest(token, fullName, number);
 	return c.json({ ok: true });
 });

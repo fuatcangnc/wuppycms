@@ -4,9 +4,11 @@
 
 import { Hono } from "hono";
 import { commitFiles, getFile, getRepo } from "../lib/git";
+import { getInstallationToken } from "../lib/git/github/app";
+import { listInstallations } from "../lib/git/github/installations";
 import { createRepoFromTemplate, enablePages, getViewer } from "../lib/git/github/repo";
 import type { AppEnv } from "./types";
-import { platform, requireUser, resolveGitToken, unauthorized } from "./helpers";
+import { platform, requireUser, resolveOAuthToken, unauthorized } from "./helpers";
 import { body, buildSiteSchema } from "./schemas";
 
 const build = new Hono<{ Bindings: AppEnv }>();
@@ -40,22 +42,89 @@ function darken(hex: string, amount = 0.12): string {
 build.post("/site", body(buildSiteSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const db = platform(c).db;
 	if (!db) return c.json({ error: "not_configured", message: "D1 bağlı değil." }, 503);
 
 	const payload = c.req.valid("json");
-	const viewer = await getViewer(token);
 	const template = c.env.SITE_TEMPLATE_REPO || "fuatcangnc/wuppycms-tailwind-starter";
 	const color = payload.color ?? "#dd641e";
 
-	const generated = await createRepoFromTemplate(token, template, {
-		owner: viewer.login,
-		name: payload.repoName,
-		description: payload.tagline,
-		private: Boolean(payload.private),
-	});
+	// Repo sahibi seçimi: istenen sahip bir GitHub App kurulumuysa installation
+	// token'ı; değilse kullanıcının OAuth token'ı (kişisel hesapta repo açmak
+	// OAuth ister). İki yol da yoksa kurulum istemeye yönlendir.
+	const installations = await listInstallations(db, user.id);
+	const wantedOwner = payload.owner?.trim().toLowerCase();
+	const oauthToken = await resolveOAuthToken(c);
+	const oauthViewer = oauthToken ? await getViewer(oauthToken).catch(() => null) : null;
+
+	// İstenen sahip verilmemişse: OAuth kullanıcısının kendi kurulumu, yoksa
+	// ilk kurulum. Böylece yalnız kurulumu olan kullanıcı da site üretebilir.
+	const appInstallation = wantedOwner
+		? installations.find((entry) => entry.accountLogin.toLowerCase() === wantedOwner)
+		: oauthViewer
+			? (installations.find(
+					(entry) => entry.accountLogin.toLowerCase() === oauthViewer.login.toLowerCase(),
+				) ?? installations[0])
+			: installations[0];
+	const appToken = appInstallation
+		? await getInstallationToken(c.env, appInstallation.installationId).catch(() => null)
+		: null;
+
+	type Candidate = { token: string; owner: string };
+	const candidates: Candidate[] = [];
+	// Kişisel hesapta repo açmak OAuth kullanıcı token'ı ister; GitHub App
+	// installation token'ı org depoları içindir. Bu yüzden OAuth eşleşiyorsa
+	// önce o denenir, sonra kurulum.
+	if (oauthToken && oauthViewer) {
+		if (!wantedOwner || oauthViewer.login.toLowerCase() === wantedOwner) {
+			candidates.push({ token: oauthToken, owner: oauthViewer.login });
+		}
+	}
+	if (appInstallation && appToken) {
+		const sameAsOauth =
+			oauthViewer?.login.toLowerCase() === appInstallation.accountLogin.toLowerCase();
+		if (!sameAsOauth) {
+			candidates.push({ token: appToken, owner: appInstallation.accountLogin });
+		}
+	}
+	if (candidates.length === 0) {
+		if (!oauthToken && installations.length === 0) return unauthorized(c);
+		return c.json(
+			{
+				error: "owner_unavailable",
+				message: payload.owner
+					? `“${payload.owner}” için geçerli bir GitHub App kurulumu yok.`
+					: "Site oluşturmak için GitHub App kurun ya da GitHub hesabıyla giriş yapın.",
+			},
+			400,
+		);
+	}
+
+	// Şablon repo'suna erişimi olan adayla üret; olmazsa sıradakini dene.
+	let generated: Awaited<ReturnType<typeof createRepoFromTemplate>> | null = null;
+	let owner = candidates[0]!.owner;
+	let token = candidates[0]!.token;
+	let lastError: unknown;
+	for (const candidate of candidates) {
+		try {
+			generated = await createRepoFromTemplate(candidate.token, template, {
+				owner: candidate.owner,
+				name: payload.repoName,
+				description: payload.tagline,
+				private: Boolean(payload.private),
+			});
+			owner = candidate.owner;
+			token = candidate.token;
+			break;
+		} catch (error) {
+			lastError = error;
+		}
+	}
+	if (!generated) {
+		throw lastError instanceof Error
+			? lastError
+			: new Error("Depo şablondan üretilemedi.");
+	}
 
 	let branch = generated.defaultBranch || "main";
 	let repo = generated;
@@ -71,11 +140,11 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 
 	const files: { path: string; content: string }[] = [];
 	const repoName = repo.fullName.split("/").pop() ?? payload.repoName;
-	const isUserSite = repoName.toLowerCase() === `${viewer.login.toLowerCase()}.github.io`;
+	const isUserSite = repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`;
 	const pagesBase = isUserSite ? "/" : `/${repoName}/`;
 	const pagesUrl = isUserSite
-		? `https://${viewer.login}.github.io/`
-		: `https://${viewer.login}.github.io/${repoName}/`;
+		? `https://${owner}.github.io/`
+		: `https://${owner}.github.io/${repoName}/`;
 	const pagesEnabled = await enablePages(token, repo.fullName);
 
 	// site.ts — marka/tagline/description/iletişim/GitHub bağlantısı.
@@ -93,7 +162,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		const configFile = await readTemplateFile(token, repo.fullName, "astro.config.mjs", branch);
 		const config = configFile.content.replace(
 			/export default defineConfig\(\{/,
-			`export default defineConfig({\n\tsite: ${JSON.stringify(`https://${viewer.login}.github.io`)},\n\tbase: ${JSON.stringify(pagesBase)},`,
+			`export default defineConfig({\n\tsite: ${JSON.stringify(`https://${owner}.github.io`)},\n\tbase: ${JSON.stringify(pagesBase)},`,
 		);
 		files.push({ path: "astro.config.mjs", content: config });
 	} catch {

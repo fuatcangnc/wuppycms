@@ -3,8 +3,15 @@
 // Site iskeleti /api/build/site ile Astro template repo'sundan üretilir; AI
 // brief'i sessionStorage'a bırakılır ve admin ajanı editörde hazırlar.
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui-react/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuTrigger,
+} from "@/components/ui-react/dropdown-menu";
 import { Input } from "@/components/ui-react/input";
 import { Textarea } from "@/components/ui-react/textarea";
 import { t } from "@/lib/i18n";
@@ -34,6 +41,13 @@ interface BuildResult {
 	repoFullName: string;
 	branch: string;
 }
+
+type Installation = {
+	installation_id: string;
+	account_login: string | null;
+	account_type: string | null;
+	repository_selection: string | null;
+};
 
 const COLORS = [
 	{ name: "Wuppy Orange", value: "#dd641e" },
@@ -83,6 +97,25 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 	const [color, setColor] = useState(COLORS[0]!.value);
 	const [error, setError] = useState("");
 	const [creating, setCreating] = useState(false);
+	const [installations, setInstallations] = useState<Installation[]>([]);
+	const [owner, setOwner] = useState("");
+
+	// GitHub App kurulumları — site hangi hesapta oluşturulacak? Kişisel hesap
+	// için OAuth yolu da var; kurulum varsa varsayılan onun hesabıdır.
+	useEffect(() => {
+		void (async () => {
+			try {
+				const res = await fetch("/api/github/app/status", { credentials: "same-origin" });
+				if (!res.ok) return;
+				const data = (await res.json()) as { installations?: Installation[] };
+				const list = data.installations ?? [];
+				setInstallations(list);
+				setOwner((current) => current || list[0]?.account_login || "");
+			} catch {
+				// kurulum bilgisi yoksa OAuth yolu denenir
+			}
+		})();
+	}, []);
 
 	const questions = useMemo<BuildQuestion[]>(
 		() => [
@@ -236,6 +269,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 						siteName: name,
 						tagline: tagline.trim() || "A site built with WuppyCMS",
 						repoName: slug,
+						owner: owner || undefined,
 						private: privateRepo,
 						color,
 						answers: Object.fromEntries(answerPairs.map((entry) => [entry.question, entry.answer])),
@@ -448,6 +482,37 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 							<input type="checkbox" checked={privateRepo} onChange={(event) => setPrivateRepo(event.target.checked)} />
 							{t("build.private")}
 						</label>
+					</div>
+
+					<div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+						<span className="text-xs font-medium text-muted-foreground">{t("build.owner")}</span>
+						{installations.length > 1 ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger variant="outline" size="sm">
+									@{owner || installations[0]?.account_login}
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuLabel>{t("build.ownerHint")}</DropdownMenuLabel>
+									{installations.map((entry) => (
+										<DropdownMenuItem
+											key={entry.installation_id}
+											onSelect={() => setOwner(entry.account_login ?? "")}
+										>
+											<span className="truncate">@{entry.account_login}</span>
+											<span className="ml-auto text-xs text-muted-foreground">
+												{entry.account_type === "Organization"
+													? t("project.app.organization")
+													: t("project.app.personal")}
+											</span>
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						) : installations.length === 1 ? (
+							<span className="text-sm font-medium">@{owner}</span>
+						) : (
+							<span className="text-xs text-muted-foreground">{t("build.ownerOauth")}</span>
+						)}
 					</div>
 
 					<div className="mt-6">

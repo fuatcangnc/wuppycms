@@ -113,6 +113,10 @@ export async function startMockEnv({
 	// Playwright harness'i kendi portunu (4444) açıkça kullanır; 4321'deki
 	// başka bir sunucu bu koşumu etkilemez. Eski .mjs suitleri varsayılanı korur.
 	skipConflictCheck = false,
+	// GitHub App yapılandırılmış gibi davran (sahte kimlik): Projects ekranı
+	// "App'i kur" kartını gösterir; kurulum kaydı olmadığı için token çağrısı
+	// yapılmaz. Gerçek anahtar gerekmez.
+	githubApp = false,
 }) {
 	if (!skipConflictCheck) await ensureNoDevServerConflict();
 
@@ -140,13 +144,22 @@ export async function startMockEnv({
 	writeFileSync(bakPath, backup);
 	const lines = backup
 		.split("\n")
-		.filter((l) => !/^\s*(GITHUB_TOKEN|GITHUB_API_BASE|BETTER_AUTH_URL)\s*=/.test(l));
+		.filter((l) => !/^\s*(GITHUB_TOKEN|GITHUB_API_BASE|BETTER_AUTH_URL|GITHUB_APP_)\s*=/.test(l));
 	lines.push(
 		`GITHUB_TOKEN="${token}"`,
 		`GITHUB_API_BASE="http://127.0.0.1:${apiPort}"`,
 		// better-auth kök adresi kendi portumuz olmalı; yoksa origin kontrolü 403 verir.
 		`BETTER_AUTH_URL="${base}"`,
 	);
+	if (githubApp) {
+		// Yalnızca "yapılandırıldı" bayrağını açar; kurulum yoksa private key
+		// hiç okunmaz (token çağrısı kurulum varsa yapılır).
+		lines.push(
+			`GITHUB_APP_ID="1"`,
+			`GITHUB_APP_PRIVATE_KEY_B64="${Buffer.from("e2e-placeholder").toString("base64")}"`,
+			`GITHUB_APP_SLUG="wuppycms"`,
+		);
+	}
 	writeFileSync(devVarsPath, lines.join("\n"));
 
 	let child = null;

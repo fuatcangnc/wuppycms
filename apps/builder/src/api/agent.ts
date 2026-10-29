@@ -147,12 +147,12 @@ agent.get("/status", async (c) => {
 agent.post("/prompt", body(agentPromptSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
+	const payload = c.req.valid("json");
+	const token = await resolveGitToken(c, payload.full_name);
 	if (!token) return unauthorized(c);
 	const db = platform(c).db;
 	if (!db) return c.json({ error: "not_configured", message: "D1 bağlı değil." }, 503);
 
-	const payload = c.req.valid("json");
 	const providerOverride = payload.provider;
 	const config = await resolveAiConfig(c, user.id, providerOverride, payload.model);
 	if (!config) {
@@ -290,9 +290,9 @@ agent.delete("/session", async (c) => {
 agent.get("/pages", async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const repo = await getRepo(token, fullName);
 	const branch = c.req.query("branch") || repo.defaultBranch;
 	const siteUrl = (await readSiteUrl(token, fullName, branch)) ?? "";
@@ -321,11 +321,11 @@ agent.get("/pages", async (c) => {
 agent.post("/undo", body(agentUndoSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
+	const payload = c.req.valid("json");
+	const token = await resolveGitToken(c, payload.full_name);
 	if (!token) return unauthorized(c);
 	const db = platform(c).db;
 	if (!db) return c.json({ error: "not_configured" }, 503);
-	const payload = c.req.valid("json");
 	const repo = await getRepo(token, payload.full_name);
 	const branch = payload.branch || repo.defaultBranch;
 	const change = await latestChange(db, user.id, payload.full_name, payload.changeId);

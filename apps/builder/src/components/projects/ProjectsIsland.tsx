@@ -16,8 +16,20 @@ export type ProjectRow = {
 	created_at: string;
 };
 
-type RepoSummary = { fullName: string; private: boolean };
+type RepoSummary = { fullName: string; private: boolean; source?: "app" | "oauth" | "env" };
 type RepoInfo = RepoSummary & { astro: boolean; wuppy: boolean; defaultBranch: string };
+
+type Installation = {
+	installation_id: string;
+	account_login: string | null;
+	account_type: string | null;
+	repository_selection: string | null;
+};
+
+type AppStatus = {
+	app: { configured: boolean; slug: string; installUrl: string; manageUrl: string };
+	installations: Installation[];
+};
 
 export default function ProjectsIsland({
 	projects: initial,
@@ -34,6 +46,30 @@ export default function ProjectsIsland({
 	const [checking, setChecking] = useState<string | null>(null);
 	const [notAstro, setNotAstro] = useState<RepoSummary | null>(null);
 	const [mode, setMode] = useState<"projects" | "build">("projects");
+	const [appStatus, setAppStatus] = useState<AppStatus | null>(null);
+	const [needsApp, setNeedsApp] = useState(false);
+	const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+
+	// GitHub App durumu — kurulum dönüşünde (?github_app=…) kullanıcıya sonucu
+	// göster; kurulum yoksa panele "App'i kur" kartı düşer.
+	useEffect(() => {
+		void (async () => {
+			try {
+				const res = await fetch("/api/github/app/status", { credentials: "same-origin" });
+				if (res.ok) setAppStatus((await res.json()) as AppStatus);
+			} catch {
+				// durum bilgisi kritik değil — repo listesi yine çalışır
+			}
+		})();
+		const flag = new URLSearchParams(window.location.search).get("github_app");
+		const messages: Record<string, { kind: "ok" | "error"; text: string }> = {
+			installed: { kind: "ok", text: t("project.app.installed") },
+			missing: { kind: "error", text: t("project.app.missing") },
+			no_db: { kind: "error", text: t("project.app.no_db") },
+			state_mismatch: { kind: "error", text: t("project.app.state_mismatch") },
+		};
+		if (flag && messages[flag]) setNotice(messages[flag]);
+	}, []);
 
 	const openPanel = () => {
 		setPanelOpen(true);
@@ -42,6 +78,7 @@ export default function ProjectsIsland({
 			try {
 				const res = await fetch("/api/git/repos", { credentials: "same-origin" });
 				if (!res.ok) {
+					if (res.status === 401) setNeedsApp(true);
 					const data = (await res.json().catch(() => ({}))) as { message?: string };
 					throw new Error(data.message ?? t("project.requestStatus", { status: res.status }));
 				}
@@ -157,6 +194,55 @@ export default function ProjectsIsland({
 					</Button>
 				</div>
 
+				{notice && (
+					<div
+						role="status"
+						className={
+							notice.kind === "ok"
+								? "mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm"
+								: "mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+						}
+					>
+						{notice.text}
+					</div>
+				)}
+
+				{appStatus && (
+					<div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+						{appStatus.installations.length > 0 ? (
+							<>
+								<span>
+									{t("project.app.connected", {
+										accounts: appStatus.installations
+											.map((entry) => `@${entry.account_login ?? "?"}`)
+											.join(", "),
+									})}
+								</span>
+								<a
+									href={appStatus.app.manageUrl}
+									target="_blank"
+									rel="noreferrer"
+									className="font-medium text-foreground hover:underline"
+								>
+									{t("project.app.manage")}
+								</a>
+							</>
+						) : (
+							<>
+								<span>{t("project.app.none")}</span>
+								{appStatus.app.configured && (
+									<a
+										href={appStatus.app.installUrl}
+										className="font-medium text-primary hover:underline"
+									>
+										{t("project.app.install")}
+									</a>
+								)}
+							</>
+						)}
+					</div>
+				)}
+
 				{panelOpen && (
 					<section className="mt-6 rounded-xl border border-border bg-card p-5">
 						<div className="flex flex-wrap items-start justify-between gap-3">
@@ -168,6 +254,17 @@ export default function ProjectsIsland({
 								✦ {t("build.startWithAi")}
 							</Button>
 						</div>
+						{(needsApp || (appStatus && !appStatus.installations.length && appStatus.app.configured)) && (
+							<div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4">
+								<p className="text-sm font-semibold">{t("project.app.title")}</p>
+								<p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+									{t("project.app.body")}
+								</p>
+								<Button as="a" href="/api/github/app/install" size="sm" className="mt-3">
+									{t("project.app.install")}
+								</Button>
+							</div>
+						)}
 						<Input
 							size="sm"
 							className="mt-4"
@@ -207,9 +304,12 @@ export default function ProjectsIsland({
 										<span className="shrink-0 text-xs text-muted-foreground">
 											{checking === repo.fullName
 												? t("build.kicker")
-												: repo.private
-													? t("project.private")
-													: t("project.public")}
+												: [
+														repo.source === "app" ? t("project.app.badge") : "",
+														repo.private ? t("project.private") : t("project.public"),
+													]
+														.filter(Boolean)
+														.join(" · ")}
 										</span>
 									</button>
 								))}

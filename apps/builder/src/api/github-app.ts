@@ -6,8 +6,10 @@
 
 import { Hono } from "hono";
 import {
+	createInstallState,
 	getInstallation,
 	listInstallationRepos,
+	verifyInstallState,
 	verifyWebhook,
 } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
@@ -21,7 +23,9 @@ githubApp.get("/install", async (c) => {
 		return c.redirect(`/login?next=${encodeURIComponent("/api/github/app/install")}`);
 	}
 	const slug = c.env.GITHUB_APP_SLUG || "wuppycms";
-	return c.redirect(`https://github.com/apps/${slug}/installations/new`);
+	const state = await createInstallState(c.env, user.id);
+	const query = state ? `?state=${encodeURIComponent(state)}` : "";
+	return c.redirect(`https://github.com/apps/${slug}/installations/new${query}`);
 });
 
 githubApp.get("/setup", async (c) => {
@@ -34,6 +38,12 @@ githubApp.get("/setup", async (c) => {
 	const installationId = c.req.query("installation_id");
 	if (!installationId) {
 		return c.redirect("/projects?github_app=missing");
+	}
+	// İmzalı state, kurulumun bu kullanıcı tarafından başlatıldığını kanıtlar;
+	// yoksa (eski kurulumlar / yerel) kurulum yine de kullanıcıya bağlanır.
+	const stateUser = await verifyInstallState(c.env, c.req.query("state"));
+	if (stateUser && stateUser !== user.id) {
+		return c.redirect("/projects?github_app=state_mismatch");
 	}
 	const db = platform(c).db;
 	if (!db) return c.redirect("/projects?github_app=no_db");
@@ -80,8 +90,15 @@ githubApp.get("/setup", async (c) => {
 githubApp.get("/status", async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
+	const slug = c.env.GITHUB_APP_SLUG || "wuppycms";
+	const app = {
+		configured: Boolean(c.env.GITHUB_APP_ID && c.env.GITHUB_APP_PRIVATE_KEY_B64),
+		slug,
+		installUrl: "/api/github/app/install",
+		manageUrl: `https://github.com/apps/${slug}/installations`,
+	};
 	const db = platform(c).db;
-	if (!db) return c.json({ installations: [] });
+	if (!db) return c.json({ app, installations: [] });
 	const rows = await db
 		.prepare(
 			`SELECT installation_id, account_login, account_type, repository_selection, created_at
@@ -95,7 +112,7 @@ githubApp.get("/status", async (c) => {
 			repository_selection: string | null;
 			created_at: string;
 		}>();
-	return c.json({ installations: rows.results ?? [] });
+	return c.json({ app, installations: rows.results ?? [] });
 });
 
 githubApp.get("/repos", async (c) => {

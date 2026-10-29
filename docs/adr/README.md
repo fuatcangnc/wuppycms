@@ -24,6 +24,7 @@ Numara sırasıyla eklenir; bir karar değiştiğinde eski kayıt silinmez,
 |     | [0016](0016-agent-undo-state.md) Ajan Undo: tek istek, kalıcı durum, F5'siz önizleme |
 |     | [0017](0017-with-ai-site-builder.md) “With AI” site builder |
 |     | [0018](0018-wuppycms-technical-identifiers.md) Teknik kimlikler: WuppyCMS |
+|     | [0019](0019-github-app-repo-access.md) GitHub App ile repo erişimi |
 
 Not: 0001–0009 kayıtları marka değişikliğinden (0009) önce yazıldığı için
 metinlerinde eski marka adı geçebilir; kararlar tarihseldir.

@@ -12,6 +12,9 @@ import { pickDueDocs, publishMessage } from "../lib/schedule";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveGitToken, unauthorized } from "./helpers";
 import { platformFromBindings } from "../lib/platform";
+import { getInstallationToken } from "../lib/git/github/app";
+import { installationForOwner, listInstallations } from "../lib/git/github/installations";
+import { splitFullName } from "../lib/git/github/api";
 import { body, scheduleRunSchema } from "./schemas";
 
 export const schedule = new Hono<{ Bindings: AppEnv }>();
@@ -77,11 +80,11 @@ export async function publishDue(
 schedule.post("/run", body(scheduleRunSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated", message: "Giriş gerekli." }, 401);
-	const token = await resolveGitToken(c);
+	const payload = c.req.valid("json");
+	const token = await resolveGitToken(c, payload.full_name);
 	if (!token) return unauthorized(c);
 	const db = platform(c).db;
 
-	const payload = c.req.valid("json");
 	const targets: { repo: string; branch: string }[] = [];
 	if (payload.full_name) {
 		const repo = await getRepo(token, payload.full_name);
@@ -99,8 +102,10 @@ schedule.post("/run", body(scheduleRunSchema), async (c) => {
 
 	const runs: ScheduleRunResult[] = [];
 	for (const target of targets) {
+		// GitHub App kurulumu repoya özel olabilir; her hedef için yeniden çöz.
+		const repoToken = payload.full_name ? token : ((await resolveGitToken(c, target.repo)) ?? token);
 		try {
-			runs.push(await publishDue(token, target.repo, target.branch));
+			runs.push(await publishDue(repoToken, target.repo, target.branch));
 		} catch (error) {
 			runs.push({
 				repo: target.repo,
@@ -127,6 +132,7 @@ export async function runScheduled(env: AppEnv): Promise<ScheduleRunResult[]> {
 	const runs: ScheduleRunResult[] = [];
 	for (const row of results ?? []) {
 		let token = env.GITHUB_TOKEN;
+		if (!token) token = await installationTokenForRepo(env, db, row.user_id, row.repo_full_name);
 		if (!token) {
 			const { findGitHubToken } = await import("../lib/auth");
 			token = (await findGitHubToken(db, row.user_id)) ?? undefined;
@@ -147,4 +153,33 @@ export async function runScheduled(env: AppEnv): Promise<ScheduleRunResult[]> {
 		}
 	}
 	return runs;
+}
+
+/**
+ * Proje sahibinin, repo sahibine ait GitHub App kurulumu için token'ı.
+ * Kurulum yoksa null döner (çağıran OAuth token'ına düşer).
+ */
+export async function installationTokenForRepo(
+	env: AppEnv,
+	db: import("../lib/platform").SqlDatabase,
+	userId: string,
+	repoFullName: string,
+): Promise<string | undefined> {
+	if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY_B64) return undefined;
+	let installation = null;
+	try {
+		installation = await installationForOwner(db, userId, splitFullName(repoFullName).owner);
+	} catch {
+		installation = null;
+	}
+	if (!installation) {
+		const all = await listInstallations(db, userId);
+		installation = all[0] ?? null;
+	}
+	if (!installation) return undefined;
+	try {
+		return await getInstallationToken(env, installation.installationId);
+	} catch {
+		return undefined;
+	}
 }

@@ -512,6 +512,20 @@ project:
   reposFailed: Depolar alınamadı.
   createFailed: Proje oluşturulamadı.
   requestStatus: "İstek başarısız ({status})"
+  app:
+    title: GitHub App'i kur
+    body: Depolarını WuppyCMS'e bağlamak için GitHub App'i kur. Token kopyalaman gerekmez; erişimi istediğin an GitHub'dan kaldırabilirsin.
+    install: GitHub App'i kur
+    manage: Kurulumu yönet
+    connected: "Bağlı hesaplar: {accounts}"
+    none: Henüz bir GitHub App kurulumu yok.
+    badge: App
+    organization: Organizasyon
+    personal: Kişisel
+    installed: GitHub App bağlandı; depoların listeye eklendi.
+    missing: Kurulum tamamlanmadı — GitHub installation_id göndermedi.
+    no_db: Veritabanı bağlı değil; kurulum kaydedilemedi.
+    state_mismatch: Kurulum başka bir oturumda başlatılmış; yeniden dene.
 
 build:
   kicker: With AI
@@ -533,6 +547,9 @@ build:
   close: Kapat
   designTitle: Kendinize göre yapın
   designSubtitle: Tasarım sisteminden bir ana renk seçin, sonra depoyu onaylayın.
+  owner: Oluşturulacak hesap
+  ownerHint: GitHub App kurulumu
+  ownerOauth: GitHub hesabınla oluşturulacak
   siteName: Site adı
   tagline: Kısa açıklama
   repoName: Depo adı

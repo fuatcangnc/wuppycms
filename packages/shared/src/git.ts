@@ -71,6 +71,8 @@ export type RepoInfo = {
 export type RepoSummary = RepoInfo & {
 	description: string | null;
 	pushedAt: string;
+	/** Erişimin kaynağı: GitHub App kurulumu ya da OAuth/geliştirme token'ı. */
+	source?: "app" | "oauth" | "env";
 };
 
 /** Dal özeti. */

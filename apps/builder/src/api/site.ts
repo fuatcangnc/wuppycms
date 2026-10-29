@@ -39,9 +39,9 @@ function parseSitesFile(raw: string): { file: SitesFile | null; issues: SitesVal
 
 // GET /api/site/scan?full_name=owner/repo — kurulum sihirbazının taraması.
 site.get("/scan", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const repo = await getRepo(token, fullName);
 	const ref = repo.defaultBranch;
 
@@ -106,11 +106,10 @@ site.get("/scan", async (c) => {
 site.put("/config", body(siteConfigSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
-
 	const payload = c.req.valid("json");
 	const fullName = payload.full_name;
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const sites = payload.sites as SiteConfigEntry[];
 	const validation = validateSitesFile({ version: 1, sites });
 	if (!validation.ok) {

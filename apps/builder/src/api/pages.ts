@@ -13,9 +13,9 @@ const PAGE_RE = /\.(astro|md|mdx|html)$/i;
 
 // GET /api/pages?full_name=owner/repo[&ref=branch]
 pages.get("/", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const branch = c.req.query("ref") || (await getRepo(token, fullName)).defaultBranch;
 	const tree = await listTree(token, fullName, branch, true);
 	const files = tree.entries

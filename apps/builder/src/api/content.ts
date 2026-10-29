@@ -48,11 +48,12 @@ function findCollection(
 
 // GET /api/content/schema?full_name=owner/repo[&ref=]
 content.get("/schema", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
 	const { ref, collections, configFound } = await loadCollections(
 		token,
-		requireQuery(c, "full_name"),
+		fullName,
 		c.req.query("ref"),
 	);
 	return c.json({ path: CONTENT_CONFIG_PATH, ref, collections, configFound });
@@ -60,9 +61,9 @@ content.get("/schema", async (c) => {
 
 // GET /api/content/entries?full_name=…&collection=blog[&ref=]
 content.get("/entries", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const { ref, collections, configFound } = await loadCollections(
 		token,
 		fullName,
@@ -131,13 +132,14 @@ content.get("/entries", async (c) => {
 content.post("/entry", body(contentEntrySchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 
 	const payload = c.req.valid("json");
 	const fullName = payload.full_name;
 	const collectionKey = payload.collection;
 	const title = payload.title;
+
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 
 	const { ref, collections, configFound } = await loadCollections(token, fullName);
 	if (!configFound) {
@@ -176,11 +178,12 @@ content.post("/entry", body(contentEntrySchema), async (c) => {
 content.post("/collection", body(contentCollectionSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const payload = c.req.valid("json");
 	const fullName = payload.full_name;
 	const key = payload.key;
+
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 
 	const repo = await getRepo(token, fullName);
 	const ref = repo.defaultBranch;

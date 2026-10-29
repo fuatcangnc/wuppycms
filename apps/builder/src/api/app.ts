@@ -3,7 +3,7 @@
 // şifreli token okunacak (bkz. lib/crypto.ts).
 
 import { Hono } from "hono";
-import type { CommitAuthor, CommitFile } from "@wuppycms/shared";
+import type { CommitAuthor, CommitFile, RepoSummary } from "@wuppycms/shared";
 import { createAuth } from "../lib/auth";
 import {
 	BackendError,
@@ -18,8 +18,17 @@ import {
 	listUserRepos,
 	setGitHubApiBase,
 } from "../lib/git";
+import { listInstallationRepos } from "../lib/git/github/app";
+import { listInstallations } from "../lib/git/github/installations";
 import type { AppEnv } from "./types";
-import { platform, requireQuery, requireUser, resolveGitToken, unauthorized } from "./helpers";
+import {
+	platform,
+	requireQuery,
+	requireUser,
+	resolveGitAuth,
+	resolveGitToken,
+	unauthorized,
+} from "./helpers";
 import { body, projectCreateSchema } from "./schemas";
 import { content } from "./content";
 import { media } from "./media";
@@ -56,23 +65,63 @@ api.on(["GET", "POST"], "/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
 const git = new Hono<{ Bindings: AppEnv }>();
 
 git.get("/repo", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
-	const repo = await getRepo(token, requireQuery(c, "full_name"));
+	const repo = await getRepo(token, fullName);
 	return c.json(repo);
 });
 
+/**
+ * Kullanıcının erişebildiği depolar: GitHub App kurulumları (varsa) ve
+ * OAuth/geliştirme token'ı (varsa) birleşik, tekrarsız liste.
+ */
 git.get("/repos", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
-	const repos = await listUserRepos(token);
-	return c.json({ repos });
+	const user = await requireUser(c);
+	const db = platform(c).db;
+	const byFullName = new Map<string, RepoSummary>();
+
+	if (user && db && c.env.GITHUB_APP_ID && c.env.GITHUB_APP_PRIVATE_KEY_B64) {
+		for (const installation of await listInstallations(db, user.id)) {
+			try {
+				for (const repo of await listInstallationRepos(c.env, installation.installationId)) {
+					byFullName.set(repo.fullName, {
+						fullName: repo.fullName,
+						private: repo.private,
+						defaultBranch: repo.defaultBranch,
+						htmlUrl: `https://github.com/${repo.fullName}`,
+						description: null,
+						pushedAt: "",
+						source: "app" as const,
+					});
+				}
+			} catch {
+				// kurulum kaldırılmış ya da private key yok — atla
+			}
+		}
+	}
+
+	const auth = await resolveGitAuth(c);
+	if (auth && auth.kind !== "app") {
+		try {
+			for (const repo of await listUserRepos(auth.token)) {
+				if (!byFullName.has(repo.fullName)) byFullName.set(repo.fullName, repo);
+			}
+		} catch {
+			// token süresi dolmuş olabilir — kurulum listesi yine dönsün
+		}
+	}
+
+	// Hiç kimlik yoksa route sözleşmesi 401 kalır (Projects UI kurulum kartı
+	// gösterir); kimlik varsa boş liste de geçerli yanıttır.
+	if (!auth && byFullName.size === 0) return unauthorized(c);
+	return c.json({ repos: [...byFullName.values()] });
 });
 
 git.get("/repo-info", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	const repo = await getRepo(token, fullName);
 	const branch = repo.defaultBranch;
 	const exists = async (path: string) => {
@@ -114,27 +163,25 @@ git.get("/repo-info", async (c) => {
 });
 
 git.get("/branches", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
-	const branches = await listBranches(token, requireQuery(c, "full_name"));
+	const branches = await listBranches(token, fullName);
 	return c.json({ branches });
 });
 
 git.get("/branch", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
-	const branch = await getBranch(
-		token,
-		requireQuery(c, "full_name"),
-		requireQuery(c, "branch"),
-	);
+	const branch = await getBranch(token, fullName, requireQuery(c, "branch"));
 	return c.json(branch);
 });
 
 git.get("/tree", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return unauthorized(c);
 	let ref = c.req.query("ref");
 	if (!ref) {
 		ref = (await getRepo(token, fullName)).defaultBranch;
@@ -145,11 +192,12 @@ git.get("/tree", async (c) => {
 });
 
 git.get("/file", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
 	const file = await getFile(
 		token,
-		requireQuery(c, "full_name"),
+		fullName,
 		requireQuery(c, "path"),
 		c.req.query("ref"),
 	);
@@ -157,11 +205,12 @@ git.get("/file", async (c) => {
 });
 
 git.get("/compare", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
 	const result = await compareCommits(
 		token,
-		requireQuery(c, "full_name"),
+		fullName,
 		requireQuery(c, "base"),
 		requireQuery(c, "head"),
 	);
@@ -178,9 +227,6 @@ type CommitBody = {
 };
 
 git.post("/commit", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
-
 	let body: CommitBody;
 	try {
 		body = await c.req.json<CommitBody>();
@@ -190,6 +236,8 @@ git.post("/commit", async (c) => {
 	if (!body.full_name || !body.branch || !Array.isArray(body.files)) {
 		throw new BackendError(400, "full_name, branch ve files zorunludur.");
 	}
+	const token = await resolveGitToken(c, body.full_name);
+	if (!token) return unauthorized(c);
 
 	const result = await commitFiles(
 		token,
@@ -207,10 +255,11 @@ git.post("/commit", async (c) => {
 });
 
 git.get("/commits", async (c) => {
-	const token = await resolveGitToken(c);
+	const fullName = requireQuery(c, "full_name");
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
 	const perPage = Math.min(Number(c.req.query("per_page") ?? 30) || 30, 100);
-	const commits = await listCommits(token, requireQuery(c, "full_name"), {
+	const commits = await listCommits(token, fullName, {
 		ref: c.req.query("ref"),
 		path: c.req.query("path"),
 		perPage,
@@ -227,14 +276,14 @@ type UploadBody = {
 };
 
 git.post("/upload", async (c) => {
-	const token = await resolveGitToken(c);
-	if (!token) return unauthorized(c);
 	const body = await c.req
 		.json<UploadBody>()
 		.catch(() => ({}) as UploadBody);
 	if (!body.full_name || !body.branch || !body.path || !body.content) {
 		throw new BackendError(400, "full_name, branch, path ve base64 content zorunludur.");
 	}
+	const token = await resolveGitToken(c, body.full_name);
+	if (!token) return unauthorized(c);
 	// ~4 MB decoded tavan (base64 ≈ 4/3 oranında şişer).
 	if (body.content.length > 5_600_000) {
 		throw new BackendError(413, "Dosya çok büyük — en fazla ~4 MB.");
@@ -294,7 +343,7 @@ projects.post("/", body(projectCreateSchema), async (c) => {
 	const payload = c.req.valid("json");
 	const fullName = payload.full_name;
 	// Yetki + varlık doğrulaması: token'ın repoya erişimi yoksa patlar.
-	const token = await resolveGitToken(c);
+	const token = await resolveGitToken(c, fullName);
 	if (!token) return unauthorized(c);
 	const repo = await getRepo(token, fullName);
 	const name = payload.name || repo.fullName.split("/")[1]!;

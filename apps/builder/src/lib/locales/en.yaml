@@ -509,6 +509,20 @@ project:
   reposFailed: Could not load repos.
   createFailed: Could not create the project.
   requestStatus: "Request failed ({status})"
+  app:
+    title: Install the GitHub App
+    body: Install the GitHub App to connect your repos to WuppyCMS. No token to copy — you can revoke access from GitHub at any time.
+    install: Install GitHub App
+    manage: Manage installation
+    connected: "Connected accounts: {accounts}"
+    none: No GitHub App installation yet.
+    badge: App
+    organization: Organization
+    personal: Personal
+    installed: GitHub App connected; your repos are now listed.
+    missing: Installation did not finish — GitHub sent no installation_id.
+    no_db: Database is not connected; the installation could not be saved.
+    state_mismatch: The installation was started in another session; please try again.
 
 build:
   kicker: With AI
@@ -530,6 +544,9 @@ build:
   close: Close
   designTitle: Make it yours
   designSubtitle: Pick a primary color from the design system, then confirm the repository.
+  owner: Create under
+  ownerHint: GitHub App installation
+  ownerOauth: Will be created under your GitHub account
   siteName: Site name
   tagline: Tagline
   repoName: Repository name

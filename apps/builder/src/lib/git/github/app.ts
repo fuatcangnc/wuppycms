@@ -78,7 +78,17 @@ export async function getInstallation(
 export async function listInstallationRepos(
 	env: AppEnv,
 	installationId: string,
-): Promise<{ fullName: string; name: string; private: boolean; defaultBranch: string }[]> {
+): Promise<
+	{
+		fullName: string;
+		name: string;
+		private: boolean;
+		defaultBranch: string;
+		description: string | null;
+		pushedAt: string;
+		htmlUrl: string;
+	}[]
+> {
 	const token = await getInstallationToken(env, installationId);
 	const data = await gh<{
 		repositories: Array<{
@@ -86,6 +96,9 @@ export async function listInstallationRepos(
 			name: string;
 			private: boolean;
 			default_branch: string;
+			description: string | null;
+			pushed_at: string;
+			html_url: string;
 		}>;
 	}>(token, "/installation/repositories?per_page=100");
 	return data.repositories.map((repo) => ({
@@ -93,6 +106,9 @@ export async function listInstallationRepos(
 		name: repo.name,
 		private: repo.private,
 		defaultBranch: repo.default_branch,
+		description: repo.description,
+		pushedAt: repo.pushed_at,
+		htmlUrl: repo.html_url,
 	}));
 }
 
@@ -118,4 +134,67 @@ function b64urlHex(input: ArrayBuffer): string {
 	return Array.from(new Uint8Array(input))
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("");
+}
+
+/** Kurulum akışı state'i — kullanıcı kimliğini imzalı olarak taşır. */
+export async function createInstallState(
+	env: AppEnv,
+	userId: string,
+): Promise<string | null> {
+	if (!env.BETTER_AUTH_SECRET) return null;
+	const payload = b64url(JSON.stringify({ uid: userId, ts: Date.now() }));
+	const key = await crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(env.BETTER_AUTH_SECRET),
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["sign"],
+	);
+	const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+	return `${payload}.${b64url(mac)}`;
+}
+
+/** State'i doğrular ve kullanıcı kimliğini döndürür (30 dk geçerlilik). */
+export async function verifyInstallState(
+	env: AppEnv,
+	state: string | undefined,
+): Promise<string | null> {
+	if (!state || !env.BETTER_AUTH_SECRET) return null;
+	const [payload, signature] = state.split(".");
+	if (!payload || !signature) return null;
+	const key = await crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(env.BETTER_AUTH_SECRET),
+		{ name: "HMAC", hash: "SHA-256" },
+		false,
+		["verify"],
+	);
+	const mac = b64urlToBytes(signature);
+	const valid = await crypto.subtle.verify(
+		"HMAC",
+		key,
+		mac,
+		new TextEncoder().encode(payload),
+	);
+	if (!valid) return null;
+	try {
+		const data = JSON.parse(new TextDecoder().decode(b64urlToBytes(payload))) as {
+			uid?: string;
+			ts?: number;
+		};
+		if (!data.uid || !data.ts) return null;
+		if (Date.now() - data.ts > 30 * 60_000) return null;
+		return data.uid;
+	} catch {
+		return null;
+	}
+}
+
+function b64urlToBytes(value: string): Uint8Array<ArrayBuffer> {
+	const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+	const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+	const binary = atob(padded);
+	const bytes = new Uint8Array(new ArrayBuffer(binary.length));
+	for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+	return bytes;
 }
