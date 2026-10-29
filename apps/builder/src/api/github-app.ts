@@ -14,6 +14,8 @@ import {
 } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
 import { platform, requireUser } from "./helpers";
+import { findGitHubToken } from "../lib/auth";
+import { claimInstallations } from "../lib/git/github/installations";
 
 export const githubApp = new Hono<{ Bindings: AppEnv }>();
 
@@ -99,6 +101,11 @@ githubApp.get("/status", async (c) => {
 	};
 	const db = platform(c).db;
 	if (!db) return c.json({ app, installations: [] });
+	// Setup URL atlanmış olsa bile webhook'tan gelen kurulumu sahiplen.
+	const oauth = await findGitHubToken(db, user.id);
+	if (oauth) {
+		await claimInstallations(db, user.id, oauth).catch(() => 0);
+	}
 	const rows = await db
 		.prepare(
 			`SELECT installation_id, account_login, account_type, repository_selection, created_at
@@ -166,6 +173,27 @@ githubApp.post("/webhook", async (c) => {
 				.bind(installationId)
 				.run();
 		} else if (event === "installation" && payload.action === "created") {
+			const nowIso = new Date().toISOString();
+			// Kurulum setup dönüşünden önce gelebilir: sahipsiz (user_id = '')
+			// kaydet; kullanıcı Projects'i açınca OAuth erişimiyle sahiplenilir.
+			await db
+				.prepare(
+					`INSERT INTO github_installations
+						(id, user_id, installation_id, account_login, account_type, repository_selection, created_at, updated_at)
+					 SELECT ?, '', ?, ?, ?, ?, ?, ?
+					 WHERE NOT EXISTS (SELECT 1 FROM github_installations WHERE installation_id = ?)`,
+				)
+				.bind(
+					crypto.randomUUID(),
+					installationId,
+					installation.account?.login ?? null,
+					installation.account?.type ?? null,
+					installation.repository_selection ?? null,
+					nowIso,
+					nowIso,
+					installationId,
+				)
+				.run();
 			await db
 				.prepare(
 					`UPDATE github_installations
@@ -176,7 +204,7 @@ githubApp.post("/webhook", async (c) => {
 					installation.account?.login ?? null,
 					installation.account?.type ?? null,
 					installation.repository_selection ?? null,
-					new Date().toISOString(),
+					nowIso,
 					installationId,
 				)
 				.run();

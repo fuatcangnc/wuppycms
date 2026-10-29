@@ -19,6 +19,24 @@ tasarım dili ve değiştirilemez kurallar) şurada yaşar:
 | `DESIGN_SYSTEM.md` | Global tasarım sözleşmesi (admin + site); token kaynakları `global.css` |
 | `apps/site-template/DESIGN_SYSTEM.md` | Müşteri sitesi tasarım sistemi (token'lar, Bejamas, Tailwind 4) |
 
+## GitHub App
+
+Repo erişimi GitHub App installation token'larıyla yapılır (ADR 0019); müşteri
+token kopyalamaz. App'in GitHub tarafındaki ayarları (bir kez):
+
+- **Setup URL:** `https://app.wuppycms.com/api/github/app/setup`
+- **Webhook URL:** `https://app.wuppycms.com/api/github/app/webhook`
+  (`GITHUB_APP_WEBHOOK_SECRET` ile aynı secret)
+- **İzinler:** Contents (RW), Administration (RW — repo oluşturma/silme),
+  Pages (RW — otomatik yayın), Pull requests (RW), Metadata (R),
+  Actions/Workflows (RW — üretilen sitenin CI'ı)
+- **Env:** `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY_B64` (PEM'in ya da DER'in
+  base64'ü), `GITHUB_APP_SLUG`, `GITHUB_APP_WEBHOOK_SECRET`
+
+Kurulum dönüşünde `/api/github/app/setup` installation'ı oturumdaki kullanıcıya
+bağlar; `installation` silme webhook'u kaydı temizler. Yerelde GitHub App
+yerine `GITHUB_TOKEN` kullanılabilir (E2E bu yolu kullanır).
+
 ## Komutlar
 
 ```bash

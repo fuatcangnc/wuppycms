@@ -158,6 +158,7 @@ export async function startMockEnv({
 			`GITHUB_APP_ID="1"`,
 			`GITHUB_APP_PRIVATE_KEY_B64="${Buffer.from("e2e-placeholder").toString("base64")}"`,
 			`GITHUB_APP_SLUG="wuppycms"`,
+			`GITHUB_APP_WEBHOOK_SECRET="e2e-webhook-secret"`,
 		);
 	}
 	writeFileSync(devVarsPath, lines.join("\n"));

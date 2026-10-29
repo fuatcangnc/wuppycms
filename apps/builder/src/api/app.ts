@@ -4,7 +4,7 @@
 
 import { Hono } from "hono";
 import type { CommitAuthor, CommitFile, RepoSummary } from "@wuppycms/shared";
-import { createAuth } from "../lib/auth";
+import { createAuth, findGitHubToken } from "../lib/auth";
 import {
 	BackendError,
 	commitFiles,
@@ -19,7 +19,7 @@ import {
 	setGitHubApiBase,
 } from "../lib/git";
 import { listInstallationRepos } from "../lib/git/github/app";
-import { listInstallations } from "../lib/git/github/installations";
+import { claimInstallations, listInstallations } from "../lib/git/github/installations";
 import type { AppEnv } from "./types";
 import {
 	platform,
@@ -81,6 +81,11 @@ git.get("/repos", async (c) => {
 	const db = platform(c).db;
 	const byFullName = new Map<string, RepoSummary>();
 
+	if (user && db) {
+		const oauth = await findGitHubToken(db, user.id);
+		if (oauth) await claimInstallations(db, user.id, oauth).catch(() => 0);
+	}
+
 	if (user && db && c.env.GITHUB_APP_ID && c.env.GITHUB_APP_PRIVATE_KEY_B64) {
 		for (const installation of await listInstallations(db, user.id)) {
 			try {
@@ -89,9 +94,9 @@ git.get("/repos", async (c) => {
 						fullName: repo.fullName,
 						private: repo.private,
 						defaultBranch: repo.defaultBranch,
-						htmlUrl: `https://github.com/${repo.fullName}`,
-						description: null,
-						pushedAt: "",
+						htmlUrl: repo.htmlUrl,
+						description: repo.description,
+						pushedAt: repo.pushedAt,
 						source: "app" as const,
 					});
 				}

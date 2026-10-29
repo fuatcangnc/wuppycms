@@ -5,6 +5,7 @@
 // `app.ts` içinde bellek içi cache'lenir.
 
 import type { SqlDatabase } from "../../platform";
+import { gh } from "./api";
 
 export type GithubInstallation = {
 	installationId: string;
@@ -68,4 +69,43 @@ export async function installationForOwner(
 		.bind(userId, login)
 		.first<Row>();
 	return row ? toInstallation(row) : null;
+}
+
+/**
+ * Webhook ile gelen "sahipsiz" kurulumları, kullanıcının OAuth token'ıyla
+ * erişebildiği installation'larla eşleştirir. Setup URL yapılandırılmamış
+ * olsa bile kurulum Projects ekranında görünür.
+ *
+ * Yalnız sahipsiz kayıt varsa GitHub'a gider (her istekte ek çağrı yok).
+ */
+export async function claimInstallations(
+	db: SqlDatabase,
+	userId: string,
+	oauthToken: string,
+): Promise<number> {
+	const pending = await db
+		.prepare(
+			`SELECT installation_id FROM github_installations WHERE user_id = '' LIMIT 20`,
+		)
+		.all<{ installation_id: string }>();
+	if (!(pending.results?.length)) return 0;
+
+	const data = await gh<{ installations: Array<{ id: number }> }>(
+		oauthToken,
+		"/user/installations?per_page=100",
+	);
+	const accessible = new Set((data.installations ?? []).map((entry) => String(entry.id)));
+	let claimed = 0;
+	for (const row of pending.results ?? []) {
+		if (!accessible.has(row.installation_id)) continue;
+		await db
+			.prepare(
+				`UPDATE github_installations SET user_id = ?, updated_at = ?
+				 WHERE installation_id = ? AND user_id = ''`,
+			)
+			.bind(userId, new Date().toISOString(), row.installation_id)
+			.run();
+		claimed += 1;
+	}
+	return claimed;
 }

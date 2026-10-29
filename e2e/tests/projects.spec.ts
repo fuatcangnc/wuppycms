@@ -1,7 +1,14 @@
 // Projects ekranı + GitHub App durumu — kurulum yokken "App'i kur" kartı,
 // mock reponun listelenmesi ve durum API'sinin sözleşmesi.
 
+import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
+
+const WEBHOOK_SECRET = "e2e-webhook-secret";
+
+function sign(body: string): string {
+	return `sha256=${createHmac("sha256", WEBHOOK_SECRET).update(body).digest("hex")}`;
+}
 
 test.describe("projects / GitHub App", () => {
 	test("kurulum yokken App kartını gösterir ve repoyu listeler", async ({ page }) => {
@@ -35,5 +42,39 @@ test.describe("projects / GitHub App", () => {
 		const location = res.headers()["location"] ?? "";
 		expect(location).toContain("https://github.com/apps/wuppycms/installations/new");
 		expect(location).toContain("state=");
+	});
+});
+
+test.describe("github app webhook", () => {
+	test("geçerli imzayı kabul eder, bozuk imzayı reddeder", async ({ page }) => {
+		const body = JSON.stringify({
+			action: "created",
+			installation: {
+				id: 999_001,
+				account: { login: "e2e-probe", type: "User" },
+				repository_selection: "selected",
+			},
+		});
+
+		const bad = await page.request.post("/api/github/app/webhook", {
+			headers: {
+				"content-type": "application/json",
+				"x-github-event": "installation",
+				"x-hub-signature-256": "sha256=deadbeef",
+			},
+			data: body,
+		});
+		expect(bad.status()).toBe(401);
+
+		const good = await page.request.post("/api/github/app/webhook", {
+			headers: {
+				"content-type": "application/json",
+				"x-github-event": "installation",
+				"x-hub-signature-256": sign(body),
+			},
+			data: body,
+		});
+		expect(good.ok()).toBeTruthy();
+		await expect(good.json()).resolves.toMatchObject({ ok: true });
 	});
 });
