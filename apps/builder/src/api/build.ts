@@ -240,7 +240,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	}
 
 	// Tasarım sistemi primary rengi.
-	const cssFile = await readTemplateFile(token, repo.fullName, "src/styles/global.css", branch);
+	const cssFile = await readTemplateFile(token, repo.fullName, template.stylesPath, branch);
 	let css = cssFile.content;
 	css = css.replace(/--primary:\s*#[0-9a-f]{6};/i, `--primary: ${color};`);
 	css = css.replace(/--primary-dark:\s*#[0-9a-f]{6};/i, `--primary-dark: ${darken(color)};`);

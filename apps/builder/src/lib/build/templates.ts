@@ -11,6 +11,8 @@ export type SiteTemplate = {
 	description: string;
 	repo: string;
 	preview: string;
+	/** Tasarım tokenlarının (renk) yazılacağı stil dosyası. */
+	stylesPath: string;
 	/** Şablonun öne çıkan özellikleri (kart üzerinde kısa etiketler). */
 	tags: string[];
 };
@@ -24,6 +26,7 @@ export function listSiteTemplates(env: AppEnv): SiteTemplate[] {
 				"Mühendislik ve araç projeleri için güçlü, kurumsal tasarım. Hizmet kartları, süreç şeması, blog ve teklif formu hazır.",
 			repo: env.SITE_TEMPLATE_KARAKAS_REPO || "fuatcangnc/wuppycms-karakas-starter",
 			preview: "/templates/karakas.webp",
+			stylesPath: "src/styles/globals.css",
 			tags: ["Kurumsal", "Hizmetler", "Blog", "Teklif formu"],
 		},
 		{
@@ -33,6 +36,7 @@ export function listSiteTemplates(env: AppEnv): SiteTemplate[] {
 				"Sade, endüstriyel ve içerik odaklı başlangıç. Hızlı kurulum için temel sayfalar ve koleksiyonlar.",
 			repo: env.SITE_TEMPLATE_REPO || "fuatcangnc/wuppycms-tailwind-starter",
 			preview: "/templates/starter.webp",
+			stylesPath: "src/styles/global.css",
 			tags: ["Minimal", "İçerik", "Hızlı"],
 		},
 	];
