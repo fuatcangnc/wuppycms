@@ -23,7 +23,8 @@ import type {
 	AgentEvent,
 } from "./protocol";
 
-const MAX_STEPS = 24;
+// Büyük şablonlarda (çok sayfalı siteler) tek koşuda bitmesi için geniş tutuldu.
+const MAX_STEPS = 64;
 const TOOL_RESULT_LIMIT = 8_000;
 /** Yazma yapan araçlar — kısa düzenlemelerde okuma turunu kesmek için. */
 const WRITE_TOOLS = new Set([

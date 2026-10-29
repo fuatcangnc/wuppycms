@@ -20,6 +20,12 @@ export function rewriteHtml(html: string, prefix: string): string {
 		/\b(href|src|action|poster)=(["'])\/(?!\/)/gi,
 		(_match, attr: string, quote: string) => `${attr}=${quote}${prefix}/`,
 	);
+	// Inline modül import'ları (`import('/scripts/...')`) mutlak yol kullanır;
+	// bunlar da öneklenmezse tema animasyonları çalışmaz ve sayfa boş kalır.
+	out = out.replace(
+		/\bimport\s*\(\s*(["'])\/(?!\/)/g,
+		(_match, quote: string) => `import(${quote}${prefix}/`,
+	);
 	// srcset: virgülle ayrılmış adaylar
 	out = out.replace(/\bsrcset=(["'])(.*?)\1/gis, (match, quote: string, value: string) => {
 		const rewritten = value

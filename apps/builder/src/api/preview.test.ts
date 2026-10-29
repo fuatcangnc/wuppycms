@@ -22,6 +22,11 @@ describe("rewriteHtml", () => {
 		expect(out).toContain('href="https://x.test/a"');
 	});
 
+	it("inline modül import yollarını önekler", () => {
+		const out = rewriteHtml('<script>import("/scripts/motion-init.js")</script>', P);
+		expect(out).toContain(`import("${P}/scripts/motion-init.js")`);
+	});
+
 	it("srcset adaylarını önekler", () => {
 		const out = rewriteHtml('<img srcset="/a.png 1x, /b.png 2x">', P);
 		expect(out).toContain(`srcset="${P}/a.png 1x, ${P}/b.png 2x"`);

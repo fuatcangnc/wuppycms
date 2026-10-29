@@ -21,6 +21,7 @@ export const MODEL_CATALOG: Record<
 		{ id: "gpt-4.1-mini", label: "GPT-4.1 mini" },
 		{ id: "gpt-4.1", label: "GPT-4.1" },
 		{ id: "deepseek-v4.1-flash", label: "DeepSeek V4.1 Flash" },
+		{ id: "qwen3.8-flash-next", label: "Qwen 3.8 Flash Next" },
 	],
 	gemini: [
 		{ id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
