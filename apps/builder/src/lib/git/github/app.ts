@@ -80,6 +80,24 @@ export async function getInstallationToken(env: AppEnv, installationId: string):
 	return data.token;
 }
 
+/**
+ * App'in tüm kurulumları (App JWT'si ile). OAuth uygulama token'ı
+ * `/user/installations` yetkisine sahip olmadığında kullanıcının kendi
+ * kurulumunu bulmak için kullanılır.
+ */
+export async function listAppInstallations(
+	env: AppEnv,
+): Promise<
+	Array<{
+		id: number;
+		account: { login: string; type: string };
+		repository_selection: string;
+	}>
+> {
+	const jwt = await appJwt(env);
+	return gh(jwt, "/app/installations?per_page=100");
+}
+
 export async function getInstallation(
 	env: AppEnv,
 	installationId: string,

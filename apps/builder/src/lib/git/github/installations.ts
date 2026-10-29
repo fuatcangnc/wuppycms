@@ -6,7 +6,8 @@
 
 import type { SqlDatabase } from "../../platform";
 import type { AppEnv } from "../../../api/types";
-import { getInstallation } from "./app";
+import { getInstallation, listAppInstallations } from "./app";
+import { BackendError } from "../backend";
 import { gh } from "./api";
 
 export type GithubInstallation = {
@@ -86,15 +87,48 @@ export async function claimInstallations(
 	userId: string,
 	oauthToken: string,
 ): Promise<number> {
-	const data = await gh<{ installations: Array<{ id: number }> }>(
-		oauthToken,
-		"/user/installations?per_page=100",
-	);
-	const accessible = (data.installations ?? []).map((entry) => String(entry.id));
-	if (accessible.length === 0) return 0;
+	type Claimable = {
+		id: string;
+		accountLogin: string | null;
+		accountType: string | null;
+		selection: string | null;
+	};
+	let claimables: Claimable[] = [];
+	try {
+		const data = await gh<{ installations: Array<{ id: number }> }>(
+			oauthToken,
+			"/user/installations?per_page=100",
+		);
+		claimables = (data.installations ?? []).map((entry) => ({
+			id: String(entry.id),
+			accountLogin: null,
+			accountType: null,
+			selection: null,
+		}));
+	} catch (error) {
+		// OAuth App token'ı `/user/installations` yetkisine sahip değildir
+		// (GitHub App user token gerekir). App JWT'siyle tüm kurulumları çekip
+		// kullanıcının login'iyle eşleştir.
+		if (!(error instanceof BackendError) || error.status !== 403) throw error;
+		const viewer = await gh<{ login: string }>(oauthToken, "/user");
+		const installations = await listAppInstallations(env);
+		claimables = installations
+			.filter(
+				(entry) =>
+					entry.account.login.toLowerCase() === viewer.login.toLowerCase(),
+			)
+			.map((entry) => ({
+				id: String(entry.id),
+				accountLogin: entry.account.login,
+				accountType: entry.account.type,
+				selection: entry.repository_selection,
+			}));
+	}
+	if (claimables.length === 0) return 0;
 
 	let claimed = 0;
-	for (const installationId of accessible) {
+	for (const claimable of claimables) {
+		const installationId = claimable.id;
 		// Aynı kurulum başka bir WuppyCMS kullanıcısında kayıtlıysa meta veriyi
 		// oradan kopyala; hiç kayıt yoksa App JWT'siyle kurulumu çek.
 		const source = await db
@@ -109,9 +143,9 @@ export async function claimInstallations(
 				repository_selection: string | null;
 			}>();
 
-		let accountLogin = source?.account_login ?? null;
-		let accountType = source?.account_type ?? null;
-		let selection = source?.repository_selection ?? null;
+		let accountLogin = claimable.accountLogin ?? source?.account_login ?? null;
+		let accountType = claimable.accountType ?? source?.account_type ?? null;
+		let selection = claimable.selection ?? source?.repository_selection ?? null;
 		if (!source) {
 			try {
 				const installation = await getInstallation(env, installationId);
