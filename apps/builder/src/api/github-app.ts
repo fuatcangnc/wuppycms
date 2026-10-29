@@ -104,7 +104,7 @@ githubApp.get("/status", async (c) => {
 	// Setup URL atlanmış olsa bile webhook'tan gelen kurulumu sahiplen.
 	const oauth = await findGitHubToken(db, user.id);
 	if (oauth) {
-		await claimInstallations(db, user.id, oauth).catch(() => 0);
+		await claimInstallations(c.env, db, user.id, oauth).catch(() => 0);
 	}
 	const rows = await db
 		.prepare(

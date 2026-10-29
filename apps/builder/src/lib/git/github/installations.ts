@@ -5,6 +5,8 @@
 // `app.ts` içinde bellek içi cache'lenir.
 
 import type { SqlDatabase } from "../../platform";
+import type { AppEnv } from "../../../api/types";
+import { getInstallation } from "./app";
 import { gh } from "./api";
 
 export type GithubInstallation = {
@@ -79,31 +81,70 @@ export async function installationForOwner(
  * Yalnız sahipsiz kayıt varsa GitHub'a gider (her istekte ek çağrı yok).
  */
 export async function claimInstallations(
+	env: AppEnv,
 	db: SqlDatabase,
 	userId: string,
 	oauthToken: string,
 ): Promise<number> {
-	const pending = await db
-		.prepare(
-			`SELECT installation_id FROM github_installations WHERE user_id = '' LIMIT 20`,
-		)
-		.all<{ installation_id: string }>();
-	if (!(pending.results?.length)) return 0;
-
 	const data = await gh<{ installations: Array<{ id: number }> }>(
 		oauthToken,
 		"/user/installations?per_page=100",
 	);
-	const accessible = new Set((data.installations ?? []).map((entry) => String(entry.id)));
+	const accessible = (data.installations ?? []).map((entry) => String(entry.id));
+	if (accessible.length === 0) return 0;
+
 	let claimed = 0;
-	for (const row of pending.results ?? []) {
-		if (!accessible.has(row.installation_id)) continue;
+	for (const installationId of accessible) {
+		// Aynı kurulum başka bir WuppyCMS kullanıcısında kayıtlıysa meta veriyi
+		// oradan kopyala; hiç kayıt yoksa App JWT'siyle kurulumu çek.
+		const source = await db
+			.prepare(
+				`SELECT account_login, account_type, repository_selection
+				 FROM github_installations WHERE installation_id = ? LIMIT 1`,
+			)
+			.bind(installationId)
+			.first<{
+				account_login: string | null;
+				account_type: string | null;
+				repository_selection: string | null;
+			}>();
+
+		let accountLogin = source?.account_login ?? null;
+		let accountType = source?.account_type ?? null;
+		let selection = source?.repository_selection ?? null;
+		if (!source) {
+			try {
+				const installation = await getInstallation(env, installationId);
+				accountLogin = installation.account.login;
+				accountType = installation.account.type;
+				selection = installation.repository_selection;
+			} catch {
+				// private key yoksa kurulum meta verisi olmadan bağlanır
+			}
+		}
+
+		const now = new Date().toISOString();
 		await db
 			.prepare(
-				`UPDATE github_installations SET user_id = ?, updated_at = ?
-				 WHERE installation_id = ? AND user_id = ''`,
+				`INSERT INTO github_installations
+					(id, user_id, installation_id, account_login, account_type, repository_selection, created_at, updated_at)
+				 SELECT ?, ?, ?, ?, ?, ?, ?, ?
+				 WHERE NOT EXISTS (
+					SELECT 1 FROM github_installations WHERE user_id = ? AND installation_id = ?
+				 )`,
 			)
-			.bind(userId, new Date().toISOString(), row.installation_id)
+			.bind(
+				crypto.randomUUID(),
+				userId,
+				installationId,
+				accountLogin,
+				accountType,
+				selection,
+				now,
+				now,
+				userId,
+				installationId,
+			)
 			.run();
 		claimed += 1;
 	}

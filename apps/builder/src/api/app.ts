@@ -83,7 +83,7 @@ git.get("/repos", async (c) => {
 
 	if (user && db) {
 		const oauth = await findGitHubToken(db, user.id);
-		if (oauth) await claimInstallations(db, user.id, oauth).catch(() => 0);
+		if (oauth) await claimInstallations(c.env, db, user.id, oauth).catch(() => 0);
 	}
 
 	if (user && db && c.env.GITHUB_APP_ID && c.env.GITHUB_APP_PRIVATE_KEY_B64) {
