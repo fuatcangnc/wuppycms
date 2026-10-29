@@ -90,7 +90,9 @@ export async function resolveGitAuth(
 		}
 	}
 
-	if (c.env.GITHUB_TOKEN) return { token: c.env.GITHUB_TOKEN, kind: "env" };
+	if (isDevGitTokenAllowed(c.env) && c.env.GITHUB_TOKEN) {
+		return { token: c.env.GITHUB_TOKEN, kind: "env" };
+	}
 	if (!db || !session) return null;
 	const token = await findGitHubToken(db, session.user.id);
 	return token ? { token, kind: "oauth" } : null;
@@ -116,6 +118,21 @@ export async function resolveOAuthToken(c: ApiContext): Promise<string | null> {
 	const session = await createAuth(c.env).api.getSession({ headers: c.req.raw.headers });
 	if (!session) return null;
 	return findGitHubToken(db, session.user.id);
+}
+
+/**
+ * `GITHUB_TOKEN` yalnız yerel geliştirme/E2E için bir kaçış kapısıdır.
+ * Üretimde bu token sunucu sahibinin tüm repolarına erişebildiği için
+ * müşteri hesaplarına yetki sızdırır; uzak base URL'de kullanılmaz.
+ */
+export function isDevGitTokenAllowed(env: AppEnv): boolean {
+	if (!env.GITHUB_TOKEN) return false;
+	try {
+		const host = new URL(env.BETTER_AUTH_URL ?? "http://localhost:4321").hostname;
+		return host === "localhost" || host === "127.0.0.1" || host.endsWith(".localhost");
+	} catch {
+		return false;
+	}
 }
 
 export function unauthorized(c: ApiContext): Response {

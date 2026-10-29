@@ -10,7 +10,7 @@ import { parseFrontmatterScalars } from "../lib/content/entry";
 import { commitFiles, getFile, getRepo, listTree } from "../lib/git";
 import { pickDueDocs, publishMessage } from "../lib/schedule";
 import type { AppEnv } from "./types";
-import { platform, requireUser, resolveGitToken, unauthorized } from "./helpers";
+import { isDevGitTokenAllowed, platform, requireUser, resolveGitToken, unauthorized } from "./helpers";
 import { platformFromBindings } from "../lib/platform";
 import { getInstallationToken } from "../lib/git/github/app";
 import { installationForOwner, listInstallations } from "../lib/git/github/installations";
@@ -131,7 +131,7 @@ export async function runScheduled(env: AppEnv): Promise<ScheduleRunResult[]> {
 
 	const runs: ScheduleRunResult[] = [];
 	for (const row of results ?? []) {
-		let token = env.GITHUB_TOKEN;
+		let token = isDevGitTokenAllowed(env) ? env.GITHUB_TOKEN : undefined;
 		if (!token) token = await installationTokenForRepo(env, db, row.user_id, row.repo_full_name);
 		if (!token) {
 			const { findGitHubToken } = await import("../lib/auth");
