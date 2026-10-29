@@ -1,6 +1,6 @@
 # 0020 — Üretilen sitelerin yayını: GitHub Pages
 
-Durum: Kabul edildi (2026-10-29)
+Durum: Superseded by 0021 (GitHub Actions billing kilidi)
 
 ## Bağlam
 

@@ -29,8 +29,8 @@ token kopyalamaz. App'in GitHub tarafındaki ayarları (bir kez):
   (`GITHUB_APP_WEBHOOK_SECRET` ile aynı secret)
 - **İzinler:** Contents (RW), Administration (RW — repo oluşturma/silme),
   Pull requests (RW), Metadata (R), Actions/Workflows (RW — üretilen sitenin
-  CI'ı). Pages (RW) opsiyoneldir: yoksa public repolarda Pages’i şablonun
-  `deploy.yml` workflow’u açar (ADR 0020)
+  CI'ı). Pages (RW) gerekmez: üretilen siteler Cloudflare Pages'te yayınlanır
+  (ADR 0021); `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` gerekir
 - **Env:** `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY_B64` (PEM'in ya da DER'in
   base64'ü), `GITHUB_APP_SLUG`, `GITHUB_APP_WEBHOOK_SECRET`
 
