@@ -145,7 +145,16 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	const pagesUrl = isUserSite
 		? `https://${owner}.github.io/`
 		: `https://${owner}.github.io/${repoName}/`;
-	const pagesEnabled = await enablePages(token, repo.fullName);
+	// Pages izni App'te yoksa sunucu token'ıyla dene (varsa); ikisi de
+	// başarısızsa site URL'i yazılmaz, repo yine kullanılabilir kalır.
+	let pagesEnabled = false;
+	for (const candidateToken of [token, c.env.GITHUB_TOKEN]) {
+		if (!candidateToken) continue;
+		if (await enablePages(candidateToken, repo.fullName)) {
+			pagesEnabled = true;
+			break;
+		}
+	}
 
 	// site.ts — marka/tagline/description/iletişim/GitHub bağlantısı.
 	const siteFile = await readTemplateFile(token, repo.fullName, "src/data/site.ts", branch);
