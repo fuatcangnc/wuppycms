@@ -9,6 +9,8 @@
 // token isolate belleğinde süresi dolana kadar cache'lenir.
 
 import type { AppEnv } from "../../api/types";
+import { decryptToken, encryptToken } from "../crypto";
+import type { SqlDatabase } from "../platform";
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
 const OAUTH_TOKEN_URL = "https://dash.cloudflare.com/oauth2/token";
@@ -33,6 +35,36 @@ export class PagesError extends Error {
 }
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
+const REFRESH_SETTING = "cloudflare_refresh_token";
+
+/** Rotasyona uğrayan refresh token'ı şifreli olarak D1'de tutar. */
+async function readStoredRefreshToken(
+	env: AppEnv,
+	db?: SqlDatabase,
+): Promise<string | null> {
+	if (!db) return null;
+	const row = await db
+		.prepare("SELECT value_encrypted FROM app_settings WHERE key = ?")
+		.bind(REFRESH_SETTING)
+		.first<{ value_encrypted: string }>();
+	return row ? decryptToken(row.value_encrypted, env.TOKEN_ENCRYPTION_KEY) : null;
+}
+
+async function storeRefreshToken(
+	env: AppEnv,
+	db: SqlDatabase | undefined,
+	refreshToken: string | undefined,
+): Promise<void> {
+	if (!db || !refreshToken) return;
+	const encrypted = await encryptToken(refreshToken, env.TOKEN_ENCRYPTION_KEY);
+	await db
+		.prepare(
+			`INSERT INTO app_settings (key, value_encrypted, updated_at) VALUES (?, ?, ?)
+			 ON CONFLICT(key) DO UPDATE SET value_encrypted = excluded.value_encrypted, updated_at = excluded.updated_at`,
+		)
+		.bind(REFRESH_SETTING, encrypted, new Date().toISOString())
+		.run();
+}
 
 /** Pages için gereken env değerleri var mı? */
 export function pagesConfigured(env: AppEnv): boolean {
@@ -42,14 +74,16 @@ export function pagesConfigured(env: AppEnv): boolean {
 	);
 }
 
-async function accessToken(env: AppEnv): Promise<string | null> {
+async function accessToken(env: AppEnv, db?: SqlDatabase): Promise<string | null> {
 	if (env.CLOUDFLARE_API_TOKEN) return env.CLOUDFLARE_API_TOKEN;
-	if (!env.CLOUDFLARE_OAUTH_REFRESH_TOKEN) return null;
+	const refreshToken =
+		(await readStoredRefreshToken(env, db)) ?? env.CLOUDFLARE_OAUTH_REFRESH_TOKEN;
+	if (!refreshToken) return null;
 	if (tokenCache && tokenCache.expiresAt - 60_000 > Date.now()) return tokenCache.token;
 
 	const body = new URLSearchParams({
 		grant_type: "refresh_token",
-		refresh_token: env.CLOUDFLARE_OAUTH_REFRESH_TOKEN,
+		refresh_token: refreshToken,
 		client_id: env.CLOUDFLARE_OAUTH_CLIENT_ID || DEFAULT_OAUTH_CLIENT_ID,
 	});
 	const res = await fetch(OAUTH_TOKEN_URL, {
@@ -60,10 +94,13 @@ async function accessToken(env: AppEnv): Promise<string | null> {
 	const data = (await res.json().catch(() => ({}))) as {
 		access_token?: string;
 		expires_in?: number;
+		refresh_token?: string;
 	};
 	if (!res.ok || !data.access_token) {
 		throw new PagesError(res.status, "Cloudflare OAuth token yenilenemedi.");
 	}
+	// Cloudflare refresh token'ı her yenilemede değiştirir; yenisi D1'e yazılır.
+	await storeRefreshToken(env, db, data.refresh_token).catch(() => undefined);
 	tokenCache = {
 		token: data.access_token,
 		expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
@@ -71,8 +108,13 @@ async function accessToken(env: AppEnv): Promise<string | null> {
 	return data.access_token;
 }
 
-async function cf<T>(env: AppEnv, path: string, init?: RequestInit): Promise<T> {
-	const token = await accessToken(env);
+async function cf<T>(
+	env: AppEnv,
+	db: SqlDatabase | undefined,
+	path: string,
+	init?: RequestInit,
+): Promise<T> {
+	const token = await accessToken(env, db);
 	if (!token) throw new PagesError(401, "Cloudflare Pages yapılandırılmadı.");
 	const res = await fetch(`${API_BASE}${path}`, {
 		...init,
@@ -125,6 +167,7 @@ type Project = { name: string; subdomain: string };
  */
 export async function ensurePagesProject(
 	env: AppEnv,
+	db: SqlDatabase | undefined,
 	input: { repoFullName: string; branch: string },
 ): Promise<PagesTarget> {
 	if (!env.CLOUDFLARE_ACCOUNT_ID) {
@@ -135,6 +178,7 @@ export async function ensurePagesProject(
 
 	const existing = await cf<Project | null>(
 		env,
+		db,
 		`/accounts/${account}/pages/projects/${name}`,
 	).catch((error) => {
 		if (error instanceof PagesError && error.status === 404) return null;
@@ -170,7 +214,7 @@ export async function ensurePagesProject(
 		},
 	};
 
-	const created = await cf<Project>(env, `/accounts/${account}/pages/projects`, {
+	const created = await cf<Project>(env, db, `/accounts/${account}/pages/projects`, {
 		method: "POST",
 		body: JSON.stringify(payload),
 	});
@@ -180,15 +224,21 @@ export async function ensurePagesProject(
 /** Bağlı Git projesinde yeni bir build başlatır (commit sonrası). */
 export async function triggerPagesDeployment(
 	env: AppEnv,
+	db: SqlDatabase | undefined,
 	projectName: string,
 	branch: string,
 ): Promise<boolean> {
 	if (!env.CLOUDFLARE_ACCOUNT_ID) return false;
 	try {
-		await cf(env, `/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments`, {
+		await cf(
+			env,
+			db,
+			`/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments`,
+			{
 			method: "POST",
-			body: JSON.stringify({ branch }),
-		});
+					body: JSON.stringify({ branch }),
+			},
+		);
 		return true;
 	} catch (error) {
 		// Aynı commit için zaten kuyrukta bir build varsa 409 dönebilir.
@@ -207,6 +257,7 @@ export type PagesDeployment = {
 /** Tanı/CLI için son deployment durumu. */
 export async function latestPagesDeployment(
 	env: AppEnv,
+	db: SqlDatabase | undefined,
 	projectName: string,
 ): Promise<PagesDeployment | null> {
 	if (!env.CLOUDFLARE_ACCOUNT_ID) return null;
@@ -218,6 +269,7 @@ export async function latestPagesDeployment(
 		}>
 	>(
 		env,
+		db,
 		`/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments?per_page=1`,
 	);
 	const row = rows?.[0];

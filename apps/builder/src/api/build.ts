@@ -148,7 +148,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	let pagesTarget: Awaited<ReturnType<typeof ensurePagesProject>> | null = null;
 	if (pagesConfigured(c.env)) {
 		try {
-			pagesTarget = await ensurePagesProject(c.env, {
+			pagesTarget = await ensurePagesProject(c.env, db, {
 				repoFullName: repo.fullName,
 				branch,
 			});
@@ -226,7 +226,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	// Cloudflare bağlı depoyu kendi build runner'ında derler; tetikleme
 	// başarısız olsa da push webhook'u bir sonraki fırsatta derler.
 	if (pagesTarget) {
-		await triggerPagesDeployment(c.env, pagesTarget.projectName, branch);
+		await triggerPagesDeployment(c.env, db, pagesTarget.projectName, branch);
 	}
 
 	const existing = await db
