@@ -1,7 +1,13 @@
 /** Canvas üst çubukları: sekmeler, gezinme, yol, seçici ve sayfa menüsü. */
 
-import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/admin/parts";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuTrigger,
+} from "@/components/ui-react/dropdown-menu";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui-react/button";
 import type { PageItem, Tab } from "./types";
@@ -26,6 +32,43 @@ export interface CanvasBarsProps {
 	onDropTab(url: string): void;
 }
 
+function PagesList({
+	pages,
+	activeUrl,
+	onSelectPage,
+}: {
+	pages: PageItem[];
+	activeUrl: string;
+	onSelectPage(url: string, title: string): void;
+}) {
+	return (
+		<>
+			<DropdownMenuLabel>{t("widget.pagesTitle")}</DropdownMenuLabel>
+			{pages.length ? (
+				pages.map((page) => {
+					const path = page.url.replace(/^https?:\/\/[^/]+/, "") || "/";
+					const active = page.url === activeUrl;
+					return (
+						<DropdownMenuItem
+							key={page.url}
+							onSelect={() => onSelectPage(page.url, page.title)}
+							className={active ? "bg-accent text-foreground" : ""}
+						>
+							<Icon name="file" className="mt-0.5 size-3.5 shrink-0" />
+							<span className="min-w-0 flex-1">
+								<span className="block truncate text-xs font-medium">{page.title}</span>
+								<span className="block truncate font-mono text-[10px] text-muted-foreground">{path}</span>
+							</span>
+						</DropdownMenuItem>
+					);
+				})
+			) : (
+				<DropdownMenuLabel>{t("widget.pagesEmpty")}</DropdownMenuLabel>
+			)}
+		</>
+	);
+}
+
 export function CanvasBars({
 	tabs,
 	activeUrl,
@@ -46,34 +89,13 @@ export function CanvasBars({
 	onDropTab,
 }: CanvasBarsProps) {
 	const shownPath = pagePath ?? activeUrl.replace(/^https?:\/\/[^/]+/, "") ?? "/";
-	const [pagesOpen, setPagesOpen] = useState(false);
-	const menuRef = useRef<HTMLDivElement | null>(null);
 
-	const openPages = () => {
-		onOpenPages();
-		setPagesOpen(true);
+	const loadPagesOnOpen = (open: boolean) => {
+		if (open) onOpenPages();
 	};
 
-	useEffect(() => {
-		if (!pagesOpen) return;
-		const onPointerDown = (event: PointerEvent) => {
-			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-				setPagesOpen(false);
-			}
-		};
-		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape") setPagesOpen(false);
-		};
-		document.addEventListener("pointerdown", onPointerDown);
-		document.addEventListener("keydown", onKeyDown);
-		return () => {
-			document.removeEventListener("pointerdown", onPointerDown);
-			document.removeEventListener("keydown", onKeyDown);
-		};
-	}, [pagesOpen]);
-
 	return (
-		<div className="relative flex shrink-0 flex-col border-b border-border bg-background">
+		<div className="flex shrink-0 flex-col border-b border-border bg-background">
 			<div className="flex h-10 items-center gap-1 border-b border-border px-2">
 				<div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
 					{tabs.map((tab) => {
@@ -121,29 +143,33 @@ export function CanvasBars({
 							</button>
 						);
 					})}
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon-sm"
-						title={t("widget.openPage")}
-						aria-label={t("widget.openPage")}
-						onClick={openPages}
-					>
-						<Icon name="plus" className="size-4" />
-					</Button>
+					<DropdownMenu onOpenChange={loadPagesOnOpen}>
+						<DropdownMenuTrigger
+							variant="ghost"
+							size="icon-sm"
+							title={t("widget.openPage")}
+							aria-label={t("widget.openPage")}
+						>
+							<Icon name="plus" className="size-4" />
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start" className="w-72">
+							<PagesList pages={pages} activeUrl={activeUrl} onSelectPage={onSelectPage} />
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					aria-haspopup="menu"
-					aria-expanded={pagesOpen}
-					title={t("widget.pagesTitle")}
-					onClick={openPages}
-				>
-					<Icon name="list" className="size-3.5" />
-					{t("widget.pages")}
-				</Button>
+				<DropdownMenu onOpenChange={loadPagesOnOpen}>
+					<DropdownMenuTrigger
+						variant="ghost"
+						size="sm"
+						title={t("widget.pagesTitle")}
+					>
+						<Icon name="list" className="size-3.5" />
+						{t("widget.pages")}
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" className="w-72">
+						<PagesList pages={pages} activeUrl={activeUrl} onSelectPage={onSelectPage} />
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 			<div className="flex h-10 items-center gap-1 px-2">
 				<Button type="button" variant="ghost" size="icon-sm" title={t("widget.back")} aria-label={t("widget.back")} onClick={onBack}>
@@ -155,17 +181,21 @@ export function CanvasBars({
 				<Button type="button" variant="ghost" size="icon-sm" title={t("widget.reloadShort")} aria-label={t("widget.reloadShort")} onClick={onReload}>
 					<Icon name="refresh" className="size-4" />
 				</Button>
-				<button
-					type="button"
-					onClick={openPages}
-					aria-haspopup="menu"
-					aria-expanded={pagesOpen}
-					title={t("widget.pagesTitle")}
-					className="mx-1 flex min-w-0 flex-1 items-center gap-1 truncate rounded-md bg-muted/40 px-2 py-1 text-left font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-				>
-					<span className="min-w-0 flex-1 truncate">{shownPath}</span>
-					<Icon name="chevron-down" className="size-3 shrink-0" />
-				</button>
+				<DropdownMenu className="mx-1 flex min-w-0 flex-1" onOpenChange={loadPagesOnOpen}>
+					<DropdownMenuTrigger
+						variant="ghost"
+						size="sm"
+						containerClassName="flex min-w-0 flex-1"
+						className="w-full min-w-0 justify-start gap-1 bg-muted/40 px-2 py-1 font-mono text-[11px] font-normal text-muted-foreground hover:bg-muted hover:text-foreground"
+						title={t("widget.pagesTitle")}
+					>
+						<span className="min-w-0 flex-1 truncate text-left">{shownPath}</span>
+						<Icon name="chevron-down" className="size-3 shrink-0" />
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="start" className="w-72">
+						<PagesList pages={pages} activeUrl={activeUrl} onSelectPage={onSelectPage} />
+					</DropdownMenuContent>
+				</DropdownMenu>
 				{bridgeReady ? (
 					<span className="mr-1 text-[10px] text-emerald-500" title={t("widget.bridgeOnTitle")}>
 						{t("widget.bridgeOn")}
@@ -193,57 +223,6 @@ export function CanvasBars({
 					{t("widget.write")}
 				</Button>
 			</div>
-
-			{pagesOpen ? (
-				<div
-					ref={menuRef}
-					role="menu"
-					className="absolute right-2 top-[82px] z-50 w-72 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-2xl"
-				>
-					<div className="flex items-center justify-between border-b border-border px-3 py-2">
-						<span className="text-xs font-semibold">{t("widget.pagesTitle")}</span>
-						<button
-							type="button"
-							aria-label={t("common.close")}
-							title={t("common.close")}
-							className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-							onClick={() => setPagesOpen(false)}
-						>
-							<Icon name="x" className="size-3.5" />
-						</button>
-					</div>
-					<div className="max-h-80 overflow-y-auto p-1">
-						{pages.length ? (
-							pages.map((page) => {
-								const path = page.url.replace(/^https?:\/\/[^/]+/, "") || "/";
-								const active = page.url === activeUrl;
-								return (
-									<button
-										key={page.url}
-										type="button"
-										role="menuitem"
-										onClick={() => {
-											onSelectPage(page.url, page.title);
-											setPagesOpen(false);
-										}}
-										className={`flex w-full items-start gap-2 rounded-md px-2 py-2 text-left transition-colors ${
-											active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-										}`}
-									>
-										<Icon name="file" className="mt-0.5 size-3.5 shrink-0" />
-										<span className="min-w-0 flex-1">
-											<span className="block truncate text-xs font-medium">{page.title}</span>
-											<span className="block truncate font-mono text-[10px] text-muted-foreground">{path}</span>
-										</span>
-									</button>
-								);
-							})
-						) : (
-							<p className="px-2 py-3 text-xs text-muted-foreground">{t("widget.pagesEmpty")}</p>
-						)}
-					</div>
-				</div>
-			) : null}
 		</div>
 	);
 }

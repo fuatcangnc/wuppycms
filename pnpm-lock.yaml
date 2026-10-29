@@ -187,6 +187,9 @@ importers:
       '@data-slot/dialog':
         specifier: ^1.1.2
         version: 1.1.2
+      '@data-slot/dropdown-menu':
+        specifier: ^1.1.2
+        version: 1.1.2
       '@data-slot/tabs':
         specifier: ^1.1.2
         version: 1.1.2
@@ -217,18 +220,18 @@ importers:
       '@nanostores/react':
         specifier: ^2.0.1
         version: 2.0.1(nanostores@1.5.5)(react@19.3.0)
-      '@wuppycms/content-schema':
-        specifier: workspace:*
-        version: link:../../packages/content-schema
-      '@wuppycms/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@tanstack/react-query':
         specifier: ^5.104.2
         version: 5.104.2(react@19.3.0)
+      '@wuppycms/content-schema':
+        specifier: workspace:*
+        version: link:../../packages/content-schema
+      '@wuppycms/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       astro:
         specifier: ^7.3.8
         version: 7.3.8(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
@@ -946,6 +949,9 @@ packages:
 
   '@data-slot/dialog@1.1.2':
     resolution: {integrity: sha512-u8wYx8TtrV3Vaum+o685KCMZ1y+PciADIF1NgqAkupIe+0PVe7gyhlMtMhQxiCnurWZ6v3h1PRCTBlNWEaWhdQ==}
+
+  '@data-slot/dropdown-menu@1.1.2':
+    resolution: {integrity: sha512-xf0SaARlsLjkHJxoHE+cf+1dLOm8m30jDMP+YDYJ6EDMKCF7nzr0hBkM6w7ppOLWdw0Hu+WVvJJ8Yznl1xLOog==}
 
   '@data-slot/tabs@1.1.2':
     resolution: {integrity: sha512-LHCfNDW5FNAjadqKtFniqlLQ+oab3mSwb8wpm8zHVljT6sGDrpii+w4bburoleJ2JhXKBHv1xMludFtA+C433A==}
@@ -6101,6 +6107,10 @@ snapshots:
   '@data-slot/core@1.1.2': {}
 
   '@data-slot/dialog@1.1.2':
+    dependencies:
+      '@data-slot/core': 1.1.2
+
+  '@data-slot/dropdown-menu@1.1.2':
     dependencies:
       '@data-slot/core': 1.1.2
 
