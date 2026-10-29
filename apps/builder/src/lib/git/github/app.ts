@@ -17,11 +17,24 @@ function b64url(input: string | ArrayBuffer): string {
 	return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+/**
+ * `GITHUB_APP_PRIVATE_KEY_B64` iki biçimi de kabul eder:
+ * - PEM dosyasının base64'ü (BEGIN/END başlıkları dahil) — panelden indirilen
+ *   anahtarın doğrudan base64'ü,
+ * - DER (PKCS#8) gövdesinin base64'ü.
+ */
 function pemBase64ToBytes(pemBase64: string): ArrayBuffer {
-	const binary = atob(pemBase64.replace(/\s+/g, ""));
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-	return bytes.buffer as ArrayBuffer;
+	const decoded = atob(pemBase64.replace(/\s+/g, ""));
+	const bytes = new Uint8Array(decoded.length);
+	for (let i = 0; i < decoded.length; i += 1) bytes[i] = decoded.charCodeAt(i);
+
+	const text = new TextDecoder().decode(bytes);
+	if (!text.includes("BEGIN")) return bytes.buffer as ArrayBuffer;
+
+	const der = atob(text.replace(/-----[^-]+-----/g, "").replace(/\s+/g, ""));
+	const out = new Uint8Array(der.length);
+	for (let i = 0; i < der.length; i += 1) out[i] = der.charCodeAt(i);
+	return out.buffer as ArrayBuffer;
 }
 
 async function appJwt(env: AppEnv): Promise<string> {
