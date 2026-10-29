@@ -104,4 +104,6 @@ export type ProviderConfig = {
 	baseUrl: string;
 	model: string;
 	apiKey: string;
+	/** Sağlayıcıya özel ek başlıklar (ör. OpenCode Go org/session). */
+	extraHeaders?: Record<string, string>;
 };

@@ -82,9 +82,20 @@ async function resolveAiConfig(
 	// Anahtarsız yalnız yerel/uyumlu sunucu (ör. Ollama) çalışabilir.
 	if (!apiKey && !(isOpenAiCompatible && isLocalBase)) return null;
 	const sameProvider = provider === (normalizeProvider(row.provider) ?? "openai");
+	const baseUrl = sameProvider ? row.base_url : PROVIDER_DEFAULTS[provider].baseUrl;
+	const extraHeaders =
+		provider === "openai" &&
+		baseUrl.includes("opencode.ai/inference") &&
+		c.env.OPENCODE_ORG_ID
+			? {
+					"x-opencode-org-id": c.env.OPENCODE_ORG_ID,
+					"x-opencode-session": `wuppycms-${userId}`,
+				}
+			: undefined;
 	return {
 		provider,
-		baseUrl: sameProvider ? row.base_url : PROVIDER_DEFAULTS[provider].baseUrl,
+		baseUrl,
+		extraHeaders,
 		model:
 			overrideModel ||
 			(sameProvider ? row.model : PROVIDER_DEFAULTS[provider].model) ||

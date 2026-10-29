@@ -130,10 +130,16 @@ type ProviderCall = { text: string };
 
 /** Sağlayıcı çağrısı — OpenAI-uyumlu ya da Gemini; hatalar anlamlı mesaja çevrilir. */
 export async function callProvider(
-	settings: { provider: Provider; baseUrl: string; model: string; apiKey: string },
+	settings: {
+		provider: Provider;
+		baseUrl: string;
+		model: string;
+		apiKey: string;
+		extraHeaders?: Record<string, string>;
+	},
 	messages: { system: string; user: string },
 ): Promise<ProviderCall> {
-	const { provider, baseUrl, model, apiKey } = settings;
+	const { provider, baseUrl, model, apiKey, extraHeaders } = settings;
 	if (provider === "gemini") {
 		const url = `${baseUrl.replace(/\/v1beta$/, "")}/v1beta/models/${encodeURIComponent(model)}:generateContent${apiKey ? `?key=${encodeURIComponent(apiKey)}` : ""}`;
 		const res = await fetch(url, {
@@ -192,6 +198,7 @@ export async function callProvider(
 		headers: {
 			"Content-Type": "application/json",
 			...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+			...(extraHeaders ?? {}),
 		},
 		body: JSON.stringify({
 			model,
@@ -243,8 +250,17 @@ ai.post("/generate", body(aiGenerateSchema), async (c) => {
 
 	try {
 		const messages = buildMessages({ ...payload, prompt });
+		const extraHeaders =
+			row.provider === "openai" &&
+			row.base_url.includes("opencode.ai/inference") &&
+			c.env.OPENCODE_ORG_ID
+				? {
+						"x-opencode-org-id": c.env.OPENCODE_ORG_ID,
+						"x-opencode-session": `wuppycms-${user.id}`,
+					}
+				: undefined;
 		const result = await callProvider(
-			{ provider: row.provider, baseUrl: row.base_url, model: row.model, apiKey },
+			{ provider: row.provider, baseUrl: row.base_url, model: row.model, apiKey, extraHeaders },
 			messages,
 		);
 		return c.json({ text: result.text, provider: row.provider, model: row.model });

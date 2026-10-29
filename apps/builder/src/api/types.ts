@@ -43,6 +43,8 @@ export interface AppEnv {
 	/** API token yoksa wrangler OAuth yenileme token'ı (local/live). */
 	CLOUDFLARE_OAUTH_REFRESH_TOKEN?: string;
 	CLOUDFLARE_OAUTH_CLIENT_ID?: string;
+	/** OpenCode Go inference org kimliği (x-opencode-org-id). */
+	OPENCODE_ORG_ID?: string;
 	/**
 	 * R2 medya kitaplığı — kovası bağlıysa medya ekranında "R2" sekmesi açılır.
 	 * Site bazlı önek/public URL `.wuppycms/sites.jsonc` içinde tutulur.

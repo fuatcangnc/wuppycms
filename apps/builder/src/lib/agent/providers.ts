@@ -107,7 +107,12 @@ function parseArgs(json: string): unknown {
 	}
 }
 
-function openAiCompatible(baseUrl: string, apiKey: string, model: string): Provider {
+function openAiCompatible(
+	baseUrl: string,
+	apiKey: string,
+	model: string,
+	extraHeaders?: Record<string, string>,
+): Provider {
 	return {
 		id: "openai",
 		model,
@@ -143,6 +148,7 @@ function openAiCompatible(baseUrl: string, apiKey: string, model: string): Provi
 				headers: {
 					"content-type": "application/json",
 					...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+					...(extraHeaders ?? {}),
 				},
 				body: JSON.stringify({
 					model,
@@ -391,6 +397,7 @@ export function resolveProvider(config: ProviderConfig): Provider {
 		config.baseUrl || PROVIDER_DEFAULTS.openai.baseUrl,
 		config.apiKey,
 		config.model || PROVIDER_DEFAULTS.openai.model,
+		config.extraHeaders,
 	);
 }
 
