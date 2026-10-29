@@ -622,6 +622,8 @@ widget:
   previewUnavailableBody: Ajanın canlı sayfayı gösterip düzenleyebilmesi için Site ayarlarına bir site URL'i ekleyin.
   openPage: Sayfa aç
   pages: Sayfalar…
+  pagesTitle: Sayfalar
+  pagesEmpty: Sayfa bulunamadı.
   back: Geri
   forward: İleri
   reloadShort: Yenile

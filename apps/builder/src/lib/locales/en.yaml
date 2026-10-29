@@ -619,6 +619,8 @@ widget:
   previewUnavailableBody: Add a site URL in Site settings so the agent can show and edit the live page.
   openPage: Open page
   pages: Pages…
+  pagesTitle: Pages
+  pagesEmpty: No pages found.
   back: Back
   forward: Forward
   reloadShort: Reload

@@ -351,7 +351,7 @@ export default function AgentWidget() {
 			return;
 		}
 		setTabs((current) =>
-			current.length >= 2 ? [current[0]!, { url: absolute, title }] : [...current, { url: absolute, title }],
+			current.some((tab) => tab.url === absolute) ? current : [...current, { url: absolute, title }],
 		);
 		setActiveUrl(absolute);
 	};
