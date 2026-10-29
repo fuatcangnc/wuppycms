@@ -207,6 +207,7 @@ export async function callProvider(
 				{ role: "user", content: messages.user },
 			],
 			temperature: 0.7,
+			stream: false,
 		}),
 	});
 	const data = (await res.json().catch(() => null)) as {

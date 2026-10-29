@@ -75,9 +75,15 @@ function ProviderTab() {
 				<select
 					className={SELECT_CLS}
 					aria-label="AI sağlayıcı"
-					value={baseUrl.includes("evren-llmapi") ? "evren" : provider}
+					value={baseUrl.includes("20128") ? "9router" : baseUrl.includes("evren-llmapi") ? "evren" : provider}
 					onChange={(event) => {
 						const value = event.target.value;
+						if (value === "9router") {
+							setProvider("openai");
+							setBaseUrl("http://127.0.0.1:20128/v1");
+							setModel("ag/gemini-3.8-flash-high");
+							return;
+						}
 						if (value === "evren") {
 							setProvider("openai");
 							setBaseUrl("https://evren-llmapi.ssyz.org.tr/v1");
@@ -95,6 +101,7 @@ function ProviderTab() {
 						}
 					}}
 				>
+					<option value="9router">9Router (ag/gemini-3.8-flash-high)</option>
 					<option value="openai">{t("dialog.openaiOption")}</option>
 					<option value="evren">Evren LLM (OpenAI-uyumlu)</option>
 					<option value="gemini">Gemini</option>

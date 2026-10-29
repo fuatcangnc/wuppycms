@@ -17,6 +17,7 @@ export const MODEL_CATALOG: Record<
 	Array<{ id: string; label: string }>
 > = {
 	openai: [
+		{ id: "ag/gemini-3.8-flash-high", label: "Gemini 3.8 Flash High (9Router)" },
 		{ id: "gpt-4o-mini", label: "GPT-4o mini" },
 		{ id: "gpt-4.1-mini", label: "GPT-4.1 mini" },
 		{ id: "gpt-4.1", label: "GPT-4.1" },

@@ -53,6 +53,28 @@ pnpm --dir apps/builder exec wrangler d1 migrations apply wuppycms \
   --local --persist-to "$DATA_DIR/.wrangler/state"
 
 echo "== systemd"
+sudo npm install -g 9router@0.5.112 --silent
+sudo tee /etc/systemd/system/9router.service >/dev/null <<EOF
+[Unit]
+Description=9router AI Proxy
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+Environment=HOME=/home/ubuntu
+Environment=PORT=20128
+ExecStart=/usr/bin/9router --no-browser --skip-update --host 127.0.0.1
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 sudo tee /etc/systemd/system/wuppycms.service >/dev/null <<EOF
 [Unit]
 Description=WuppyCMS builder (Cloudflare workerd on Lightsail)
@@ -97,6 +119,7 @@ app.wuppycms.com {
 EOF
 
 sudo systemctl daemon-reload
+sudo systemctl enable --now 9router
 sudo systemctl enable --now wuppycms
 sudo systemctl reload caddy 2>/dev/null || sudo systemctl restart caddy
 
