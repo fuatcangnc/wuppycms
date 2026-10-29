@@ -1,0 +1,117 @@
+---
+import { ArrowRight, GitBranch } from "@lucide/astro";
+import { processSteps } from "@/data/site";
+
+const positions = [
+	"lg:col-start-1 lg:row-start-1 lg:self-start lg:pr-16",
+	"lg:col-start-3 lg:row-start-1 lg:self-start lg:pl-16 lg:text-right",
+	"lg:col-start-1 lg:row-start-2 lg:self-end lg:pr-16",
+	"lg:col-start-3 lg:row-start-2 lg:self-end lg:pl-16 lg:text-right",
+];
+---
+
+<section
+	class="relative isolate overflow-hidden bg-[#0d0f10] py-20 text-white md:py-24 lg:min-h-[54rem]"
+	id="surec"
+	aria-labelledby="surec-baslik"
+>
+	<div class="absolute inset-0 -z-30 bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:22px_22px]" aria-hidden="true"></div>
+	<div class="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_50%_45%,rgba(221,100,30,.18)_0%,transparent_38%,rgba(0,0,0,.35)_75%,#0d0f10_100%)]" aria-hidden="true"></div>
+	<div class="pointer-events-none absolute -right-10 top-1/2 -z-10 -translate-y-1/2 select-none font-mono text-[22vw] font-black leading-none text-white/[0.03]" aria-hidden="true">GIT</div>
+	<div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,.2)_48%,rgba(0,0,0,.75)_100%)]" aria-hidden="true"></div>
+
+	<div class="shell relative">
+		<div class="mx-auto max-w-5xl text-center" data-reveal>
+			<h3 class="mx-auto w-fit -skew-x-12 bg-primary px-7 py-3 text-[13px] font-black uppercase tracking-[.08em] text-white">
+				<span class="block skew-x-12">Git tabanlı içerik akışı</span>
+			</h3>
+			<h2 class="mt-6 text-balance text-[clamp(2.35rem,4.8vw,4.75rem)] font-black uppercase leading-[.98] tracking-[-.055em] text-white" id="surec-baslik">
+				Repodan yayına giden süreç nasıl işler?
+			</h2>
+			<p class="mx-auto mt-6 max-w-3xl text-base leading-7 text-white/72">
+				İlk bağlantıdan commit'e, diff onayından Cloudflare dağıtımına kadar tüm akış tek
+				panelde ve her adım görünür.
+			</p>
+		</div>
+
+		<div class="relative mx-auto mt-14 max-w-7xl lg:min-h-[27rem]">
+			<div
+				class="process-core relative z-10 mx-auto mt-10 grid size-[17rem] place-items-center rounded-full bg-[linear-gradient(145deg,#f1f1f1_0%,#777_28%,#d8d8d8_51%,#575757_76%,#e2e2e2_100%)] p-[13px] shadow-[0_24px_65px_rgba(0,0,0,.6)] md:size-[19rem] lg:mt-0 lg:size-[21rem]"
+			>
+				<div class="grid size-full place-items-center rounded-full bg-[#202224] p-3 shadow-[inset_0_0_0_3px_rgba(255,255,255,.22),inset_0_12px_25px_rgba(255,255,255,.1)]">
+					<a
+						class="group grid size-full place-items-center rounded-full bg-[radial-gradient(circle_at_50%_30%,#36393b_0%,#181a1b_50%,#090a0a_100%)] text-center shadow-[inset_0_8px_24px_rgba(255,255,255,.12),0_0_28px_rgba(221,100,30,.5)] focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-white"
+						href="/#iletisim"
+						aria-label="WuppyCMS demo talebi"
+					>
+						<span class="flex flex-col items-center px-4">
+							<span class="process-indicator mb-5 block h-4 w-14 rounded-full bg-gradient-to-r from-orange-400 to-red-600 shadow-[0_0_18px_rgba(239,68,68,.9)]" aria-hidden="true"></span>
+							<span class="text-xs font-bold uppercase italic tracking-wider text-white/75">Git tabanlı CMS</span>
+							<strong class="mt-1.5 text-[1.45rem] font-black uppercase leading-tight tracking-[-.04em] text-white md:text-[1.75rem]">
+								Reponu bağla
+							</strong>
+							<span class="mt-3 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-primary transition-colors group-hover:text-white">
+								<span>Demo talep et</span>
+								<ArrowRight class="size-3.5 transition-transform duration-300 group-hover:translate-x-1" stroke-width={3} aria-hidden="true" />
+							</span>
+						</span>
+					</a>
+				</div>
+			</div>
+
+			<ol
+				class="mt-10 grid gap-px bg-white/16 md:grid-cols-2 lg:absolute lg:inset-0 lg:mt-0 lg:grid-cols-[1fr_22rem_1fr] lg:grid-rows-2 lg:gap-0 lg:bg-transparent"
+				aria-labelledby="surec-baslik"
+			>
+				{
+					processSteps.map((step, index) => (
+						<li
+							class:list={[
+								`bg-[#111415]/95 p-6 text-white md:p-7 lg:bg-transparent lg:p-0 ${positions[index] ?? ""}`,
+							]}
+							data-reveal
+						>
+							<h3 class="text-[clamp(1.25rem,1.8vw,1.65rem)] font-black uppercase leading-tight tracking-[-.035em] text-white">
+								<span class="mr-2 text-primary">{step.number} ·</span>{step.title}
+							</h3>
+							<p class="mt-4 text-base leading-7 text-white/68">{step.description}</p>
+							<span class="mt-7 block h-px bg-white/18 lg:mt-8" aria-hidden="true"></span>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+
+		<div class="mt-12 flex flex-col items-center justify-center gap-4 text-center sm:flex-row" data-reveal>
+			<span class="inline-flex items-center gap-2 border border-white/15 bg-white/[0.04] px-3.5 py-2 font-mono text-[11px] text-white/65">
+				<GitBranch size={13} class="text-primary" /> main · 3f2a1c
+			</span>
+			<a class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-primary transition-colors hover:text-white" href="/#iletisim">
+				Tüm akışı birlikte kuralım <ArrowRight size={14} />
+			</a>
+		</div>
+	</div>
+</section>
+
+<style>
+	.process-core {
+		animation: process-core-breathe 3.4s ease-in-out infinite;
+	}
+	.process-indicator {
+		animation: process-indicator-pulse 2.4s ease-in-out infinite;
+	}
+	@keyframes process-core-breathe {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.025); }
+	}
+	@keyframes process-indicator-pulse {
+		0%, 100% { opacity: 0.5; transform: scaleX(0.85); }
+		50% { opacity: 1; transform: scaleX(1.1); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.process-core,
+		.process-indicator {
+			animation: none;
+		}
+	}
+</style>

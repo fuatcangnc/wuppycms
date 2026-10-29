@@ -1,0 +1,43 @@
+---
+import { Sparkles } from "@lucide/astro";
+---
+
+<aside aria-label="Demo iletişim" class="fixed bottom-8 right-4 z-50 sm:bottom-10 sm:right-6 md:bottom-12 md:right-8">
+	<a
+		href="/#iletisim"
+		aria-label="WuppyCMS demo talep et"
+		class="group flex items-center rounded-full transition-transform duration-300 hover:scale-[1.03] active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+	>
+		<span class="relative z-10 grid size-13 shrink-0 place-items-center overflow-hidden rounded-full border-[3px] border-white bg-[#0B0E11] shadow-md sm:size-16">
+			<span class="font-mono text-lg font-black text-primary sm:text-xl">W</span>
+			<span class="absolute -bottom-0.5 -right-0.5 z-20 grid size-5 place-items-center rounded-full bg-primary text-white ring-2 ring-white sm:size-6">
+				<Sparkles class="size-3 sm:size-3.5" />
+			</span>
+		</span>
+		<span class="relative z-0 -ml-4 hidden flex-col justify-center rounded-full bg-primary py-2 pl-5 pr-4 text-white shadow-md transition-colors group-hover:bg-[#b84d12] sm:-ml-5 sm:flex sm:py-2.5 sm:pl-7 sm:pr-6">
+			<span class="flex items-center gap-1.5 sm:gap-2">
+				<span class="text-[12px] font-black leading-none tracking-tight text-white drop-shadow-xs sm:text-[14px]">WuppyCMS</span>
+				<span class="inline-flex items-center rounded-full bg-white/25 px-1.5 py-0.5 text-[8.5px] font-bold leading-none text-white backdrop-blur-xs sm:px-2 sm:text-[10px]">
+					Demo
+				</span>
+			</span>
+			<span class="mt-1 whitespace-nowrap text-[10.5px] font-medium leading-none text-white/95 drop-shadow-xs sm:text-[12px]">
+				Reponu bağlamak ister misin?
+			</span>
+		</span>
+	</a>
+</aside>
+
+<style>
+	aside > a > span:first-child {
+		animation: wa-glow-pulse 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+	}
+	@keyframes wa-glow-pulse {
+		0% { box-shadow: 0 0 0 0 rgba(221, 100, 30, 0.6), 0 6px 16px rgba(0, 0, 0, 0.18); }
+		65% { box-shadow: 0 0 0 16px rgba(221, 100, 30, 0), 0 6px 16px rgba(0, 0, 0, 0.18); }
+		100% { box-shadow: 0 0 0 0 rgba(221, 100, 30, 0), 0 6px 16px rgba(0, 0, 0, 0.18); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		aside > a > span:first-child { animation: none; }
+	}
+</style>

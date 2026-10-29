@@ -1,0 +1,12 @@
+{
+	// WuppyCMS site tanımları — CMS bu dosyayı okur. Elle de düzenlenebilir.
+	"sites": [
+		{
+			"key": "default",
+			"title": "WuppyCMS Demo",
+			"root": ".",
+			"contentConfig": "src/content.config.ts",
+			"collections": ["blog", "authors"]
+		}
+	]
+}

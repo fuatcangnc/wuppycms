@@ -1,0 +1,31 @@
+---
+import { ChevronDown } from "@lucide/astro";
+import type { HTMLAttributes } from "astro/types";
+import { cn } from "@/lib/utils";
+
+interface Props extends HTMLAttributes<"button"> {
+  class?: string;
+}
+
+const { class: className = "", ...props } = Astro.props as Props;
+---
+
+<button
+  type="button"
+  data-slot="accordion-trigger"
+  class={cn(
+    "flex w-full min-h-[4rem] items-center justify-between gap-4 px-6 py-4 text-left text-base font-bold text-neutral-950 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+    className
+  )}
+  {...props}
+>
+  <span class="flex-1">
+    <slot />
+  </span>
+  <span
+    data-slot="accordion-icon"
+    class="grid size-8 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-600 transition-transform duration-300 group-data-[state=open]:bg-primary/10 group-data-[state=open]:text-primary"
+  >
+    <ChevronDown class="size-4" />
+  </span>
+</button>

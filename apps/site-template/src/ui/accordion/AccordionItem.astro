@@ -1,0 +1,30 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { cn } from "@/lib/utils";
+
+interface Props extends HTMLAttributes<"div"> {
+  value?: string;
+  open?: boolean;
+  class?: string;
+}
+
+const {
+  value,
+  open = false,
+  class: className = "",
+  ...props
+} = Astro.props as Props;
+---
+
+<div
+  data-slot="accordion-item"
+  data-value={value}
+  data-state={open ? "open" : "closed"}
+  class={cn(
+    "group border border-neutral-200 bg-[#f8f9fa] transition-all duration-300 data-[state=open]:border-l-4 data-[state=open]:border-l-primary data-[state=open]:bg-white data-[state=open]:shadow-sm",
+    className
+  )}
+  {...props}
+>
+  <slot />
+</div>

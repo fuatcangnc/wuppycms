@@ -1,0 +1,39 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2026-10-12",
+	"compatibility_flags": ["global_fetch_strictly_public"],
+	"name": "builder",
+	"main": "src/worker.ts",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "wuppycms",
+			"database_id": "bfafe20b-eed9-4853-a5e5-c6ca15c0c15c",
+			"migrations_dir": "db/migrations"
+		}
+	],
+	"routes": [
+		{ "pattern": "turancms.com", "custom_domain": true },
+		{ "pattern": "www.turancms.com", "custom_domain": true }
+	],
+	"vars": {
+		"BETTER_AUTH_URL": "https://turancms.com",
+		"SITE_TEMPLATE_REPO": "fuatcangnc/wuppycms-tailwind-starter"
+	},
+	"r2_buckets": [
+		{
+			"binding": "MEDIA_R2",
+			"bucket_name": "wuppycms-media"
+		}
+	],
+	"observability": {
+		"enabled": true
+	},
+	"triggers": {
+		"crons": ["*/15 * * * *"]
+	}
+}

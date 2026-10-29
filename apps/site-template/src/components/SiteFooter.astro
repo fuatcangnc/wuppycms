@@ -1,0 +1,105 @@
+---
+import { Icon } from "astro-icon/components";
+import Brand from "./Brand.astro";
+import CtaBanner from "./CtaBanner.astro";
+import { siteSettings } from "@/data/site";
+
+const quickLinks = [
+	["Ana Sayfa", "/"],
+	["Blog", "/blog"],
+	["Nasıl çalışır", "/#akis"],
+	["SSS", "/#sss"],
+	["İletişim", "/#iletisim"],
+];
+
+const productLinks = [
+	["AI editör", "/#ozellikler"],
+	["Git içerik", "/#ozellikler"],
+	["Sayfa ağacı", "/#ozellikler"],
+	["Ekip akışı", "/#akis"],
+];
+---
+
+<CtaBanner />
+
+<footer class="site-footer">
+	<div class="shell footer-grid">
+		<section class="footer-brand" aria-labelledby="footer-brand-title">
+			<h2 class="sr-only" id="footer-brand-title">{siteSettings.brandName}</h2>
+			<Brand inverse />
+			<p>{siteSettings.description}</p>
+			<ul class="trust-list" aria-label="Ürün kapsamı">
+				<li>Git destekli içerik</li>
+				<li>AI + diff onayı</li>
+				<li>Astro + Tailwind 4</li>
+			</ul>
+			<ul class="social-list" aria-label="Sosyal medya hesapları">
+				<li>
+					<a aria-label="GitHub" href={siteSettings.github} target="_blank" rel="noreferrer">
+						<Icon name="simple-icons:github" size={16} />
+					</a>
+				</li>
+				<li>
+					<a aria-label="X" href="https://x.com" target="_blank" rel="noreferrer">
+						<Icon name="simple-icons:x" size={16} />
+					</a>
+				</li>
+				<li>
+					<a aria-label="LinkedIn" href="https://linkedin.com" target="_blank" rel="noreferrer">
+						<Icon name="simple-icons:linkedin" size={16} />
+					</a>
+				</li>
+			</ul>
+		</section>
+
+		<nav class="footer-column" aria-labelledby="footer-product-title">
+			<h3 id="footer-product-title">Ürün</h3>
+			<ul>
+				{productLinks.map(([label, href]) => <li><a href={href}>{label}</a></li>)}
+			</ul>
+		</nav>
+
+		<nav class="footer-column" aria-labelledby="footer-corporate-title">
+			<h3 id="footer-corporate-title">Kaynaklar</h3>
+			<ul>{quickLinks.map(([label, href]) => <li><a href={href}>{label}</a></li>)}</ul>
+			<p class="footer-group-title">Depo</p>
+			<ul>
+				<li>
+					<a href={siteSettings.github} target="_blank" rel="noreferrer">
+						GitHub'da incele
+					</a>
+				</li>
+			</ul>
+		</nav>
+
+		<section class="footer-column footer-contact" aria-labelledby="footer-contact-title">
+			<h3 id="footer-contact-title">İletişim</h3>
+			<address>
+				<a href={`mailto:${siteSettings.email}`}>
+					<Icon name="lucide:mail" size={16} />
+					<span><small>E-posta</small>{siteSettings.email}</span>
+				</a>
+				<div>
+					<Icon name="lucide:map-pin" size={16} />
+					<span><small>Konum</small>{siteSettings.location}</span>
+				</div>
+				<div>
+					<Icon name="lucide:clock-3" size={16} />
+					<span><small>Çalışma saatleri</small>{siteSettings.workHours}<small>Hafta sonu: e-posta</small></span>
+				</div>
+			</address>
+		</section>
+	</div>
+
+	<div class="shell footer-bottom">
+		<p>© {new Date().getFullYear()} {siteSettings.brandName}. Tüm hakları saklıdır.</p>
+		<p class="footer-credit">
+			Tasarım &amp; Geliştirici: <a href="/" class="underline underline-offset-2 transition-colors hover:text-primary">WuppyCMS</a>
+		</p>
+		<nav aria-label="Alt bağlantılar">
+			<a href="/blog">Blog</a>
+			<a href="/#sss">SSS</a>
+			<a href="/#iletisim">İletişim</a>
+		</nav>
+	</div>
+</footer>

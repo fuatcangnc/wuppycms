@@ -1,0 +1,28 @@
+---
+interface Props {
+  value: string
+  class?: string
+}
+
+const { value, class: className } = Astro.props
+---
+
+<button
+  data-slot="tabs-trigger"
+  data-tabs-trigger
+  data-value={value}
+  role="tab"
+  type="button"
+  data-state="inactive"
+  aria-selected="false"
+  class:list={[
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-neutral-600 transition-all',
+    'hover:text-neutral-950',
+    'data-[state=active]:bg-white data-[state=active]:text-neutral-950 data-[state=active]:shadow-sm',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950',
+    'disabled:pointer-events-none disabled:opacity-50',
+    className,
+  ]}
+>
+  <slot />
+</button>

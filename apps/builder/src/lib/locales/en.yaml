@@ -1,0 +1,653 @@
+# English (en) — ürünün açılış dili (arayüz bu dille doğar). Anahtar kaynağı: tr.yaml.
+#
+# Kurallar (docs/i18n.md): anahtar kümesi ve yorumlar tr.yaml ile BİREBİR;
+# yalnız değerler çevrilir, {parametre} adları korunur.
+
+common:
+  save: Save
+  cancel: Discard
+  close: Close
+  delete: Delete
+  copy: Copy
+  copied: copied ✓
+  loading: Loading…
+  add: Add
+  empty: Empty
+
+sidebar:
+  # Sol menü bölüm başlıkları ve satırları
+  sites: Sites
+  content: Content
+  site: Site
+  media: Media
+  trash: Trash
+  reviews: Reviews
+  siteSettings: Site settings
+  contentMd: CONTENT.md
+  addCollection: Add collection
+  agentCardTitle: Use with an agent
+  agentCardBody: Pick your agent; it sets up the site and writes content in minutes.
+  signOut: Sign out
+  collapse: Collapse menu
+  moreDocs: "+{count} more docs"
+
+topbar:
+  saving: Saving…
+  dirty: Edited
+  saved: Saved
+  save: Save
+  openMenu: Open menu
+  deleteDoc: Delete document
+  viewInRepo: View in repository
+  addSite: Add site
+
+media:
+  upload: "+ Upload"
+  uploading: Loading…
+  newFolder: "+ Folder"
+  folderNamePlaceholder: folder name…
+  folders: Folders
+  searchPlaceholder: search by filename…
+  rootLabel: root
+  libraryRepo: Repo
+  libraryR2: R2
+  viewGrid: Grid view
+  viewList: List view
+  kindAll: All types
+  kindImage: Images
+  kindVideo: Video
+  kindAudio: Audio
+  kindDoc: Documents
+  kindOther: Other
+  sectionImages: Images
+  sectionOthers: Other files
+  emptySearch: No files match the search.
+  emptyFolder: No files in this folder.
+  type: Type
+  actions: Actions
+  preview: Preview
+  enlarge: Enlarge
+  open: Open
+  copyLink: Copy link
+  openTab: Open in new tab
+  noMatch: No matching files.
+  aspectOrig: Original
+  aspectSquare: "1:1 Square"
+  aspectVertical: "9:16 Portrait"
+  aspectRatio: Aspect ratio
+  zoom: Zoom
+  zoomOut: Zoom out
+  zoomIn: Zoom in
+  reset: Reset
+  outputSize: Output size
+  focal: Focal point
+  focalHint: Click the image; the composition hint is saved to the manifest.
+  focalAria: Choose focal point
+  focalSave: Save focal point
+  focalSaved: "Focal point saved ✓"
+  croppedCopy: Create cropped copy
+  replaceOriginal: Replace original
+  replaceConfirm: The original file's content will be replaced with the cropped version. Are you sure?
+  cropLoadFailed: Could not read the image (the server may block CORS).
+  cropExportFailed: Could not export the image.
+  canvasUnsupported: Canvas is not supported.
+
+entries:
+  list: List
+  board: Board
+  calendar: Calendar
+  search: Search…
+  docs: "{count} docs"
+  up: Parent folder
+  parent: .. parent
+  weekdays: Mo,Tu,We,Th,Fr,Sa,Su
+  undated: "{count} docs have no date — the calendar only shows dated content."
+  name: Name
+  changeNote: Change note
+  updated: Last updated
+  empty: 'No docs — add one with “+ New content”.'
+
+editor:
+  write: Write
+  split: Split
+  read: Read
+  preview: Preview
+  source: Source
+  focus: Focus
+  focusExit: Exit focus
+  insertFromMedia: Insert from media
+  embed: Embed
+  copyMd: Copy MD
+  copyHtml: Copy HTML
+  sendToReview: Send to review
+  embedTitle: Add embed
+  embedDesc: Paste a link; the provider is detected automatically.
+  embedDetected: "Detected: {provider}"
+  embedUnknown: "Not recognized. Supported: {list}"
+  embedSupported: "Supported: {list}"
+  embedBtnTitle: Embed a YouTube, Vimeo, X, Instagram, Spotify… link
+  copyMdTitle: Copy body as Markdown
+  copyHtmlTitle: Copy body as HTML
+  focusTitle: Focus mode (Ctrl+Shift+F, Esc to exit)
+  words: "{count} words"
+  bodyPlaceholder: Start writing…
+  sourceAria: Markdown source
+  langPlain: Plain text
+
+  find: Find
+  findMatches: "{count} matches"
+  replaceWith: Replace with
+  replace: Replace
+  replaceAll: All
+  caseSensitive: Case sensitive
+  prevMatch: Previous match
+  nextMatch: Next match
+  sprint: Sprint
+  sprintTitle: Writing sprint
+  sprintBody: Pick a target and duration; your writing speed is measured for the session.
+  sprintTarget: Word target
+  sprintDuration: Duration (minutes)
+  sprintStart: Start sprint
+  sprintEnd: End
+  sprintRemaining: Remaining
+  sprintWritten: Written
+  sprintWpm: words/min
+  sprintMin: "{count} min"
+  sprintDone: "Sprint finished — {count} words"
+  typewriter: Typewriter scrolling (in focus mode)
+
+status:
+  draft: Draft
+  review: In review
+  ready: Ready
+
+meta:
+  visual: Visual
+  yaml: YAML
+  md: MD
+  history: History
+  readiness: Readiness
+  searchPreview: Search preview
+  socialCard: Social card (OG)
+  schedule: Schedule
+  snapshot: Snapshot
+  readyTitle: Has title
+  readyDescription: Has description
+  readyDate: Has date
+  readyStatus: "Status: Ready"
+  readyBody: "Body ≥ 120 characters"
+
+review:
+  title: Reviews
+  empty: No open reviews — start one with “Send to review” in a document.
+  diff: Diff
+  requestChanges: Request changes
+  approve: Approve
+  merge: Merge
+  close: Close
+  pending: Awaiting review
+  approved: Approved
+  changesRequested: Changes requested
+  openCount: "{count} open"
+  hint: Content sent for review waits on a separate branch; merging publishes it.
+  diffTitle: "Review diff — #{number}"
+  loadingVersions: Loading versions…
+
+trash:
+  title: Trash
+  empty: Trash is empty.
+  restore: Restore
+  destroy: Delete permanently
+  hint: Deleted files wait here — restore them or delete them permanently.
+  fileCount: "{count} files"
+
+docview:
+  titlePlaceholder: Title
+  bodyLabel: Content (MDX body)
+  bodyHint: paste an image to upload it
+  reviewHint: Sends the content to a review branch and opens a PR — main stays untouched
+  backupBanner: An unsaved draft backup exists ({time}).
+  backupRestore: Restore
+  backupDiscard: Discard backup
+  panelOutline: Outline
+  panelResearch: Research
+  aiGenerate: Generate with AI
+  panelShow: Show panel
+  panelHide: Hide panel
+  outlineEmpty: No headings yet — H1–H3 will be listed here.
+
+overview:
+  visit: Visit site
+  collections: Collections
+  stats: "{entries} entries · {fields} fields · {base}"
+  noCollections: No collections found — this may not be a WuppyCMS/Astro template.
+  recent: Recently updated
+  noCommits: No commits.
+  site: Site
+  repo: "Repo: {value}"
+  branch: "Branch: {value}"
+  url: "URL: {value}"
+  media: "Media: {value}"
+  publish: "Publishing:"
+  publishReview: Via review
+  publishNow: Now
+  publishDefault: Now (default)
+  team: Team
+
+panel:
+  fieldsEmpty: This document has no editable fields.
+  apply: Apply
+  revert: Discard
+  yamlEdited: Edited — Apply pushes it back to the form
+  mdReadonly: Read-only — edit via Visual/YAML and the body editor.
+  versions: "{count} versions"
+  historyHint: Every save is a version; click one to compare it with the current state.
+  snapshotTaken: Snapshot taken.
+  snapshotFailed: Could not take a snapshot.
+  snapshotNoChange: No changes — edit something first.
+  selectFromMedia: Select from media
+  tagsPlaceholder: separate with commas
+  notInSchema: Not defined in the schema
+  moreLines: "… {count} more lines"
+  scheduleNotSet: Not scheduled — pick a date; the executor publishes it when due.
+  schedulePublished: Due and published ({date}).
+  scheduleDue: Due ({date}) — the executor will mark it “Ready” on its next run.
+  schedulePlanned: "Scheduled: {date} — becomes \"Ready\" when due."
+  searchHint: Google-like
+  searchEmpty: The description field is empty — this is how the search result looks.
+  ogPlaceholder: /image-path.webp
+  ogNotFound: No preview found
+  ogNone: No image selected
+  ogNoField: This document has no image field — add cover or ogImage to the frontmatter.
+  diffTitle: Version comparison
+  diffLoading: Loading version…
+  diffFailed: Could not load the version.
+  diffLoad: Load this version
+  publishAtLabel: Publish time
+
+aiDialog:
+  title: Generate with AI
+  promptPlaceholder: "What should it say? (e.g. “A short section announcing the new product launch”)"
+  tone: Tone
+  toneProfessional: Professional
+  toneFriendly: Friendly
+  toneCasual: Casual
+  toneFormal: Formal
+  length: Length
+  lengthShort: Short (~150 words)
+  lengthMedium: Medium (~400 words)
+  lengthLong: Long (~800 words)
+  language: Language
+  languageTr: Turkish
+  languageEn: English
+  keywordPlaceholder: Keyword (optional — SEO)
+  generate: Generate
+  generating: Generating…
+  insert: Insert into body
+  generatedNote: "Generated ({provider}/{model}) — review and insert."
+  error: "Error: {message}"
+  failed: Generation failed.
+
+dialog:
+  agentTab: Coding agent
+  providerTab: Provider
+  agentTitle: Set up with a coding agent
+  agentBody: Pick your agent, copy the prompt and paste it into the agent with the repo open.
+  runYourself: Or run it yourself
+  providerTitle: AI provider (bring your own key)
+  providerBody: Connect a provider for content generation; the key stays server-side, encrypted.
+  providerLabel: Provider
+  openaiOption: OpenAI-compatible (OpenAI, Groq, OpenRouter, Ollama…)
+  baseUrlLabel: Base URL
+  modelLabel: Model
+  keyLabel: API key
+  keyPlaceholderSaved: "•••• saved — type to replace"
+  keyPlaceholderNew: sk-…
+  keyNote: The key is stored encrypted (D1) and never written to the repo; generation runs server-side.
+  savedOk: Saved ✓
+  saveFailed: Could not save.
+  mediaDetailsTitle: Media details
+  detailsTab: Details
+  editTab: Edit image
+  usageTab: Used in
+  fileName: File name
+  fileNameLocked: The file name cannot be changed here — use a new upload to add a renamed copy.
+  moveConfirm: "“{from}” will move to “{to}”. Links in content are not updated. Are you sure?"
+  location: Location
+  altLabel: Alt text
+  captionLabel: Caption
+  widthLabel: Display width %
+  linkLabel: Link
+  altPlaceholder: Short text describing the image…
+  captionPlaceholder: Optional display caption…
+  widthPlaceholder: empty = full width
+  libraryRoot: Main library ({root})
+  replaceImage: Replace image
+  unapply: Unapply link
+  unapplyTitle: Converts a media:// link to a site-relative one
+  unapplyNote: "link resolved: {link}"
+  pickerSearch: Search files…
+  collectionTitle: Add collection
+  collectionKeyLabel: Key (used in code)
+  collectionKeyPlaceholder: products
+  collectionBaseLabel: Folder (base)
+  collectionPatternLabel: File pattern (pattern)
+  collectionFieldsLabel: "Fields (title is always included):"
+  fieldDescription: Description
+  fieldDate: Date
+  collectionCreate: Create collection
+  collectionCreating: Creating…
+  collectionKeyInvalid: Key must start with a letter (letters, digits, dash).
+  collectionFailed: Could not add the collection.
+  imageReplaceFailed: Could not replace the image.
+
+entry:
+  title: New content
+  nameLabel: Title
+  namePlaceholder: e.g. Hello world
+  slugLabel: File name (slug)
+  slugPlaceholder: hello-world
+  create: Create
+  nameRequired: Title is required.
+  failed: Could not create.
+
+config:
+  title: Configure site
+  back: Back to overview
+  generalTitle: General
+  websiteUrl: Website URL
+  mediaFolder: Media folder
+  linkFormat: Link format
+  linkRelative: Site-relative
+  linkFull: Full URL
+  linkFolder: Folder-relative
+  linkMediaUri: media:// link
+  linkHint: Format of copied links and links inserted into the editor.
+  r2Library: R2 media library
+  r2Prefix: Bucket prefix (optional)
+  r2PublicBase: Public base URL
+  publishMode: Publishing mode
+  publishReview: With review
+  publishImmediate: Publish immediately
+  publishHint: The PR/approval flow of review mode is coming; for now the choice is stored and shown on the board.
+  members: Members
+  owner: owner
+  roleEditor: editor
+  roleViewer: viewer
+  remove: remove
+  linkCopy: link
+  revoke: revoke
+  roleEditorOption: Editor
+  roleViewerOption: Viewer
+  invite: Invite
+  inviteCopied: "Invite link (copied): {url}"
+  inviteFailed: Could not invite.
+  saveFailed: Could not save.
+  membersLoadFailed: Could not load members.
+
+wizard:
+  title: Add site
+  reading: Reading your repository…
+  readingBody: "WuppyCMS is scanning {repo} for sites…"
+  step1of2: Step 1/2
+  step1Title: Check the repo root · Astro
+  step1Body: Fix anything wrong; the rest can change in site settings.
+  siteUrl: Site URL
+  siteUrlHint: The address the site is published at.
+  content: Content
+  step2of2: Step 2/2
+  step2Title: How should changes be published?
+  step2Body: Can be changed later in site settings.
+  reviewFirst: Review before publishing
+  reviewModeHint: Changes stay drafts until approved.
+  immediateModeHint: Every save goes live on the site.
+  siteSection: Site
+  done: Your site is ready
+  doneBody: You can start writing content. Team invitations are coming soon.
+  inviteEditor: Invite editor
+  soon: Soon
+  creating: Setting up…
+  createSite: Set up site
+  next: Continue
+  repoSearch: Search repositories…
+  errorRepos: Could not load repositories.
+  errorScan: Could not scan the repository.
+  errorPickCollection: Pick at least one collection.
+  errorSetup: Could not set up the site.
+  repoTruth: Your repository is the single source of truth
+  editorPreview: What will the editor see?
+  reviewNothingLive: Nothing goes live without review
+  noMatch: No matches — or you have already added every repo.
+  noCollectionsScan: defineCollection not found — a repo without collections cannot be set up.
+  withAgent: Set up with a coding agent
+  withAgentHint: Claude Code, Codex, Cursor and others can do this in your repo for you.
+  visualEditor: Visual editor
+  everySaveCommit: ↓ Every save is a commit
+
+research:
+  title: Research
+  empty: "No notes yet — add a source, quote, or idea."
+  placeholder: "Note, source, or quote…"
+  add: Add
+  addOpen: "+ Add research"
+  save: Save
+  saving: Saving…
+  deleteNote: Delete note
+  suggestions: Link suggestions
+  suggestionsEmpty: "No suggestions — other articles are already linked."
+  insertLink: "Insert as a link into the body"
+
+drafts:
+  main: Main
+  new: Draft
+  name: Draft
+  blank: "Blank draft"
+  copy: "Copy from Main"
+  delete: "Delete draft"
+  confirmDelete: "Delete “{name}”? (local draft)"
+
+auth:
+  loginTitle: Welcome back
+  signupTitle: Sign up for WuppyCMS
+  loginLine1: Sign in with your account or
+  loginLink: sign up for free
+  signupLine1: Already have an account?
+  fullName: Full name
+  namePlaceholder: Your name
+  email: Email
+  password: Password
+  passwordMin: At least 8 characters
+  signIn: Sign in
+  signUp: Sign up
+  or: or
+  github: Continue with GitHub
+  errBadCredentials: Wrong email or password.
+  errUserExists: An account with this email already exists.
+  errEmailInUse: This email is already in use.
+  errPasswordShort: Password is too short.
+  errTooMany: Too many attempts — try again in a moment.
+  requestFailed: The request failed.
+  serverUnreachable: Could not reach the server.
+  githubFailed: Could not start GitHub sign-in.
+
+invite:
+  title: Project invitation
+  checking: Checking invitation…
+  accept: Accept invitation
+  loginFirst: Sign in first
+
+landing:
+  title: WuppyCMS — Git-based CMS
+  description: Your content lives in your GitHub repo; WuppyCMS gives you a modern editor and pipeline.
+  getStart: Get started free
+  tagline: Content = git · Build = CI · Server = none
+  heroLine1: Your content stays yours.
+  heroLine2: Leave the editing joy to WuppyCMS.
+  heroBody: "WuppyCMS is an AI-powered, git-based CMS for Astro sites: content lives in your GitHub repo, every save is a real commit, and builds run on free CI."
+  stepN: "Step {number}"
+  step1Title: Connect your repo
+  step1Text: Sign in with GitHub and pick your content repo. Nothing is copied — content stays in your repo.
+  step2Title: Edit in the editor
+  step2Text: Schema-generated frontmatter form, body editor, file tree. Every save is a real commit.
+  step3Title: Build & publish on CI
+  step3Text: On push, the build runs on free CI and the output goes to the CDN. No servers, no containers.
+  footer: WuppyCMS — content in the repo, editing in your hands.
+
+project:
+  title: Projects
+  mine: Your projects
+  new: New project
+  newHeading: New project — pick a repo
+  newHint: Repos from your GitHub account are listed here. The repo you pick becomes a project; content stays in the repo, nothing is moved.
+  filterPlaceholder: Filter repos
+  private: private
+  public: public
+  noMatch: No matches
+  open: Open
+  remove: Remove project
+  empty: 'No projects yet — start with “+ New project”.'
+  reposFailed: Could not load repos.
+  createFailed: Could not create the project.
+  requestStatus: "Request failed ({status})"
+
+build:
+  kicker: With AI
+  title: Build a site that's yours
+  subtitle: Describe your idea. WuppyCMS builds an Astro site from our boilerplate and pushes it to your GitHub.
+  placeholder: Describe the site you want to build…
+  backToProjects: Back to projects
+  continue: Build
+  examples: Try one of these
+  exPortfolio: Photography portfolio
+  exBakery: Neighbourhood bakery
+  exMagazine: Independent magazine
+  questionsTitle: Clarifying questions
+  questionsSubtitle: Answer to help me build what you want.
+  back: Back
+  skip: Skip
+  next: Next
+  submit: Submit
+  close: Close
+  designTitle: Make it yours
+  designSubtitle: Pick a primary color from the design system, then confirm the repository.
+  siteName: Site name
+  tagline: Tagline
+  repoName: Repository name
+  private: Private repository
+  color: Primary color
+  create: Create site with AI
+  creating: Creating your site…
+  creatingHint: The Astro boilerplate is being pushed to your GitHub. The AI brief starts automatically in the editor.
+  error: Could not create the site.
+  cancel: Cancel
+  checkFailed: Could not check this repository.
+  notAstroTitle: This repository isn’t Astro
+  notAstroBody: "{repo} doesn’t look like an Astro site. You can start a new site from our Astro boilerplate with AI instead."
+  notAstroAction: Build with AI
+  chooseAnother: Choose another repo
+  startWithAi: Build with AI
+  q:
+    name: What should the site be called?
+    nameWhy: This becomes the brand name.
+    type: What kind of site is it?
+    typeWhy: This shapes the homepage sections.
+    audience: Who is it for?
+    audienceWhy: This shapes the tone and examples.
+    tone: What tone should it have?
+    toneWhy: This guides the copy and layout.
+    sections: Which sections do you need?
+    sectionsWhy: You can change these later.
+    portfolio: Portfolio
+    business: Business
+    blog: Blog
+    product: Product
+    other: Other
+    minimal: Minimal
+    bold: Bold
+    warm: Warm
+    technical: Technical
+    about: About
+    services: Services
+    work: Work
+    sectionBlog: Blog
+    contact: Contact
+    custom: Type your answer
+    customOr: Or add your own answer
+
+widget:
+  launcher: AI
+  open: Open the AI agent
+  agentTitle: WuppyCMS Agent
+  close: Close
+  closeEsc: Close (Esc)
+  collapse: Collapse panel
+  expand: Expand panel
+  historyShow: Show chat history
+  historyHide: Hide chat history
+  preview: Preview
+  newChat: New chat
+  noHistory: No conversations yet.
+  messageCount: "{count} messages"
+  action: Action
+  editMode: Edit
+  insertMode: Add section
+  insertPosition: Insert position
+  insertAfter: After
+  insertBefore: Before
+  emptyTitle: Ask for the next change
+  emptyBody: Pick an element in the preview or describe an edit. Every write becomes a real commit ending with (via WuppyCMS).
+  undo: Undo
+  undoing: Undoing…
+  undone: Undone
+  elements: "{count} element(s)"
+  copy: Copy
+  edit: Edit
+  composerPlaceholder: Ask for the next changes…
+  pick: Pick an element
+  pickUnavailable: Element picker is unavailable (preview bridge not found)
+  write: Write to chat
+  configure: Configure AI
+  model: Model
+  send: Send
+  stop: Stop
+  reload: Reload preview
+  commitNote: Changes are real Git commits. The deployed preview reflects them after the next build.
+  live: Live
+  activePreview: Active preview
+  makeActive: Make this window active
+  previewUnavailable: Preview unavailable
+  previewUnavailableBody: Add a site URL in Site settings so the agent can show and edit the live page.
+  openPage: Open page
+  pages: Pages…
+  back: Back
+  forward: Forward
+  reloadShort: Reload
+  bridgeOn: bridge ✓
+  bridgeOff: no bridge
+  bridgeOnTitle: Element picker bridge is connected
+  bridgeOffTitle: The site template bridge was not detected; the picker is disabled.
+  resize: Resize chat panel
+  resizeHint: Drag to resize · double-click to reset
+  timeout: The run has not progressed for 3 minutes (timeout). Try again.
+  stopping: Stopping…
+  done: Done · {seconds}s
+  thinking: Thinking…
+  queueSend: Queue and send
+  queued: Queued
+  queuedCount: "{count} message(s) queued"
+  reattached: Reattached to the running task…
+  selectSite: Select a site first.
+  history: Chat history
+  home: Home
+  closeTab: Close tab
+  undoTitle: Undo the change made by this message
+  toolsRunning: "Running · {count} calls"
+  toolsDone: "{count} calls completed"
+  toolsErrors: "{count} errors"
+
+page:
+  hint: Edit the Astro page source; Save commits it to the repository.
+  sourceAria: Page source
+  loadFailed: Could not load the page.
+  saveFailed: Could not save the page.
+  conflict: The file changed while you had it open — reload before overwriting.

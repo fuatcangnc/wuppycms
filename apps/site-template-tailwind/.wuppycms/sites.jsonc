@@ -1,0 +1,11 @@
+{
+	"sites": [
+		{
+			"key": "default",
+			"title": "WuppyCMS Starter",
+			"root": ".",
+			"contentConfig": "src/content.config.ts",
+			"collections": ["blog", "authors"]
+		}
+	]
+}

@@ -1,0 +1,76 @@
+---
+// Davet kabul sayfası (parity 2b): /invite?token=… — giriş yapmış kullanıcı
+// daveti kabul eder; değilse girişe yönlendirir. E-posta davetin hedefiyle
+// eşleşmelidir (sunucu doğrular).
+import Layout from "@/layouts/Layout.astro";
+import { t } from "@/lib/i18n";
+---
+
+<Layout>
+	<div class="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+		<a href="/" class="flex items-center gap-2 text-sm font-semibold">
+			<span class="inline-block size-5 rounded-md bg-primary"></span>
+			WuppyCMS
+		</a>
+		<div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm">
+			<h1 class="text-lg font-semibold">{t("invite.title")}</h1>
+			<p class="mt-1 text-sm text-muted-foreground" id="status">{t("invite.checking")}</p>
+			<button
+				id="accept"
+				class="mt-4 hidden w-full rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+			>
+				{t("invite.accept")}
+			</button>
+			<a id="login" href="/login?next=/invite" class="mt-4 hidden text-sm text-primary underline underline-offset-2">
+				{t("invite.loginFirst")}
+			</a>
+		</div>
+	</div>
+	<script>
+		const token = new URLSearchParams(location.search).get("token") ?? "";
+		const status = document.getElementById("status") as HTMLParagraphElement;
+		const accept = document.getElementById("accept") as HTMLButtonElement;
+		const loginLink = document.getElementById("login") as HTMLAnchorElement;
+
+		if (!token) {
+			status.textContent = "Invitation link is missing (no token).";
+		} else {
+			// Oturum var mı? (kabul ucu yine de sunucuda doğrular)
+			fetch("/api/health", { credentials: "same-origin" })
+				.then(() => {
+					status.textContent = "Press the button below to accept the invitation.";
+					accept.classList.remove("hidden");
+				})
+				.catch(() => undefined);
+			accept.addEventListener("click", async () => {
+				accept.disabled = true;
+				status.textContent = "Accepting…";
+				try {
+					const res = await fetch("/api/team/accept", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						credentials: "same-origin",
+						body: JSON.stringify({ token }),
+					});
+					const data = (await res.json().catch(() => ({}))) as { message?: string; project?: { name?: string } };
+					if (res.ok) {
+						status.textContent = `You were added to ${data.project?.name ?? "the shared project"} — redirecting to your projects…`;
+						location.assign("/projects");
+						return;
+					}
+					if (res.status === 401) {
+						status.textContent = "You need to sign in to accept this invitation.";
+						loginLink.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
+						loginLink.classList.remove("hidden");
+					} else {
+						status.textContent = data.message ?? "Could not accept the invitation.";
+					}
+				} catch {
+					status.textContent = "Connection error — try again.";
+				} finally {
+					accept.disabled = false;
+				}
+			});
+		}
+	</script>
+</Layout>

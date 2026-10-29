@@ -1,0 +1,42 @@
+# WuppyCMS
+
+> Open-source, Git-based CMS with an AI chat + site-builder surface. Content is
+> Markdown/MDX in the customer's own repository; every save is a normal Git
+> commit ending with `(via WuppyCMS)`. Astro + Hono on Cloudflare Workers (D1 +
+> R2); the open-source core (WuppyCMS) is self-hostable, the hosted version is
+> called Wryte.
+
+Key facts an assistant should know:
+
+- Content types are the customer's Astro content collections
+  (`src/content.config.ts`); there is no CMS-side schema and no content in any
+  database. Frontmatter fields drive the editing form.
+- Site registration lives in the repository at `.wuppycms/sites.jsonc`
+  (JSON schema validated); media alt/caption/focal/width live in
+  `.wuppycms/media.json`. Deleted documents go to `_trash/`.
+- Article workflow: `status` frontmatter (draft/review/ready), `publishAt`
+  for scheduled publishing (executed by a Cron Trigger or
+  `POST /api/schedule/run`), versions = Git history with a diff view, review =
+  branch + pull request (`review/<slug>` branches, merge publishes).
+- Editor: mdxeditor.dev with Write/Split/Read modes, media picker, embeds for
+  12 providers (YouTube, Vimeo, X, Instagram, TikTok, Spotify, SoundCloud,
+  CodePen, CodeSandbox, Gist, Figma, Google Maps), unsaved work is backed up
+  to IndexedDB.
+- AI is bring-your-own-provider (OpenAI-compatible or Gemini; keys encrypted
+  in D1, calls proxied server-side).
+- The admin ships an in-page **AI agent widget** (ADR 0008): live preview
+  canvas, element picker (via a `postMessage` bridge in the site template),
+  chat sessions, tool groups, model picker, stop and per-message undo. File and
+  content tools write real commits ending with `(via WuppyCMS)`; undo restores
+  the previous file state. Provider: OpenAI-compatible, Gemini or Anthropic.
+- Localization: source language is Turkish (`src/lib/locales/tr.yaml`); other
+  locales are file-per-language YAML, validated by `scripts/check-locales.mjs`
+  (see `docs/i18n.md`).
+- Development: pnpm + Node 22+, `astro dev --background`, browser E2E suites
+  run network-free against a mock GitHub server (`apps/builder/scripts/`),
+  benchmarks via `apps/builder/scripts/bench.mjs`.
+- Architecture decisions: `docs/adr/` (0006 defines the OSS/cloud split and
+  the repo-only content lifecycle).
+
+Docs: `docs/` (self-hosting, media, e2e conventions), `AGENTS.md` for
+contributor/agent rules.

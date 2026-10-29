@@ -1,0 +1,15 @@
+---
+// /admin/… derin bağlantıları (ör. /admin/wuppycms-demo-site/content/blog/merhaba-dunya,
+// /admin/wuppycms-demo-site/media/test) — aynı kabuk; görünümü istemci
+// yönlendiricisi çözer.
+import AdminShell from "@/components/admin/AdminShell.astro";
+import { getSession } from "@/lib/session";
+
+const session = await getSession(Astro);
+if (!session) {
+	const next = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+	return Astro.redirect(`/login?next=${next}`);
+}
+---
+
+<AdminShell session={session} />

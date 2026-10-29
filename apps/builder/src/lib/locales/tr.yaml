@@ -1,0 +1,656 @@
+# Kaynak dil (tr) — anahtar ve anlamın tek doğrusu.
+#
+# Kurallar (docs/i18n.md):
+# - Yeni dize önce BURAYA eklenir; anahtarlar nokta yoluyla gruplanır.
+# - Yorumlar çevirmenlere bağlam verir; çevirilerde KORUNUR (çevrilmez).
+# - Parametreler süslü parantezle: {name}. Sıra değişebilir, adlar değişmez.
+# - Dosya sırası korunur; yeni anahtar en ilgili gruba eklenir.
+
+common:
+  save: Kaydet
+  cancel: Vazgeç
+  close: Kapat
+  delete: Sil
+  copy: Kopyala
+  copied: kopyalandı ✓
+  loading: Yükleniyor…
+  add: Ekle
+  empty: Boş
+
+sidebar:
+  # Sol menü bölüm başlıkları ve satırları
+  sites: Siteler
+  content: İçerik
+  site: Site
+  media: Medya
+  trash: Çöp
+  reviews: İncelemeler
+  siteSettings: Site ayarları
+  contentMd: CONTENT.md
+  addCollection: Koleksiyon ekle
+  agentCardTitle: Ajan ile kullan
+  agentCardBody: Ajanını seç; kurulumu ve içeriği dakikalar içinde o yapsın.
+  signOut: Çıkış
+  collapse: Menüyü daralt
+  moreDocs: "+{count} doküman daha"
+
+topbar:
+  saving: Kaydediliyor…
+  dirty: Düzenlendi
+  saved: Kaydedildi
+  save: Kaydet
+  openMenu: Menüyü aç
+  deleteDoc: Dokümanı sil
+  viewInRepo: Depoda görüntüle
+  addSite: Site ekle
+
+media:
+  upload: "+ Yükle"
+  uploading: Yükleniyor…
+  newFolder: "+ Klasör"
+  folderNamePlaceholder: klasör adı…
+  folders: Klasörler
+  searchPlaceholder: dosya adına göre ara…
+  rootLabel: kök
+  libraryRepo: Depo
+  libraryR2: R2
+  viewGrid: Izgara görünümü
+  viewList: Liste görünümü
+  kindAll: Tüm türler
+  kindImage: Görseller
+  kindVideo: Video
+  kindAudio: Ses
+  kindDoc: Belgeler
+  kindOther: Diğer
+  sectionImages: Görseller
+  sectionOthers: Diğer dosyalar
+  emptySearch: Aramaya uyan dosya yok.
+  emptyFolder: Bu klasörde dosya yok.
+  type: Tür
+  actions: İşlem
+  preview: Önizleme
+  enlarge: Büyüt
+  open: Aç
+  copyLink: Bağlantıyı kopyala
+  openTab: Yeni sekmede aç
+  noMatch: Eşleşen dosya yok.
+  aspectOrig: Orijinal
+  aspectSquare: "1:1 Kare"
+  aspectVertical: "9:16 Dikey"
+  aspectRatio: En-boy oranı
+  zoom: Yakınlaştırma
+  zoomOut: Uzaklaş
+  zoomIn: Yakınlaş
+  reset: Sıfırla
+  outputSize: Çıktı boyutu
+  focal: Odak noktası
+  focalHint: Görsele tıklayın; kompozisyon ipucu olarak manifeste kaydedilir.
+  focalAria: Odak noktası seç
+  focalSave: Odak noktasını kaydet
+  focalSaved: "Odak noktası kaydedildi ✓"
+  croppedCopy: Kırpılmış kopya oluştur
+  replaceOriginal: Orijinali değiştir
+  replaceConfirm: Orijinal dosyanın içeriği kırpılmış hâliyle değiştirilecek. Onaylıyor musun?
+  cropLoadFailed: Görsel okunamadı (sunucu CORS engeli olabilir).
+  cropExportFailed: Görsel dışa aktarılamadı.
+  canvasUnsupported: Tuval desteklenmiyor.
+
+entries:
+  list: Liste
+  board: Pano
+  calendar: Takvim
+  search: Ara…
+  docs: "{count} doküman"
+  up: Üst klasör
+  parent: .. üst klasör
+  weekdays: Pt,Sa,Ça,Pe,Cu,Ct,Pz
+  undated: "{count} dokümanın tarihi yok — takvim yalnız tarihli içerikleri gösterir."
+  name: Ad
+  changeNote: Değişiklik notu
+  updated: Son güncelleme
+  empty: 'Doküman yok — “+ Yeni içerik” ile ekleyin.'
+
+editor:
+  write: Yaz
+  split: Böl
+  read: Oku
+  preview: Önizleme
+  source: Kaynak
+  focus: Odak
+  focusExit: Odaktan çık
+  insertFromMedia: Medyadan ekle
+  embed: Embed
+  copyMd: MD kopyala
+  copyHtml: HTML kopyala
+  sendToReview: İncelemeye gönder
+  embedTitle: Embed ekle
+  embedDesc: Bağlantıyı yapıştırın; sağlayıcı otomatik tanınır.
+  embedDetected: "Tanındı: {provider}"
+  embedUnknown: "Tanınmadı. Desteklenenler: {list}"
+  embedSupported: "Desteklenenler: {list}"
+  embedBtnTitle: YouTube, Vimeo, X, Instagram, Spotify… bağlantısını göm
+  copyMdTitle: Gövdeyi Markdown olarak kopyala
+  copyHtmlTitle: Gövdeyi HTML olarak kopyala
+  focusTitle: Odak modu (Ctrl+Shift+F, Esc ile çık)
+  words: "{count} kelime"
+  bodyPlaceholder: İçerik gövdesi…
+  sourceAria: Markdown kaynağı
+  langPlain: Düz metin
+
+  find: Bul
+  findMatches: "{count} eşleşme"
+  replaceWith: Yerine
+  replace: Değiştir
+  replaceAll: Tümü
+  caseSensitive: "Büyük/küçük harfe duyarlı"
+  prevMatch: Önceki eşleşme
+  nextMatch: Sonraki eşleşme
+  sprint: Sprint
+  sprintTitle: Yazı sprinti
+  sprintBody: Hedef ve süre seç; oturum boyunca kelime hızın ölçülür.
+  sprintTarget: Kelime hedefi
+  sprintDuration: Süre (dakika)
+  sprintStart: Sprinti başlat
+  sprintEnd: Bitir
+  sprintRemaining: Kalan
+  sprintWritten: Yazılan
+  sprintWpm: kelime/dk
+  sprintMin: "{count} dk"
+  sprintDone: "Sprint bitti — {count} kelime"
+  typewriter: Typewriter kaydırma (odak modunda)
+
+status:
+  draft: Taslak
+  review: İnceleme
+  ready: Hazır
+
+meta:
+  visual: Görsel
+  yaml: YAML
+  md: MD
+  history: Geçmiş
+  readiness: Hazırlık
+  searchPreview: Arama önizlemesi
+  socialCard: Sosyal kart (OG)
+  schedule: Zamanlama
+  snapshot: Anlık görüntü
+  readyTitle: Başlık var
+  readyDescription: Açıklama var
+  readyDate: Tarih var
+  readyStatus: "Durum: Hazır"
+  readyBody: "Gövde ≥ 120 karakter"
+
+review:
+  title: İncelemeler
+  empty: Açık inceleme yok — bir dokümanda “İncelemeye gönder” ile başlatın.
+  diff: Diff
+  requestChanges: Değişiklik iste
+  approve: Onayla
+  merge: Birleştir
+  close: Kapat
+  pending: İnceleme bekliyor
+  approved: Onaylandı
+  changesRequested: Değişiklik istendi
+  openCount: "{count} açık"
+  hint: İncelemeye gönderilen içerikler ayrı dalda bekler; birleştirince yayına girer.
+  diffTitle: "İnceleme diff'i — #{number}"
+  loadingVersions: Sürümler yükleniyor…
+
+trash:
+  title: Çöp
+  empty: Çöp boş.
+  restore: Geri yükle
+  destroy: Kalıcı sil
+  hint: Silinen dosyalar burada bekler — geri yükleyin ya da kalıcı silin.
+  fileCount: "{count} dosya"
+
+docview:
+  titlePlaceholder: Başlık
+  bodyLabel: İçerik (MDX gövdesi)
+  bodyHint: panodan görsel yapıştırın, yüklenir
+  reviewHint: İçeriği review dalına gönderir ve PR açar — ana dal değişmez
+  backupBanner: Kaydedilmemiş bir taslak yedeği var ({time}).
+  backupRestore: Geri yükle
+  backupDiscard: Yedeği sil
+  panelOutline: Outline
+  panelResearch: Araştırma
+  aiGenerate: AI ile üret
+  panelShow: Paneli göster
+  panelHide: Paneli gizle
+  outlineEmpty: Başlık yok — H1–H3 ekleyince burada listelenir.
+
+overview:
+  visit: Siteyi ziyaret et
+  collections: Koleksiyonlar
+  stats: "{entries} kayıt · {fields} alan · {base}"
+  noCollections: Koleksiyon bulunamadı — bu bir WuppyCMS/Astro şablonu olmayabilir.
+  recent: Son güncellenenler
+  noCommits: Commit yok.
+  site: Site
+  repo: "Repo: {value}"
+  branch: "Dal: {value}"
+  url: "Adres: {value}"
+  media: "Medya: {value}"
+  publish: "Yayın:"
+  publishReview: İnceleme ile
+  publishNow: Hemen
+  publishDefault: Hemen (varsayılan)
+  team: Ekip
+
+panel:
+  fieldsEmpty: Bu dokümanda düzenlenebilir alan yok.
+  apply: Uygula
+  revert: Vazgeç
+  yamlEdited: Düzenlendi — Uygula ile forma geçer
+  mdReadonly: Salt okunur — düzenleme Görsel/YAML ve gövde editöründen yapılır.
+  versions: "{count} sürüm"
+  historyHint: Her kayıt bir sürümdür; bir sürüme tıklayıp şu anki hâlle karşılaştırın.
+  snapshotTaken: Anlık görüntü alındı.
+  snapshotFailed: Alınamadı.
+  snapshotNoChange: Değişiklik yok — önce düzenleyin.
+  selectFromMedia: Medyadan seç
+  tagsPlaceholder: virgülle ayırın
+  notInSchema: Şemada tanımlı değil
+  moreLines: "… {count} satır daha"
+  scheduleNotSet: Zamanlanmadı — tarih seçin; zamanı gelince yürütücü yayına alır.
+  schedulePublished: Zamanı geldi ve yayına alındı ({date}).
+  scheduleDue: Zamanı geldi ({date}) — yürütücü bir sonraki turda "Hazır" yapacak.
+  schedulePlanned: "Planlandı: {date} — zamanı gelince \"Hazır\" olur."
+  searchHint: Google benzeri
+  searchEmpty: Açıklama (description) alanı boş — arama sonucu böyle görünür.
+  ogPlaceholder: /görsel-yolu.webp
+  ogNotFound: Önizleme bulunamadı
+  ogNone: Görsel seçilmedi
+  ogNoField: Bu dokümanda görsel alanı yok — frontmatter'a cover ya da ogImage ekleyin.
+  diffTitle: Sürüm karşılaştırması
+  diffLoading: Sürüm yükleniyor…
+  diffFailed: Sürüm okunamadı.
+  diffLoad: Bu sürümü yükle
+  publishAtLabel: Yayın zamanı
+
+aiDialog:
+  title: AI ile üret
+  promptPlaceholder: "Ne yazılsın? (ör. “Yeni ürün lansmanını duyuran kısa bir bölüm”)"
+  tone: Ton
+  toneProfessional: Profesyonel
+  toneFriendly: Samimi
+  toneCasual: Günlük
+  toneFormal: Resmî
+  length: Uzunluk
+  lengthShort: Kısa (~150 kelime)
+  lengthMedium: Orta (~400 kelime)
+  lengthLong: Uzun (~800 kelime)
+  language: Dil
+  languageTr: Türkçe
+  languageEn: İngilizce
+  keywordPlaceholder: Anahtar sözcük (isteğe bağlı — SEO)
+  generate: Üret
+  generating: Üretiliyor…
+  insert: Gövdeye ekle
+  generatedNote: "Üretildi ({provider}/{model}) — inceleyip ekleyin."
+  error: "Hata: {message}"
+  failed: Üretilemedi.
+
+dialog:
+  agentTab: Kodlama ajanı
+  providerTab: Sağlayıcı
+  agentTitle: Kodlama ajanıyla kur
+  agentBody: Ajanını seç, promptu kopyala ve depo açıkken ona yapıştır.
+  runYourself: Ya da kendin çalıştır
+  providerTitle: AI sağlayıcısı (kendi anahtarın)
+  providerBody: İçerik üretimi için sağlayıcını bağla; anahtar yalnız sunucuda, şifreli saklanır.
+  providerLabel: Sağlayıcı
+  openaiOption: OpenAI uyumlu (OpenAI, Groq, OpenRouter, Ollama…)
+  baseUrlLabel: Sunucu adresi
+  modelLabel: Model
+  keyLabel: API anahtarı
+  keyPlaceholderSaved: "•••• kayıtlı — değiştirmek için yazın"
+  keyPlaceholderNew: sk-…
+  keyNote: Anahtar şifreli saklanır (D1), repoya asla yazılmaz; üretim istekleri sunucudan gider.
+  savedOk: Kaydedildi ✓
+  saveFailed: Kaydedilemedi.
+  mediaDetailsTitle: Medya detayları
+  detailsTab: Detaylar
+  editTab: Görseli düzenle
+  usageTab: Kullanılan yer
+  fileName: Dosya adı
+  fileNameLocked: Dosya adı burada değiştirilemez — adlandırılmış kopya için yeni yükleme kullan.
+  moveConfirm: "“{from}” → “{to}” taşınacak. İçerikteki bağlantılar güncellenmez. Onaylıyor musun?"
+  location: Konum
+  altLabel: Alt metin
+  captionLabel: Başlık (caption)
+  widthLabel: Gösterim genişliği %
+  linkLabel: Bağ (link)
+  altPlaceholder: Görseli açıklayan kısa metin…
+  captionPlaceholder: İsteğe bağlı gösterim başlığı…
+  widthPlaceholder: boş = tam genişlik
+  libraryRoot: Ana kitaplık ({root})
+  replaceImage: Görseli değiştir
+  unapply: Bağı çöz
+  unapplyTitle: media:// bağını siteye göreli biçime çevirir
+  unapplyNote: "bağı çözüldü: {link}"
+  pickerSearch: Dosya ara…
+  collectionTitle: Koleksiyon ekle
+  collectionKeyLabel: Anahtar (kod içinde kullanılır)
+  collectionKeyPlaceholder: ürünler
+  collectionBaseLabel: Klasör (base)
+  collectionPatternLabel: Dosya deseni (pattern)
+  collectionFieldsLabel: "Alanlar (title her zaman var):"
+  fieldDescription: Açıklama
+  fieldDate: Tarih
+  collectionCreate: Koleksiyonu ekle
+  collectionCreating: Ekleniyor…
+  collectionKeyInvalid: Anahtar harfle başlamalı (harf, sayı, tire).
+  collectionFailed: Koleksiyon eklenemedi.
+  imageReplaceFailed: Görsel değiştirilemedi.
+
+entry:
+  title: Yeni içerik
+  nameLabel: Başlık
+  namePlaceholder: Örn. Merhaba dünya
+  slugLabel: Dosya adı (slug)
+  slugPlaceholder: merhaba-dunya
+  create: Oluştur
+  nameRequired: Başlık zorunlu.
+  failed: Oluşturulamadı.
+
+config:
+  title: Siteyi yapılandır
+  back: Genel bakışa dön
+  generalTitle: Genel
+  websiteUrl: Website URL
+  mediaFolder: Medya klasörü
+  linkFormat: Bağlantı biçimi
+  linkRelative: Siteye göreli
+  linkFull: Tam URL
+  linkFolder: Klasöre göreli
+  linkMediaUri: media:// bağı
+  linkHint: Kopyalanan ve editöre eklenen bağların biçimi.
+  r2Library: R2 medya kitaplığı
+  r2Prefix: Kova öneki (isteğe bağlı)
+  r2PublicBase: Public base URL
+  publishMode: Yayın modu
+  publishReview: İnceleme ile
+  publishImmediate: Hemen yayınla
+  publishHint: İnceleme modunun PR/onay akışı yakında; şimdilik kayıt edilir ve panoda görünür.
+  members: Üyeler
+  owner: sahip
+  roleEditor: düzenleyici
+  roleViewer: görüntüleyici
+  remove: çıkar
+  linkCopy: bağlantı
+  revoke: iptal
+  roleEditorOption: Düzenleyici
+  roleViewerOption: Görüntüleyici
+  invite: Davet et
+  inviteCopied: "Davet bağlantısı (kopyalandı): {url}"
+  inviteFailed: Davet edilemedi.
+  saveFailed: Kaydedilemedi.
+  membersLoadFailed: Üye bilgisi yüklenemedi.
+
+wizard:
+  title: Site ekle
+  reading: Depon okunuyor…
+  readingBody: "WuppyCMS, {repo} deposundaki siteleri arıyor…"
+  step1of2: Adım 1/2
+  step1Title: Depo kökünü kontrol et · Astro
+  step1Body: Hatalı bir şey varsa düzelt; kalanı site ayarlarından değişir.
+  siteUrl: Site adresi
+  siteUrlHint: Sitenin yayında olduğu adres.
+  content: İçerik
+  step2of2: Adım 2/2
+  step2Title: Değişiklikler nasıl yayınlansın?
+  step2Body: Sonradan site ayarlarından değişebilir.
+  reviewFirst: Yayınlamadan önce incele
+  reviewModeHint: Değişiklikler onaylanana kadar taslakta kalır.
+  immediateModeHint: Her kayıt sitede canlıya çıkar.
+  siteSection: Site
+  done: Siten hazır
+  doneBody: İçerik yazmaya başlayabilirsin. Ekip davetleri yakında.
+  inviteEditor: Editör davet et
+  soon: Yakında
+  creating: Kuruluyor…
+  createSite: Siteyi kur
+  next: Devam
+  repoSearch: Depo ara…
+  errorRepos: Depolar alınamadı.
+  errorScan: Depo taranamadı.
+  errorPickCollection: En az bir koleksiyon seç.
+  errorSetup: Site kurulamadı.
+  repoTruth: Depon tek doğruluk kaynağıdır
+  editorPreview: Editör ne görecek?
+  reviewNothingLive: İncelemeden hiçbir şey canlıya çıkmaz
+  noMatch: Eşleşme yok ya da tüm depoları ekledin.
+  noCollectionsScan: defineCollection bulunamadı — koleksiyonsuz repo kurulamaz.
+  withAgent: Kodlama ajanıyla kur
+  withAgentHint: Claude Code, Codex, Cursor ve diğerleri bunu senin yerinize repoda yapabilir.
+  visualEditor: Görsel editör
+  everySaveCommit: ↓ Her kayıt bir commit'tir
+
+research:
+  title: Araştırma
+  empty: "Henüz not yok — kaynak, alıntı ya da fikir ekle."
+  placeholder: "Not, kaynak ya da alıntı…"
+  add: Ekle
+  addOpen: "+ Araştırma ekle"
+  save: Kaydet
+  saving: Kaydediliyor…
+  deleteNote: Notu sil
+  suggestions: Bağlantı önerileri
+  suggestionsEmpty: "Öneri yok — diğer yazılar zaten bağlı görünüyor."
+  insertLink: "Gövdeye bağlantı olarak ekle"
+
+drafts:
+  main: Main
+  new: Taslak
+  name: Taslak
+  blank: "Boş taslak"
+  copy: "Main'den kopyala"
+  delete: "Taslağı sil"
+  confirmDelete: "“{name}” silinsin mi? (yerel taslak)"
+
+auth:
+  loginTitle: Tekrar hoş geldin
+  signupTitle: WuppyCMS'a kayıt ol
+  loginLine1: Hesabınla giriş yap ya da
+  loginLink: ücretsiz kayıt ol
+  signupLine1: Zaten hesabın var mı?
+  fullName: Ad Soyad
+  namePlaceholder: Adın
+  email: E-posta
+  password: Şifre
+  passwordMin: En az 8 karakter
+  signIn: Giriş yap
+  signUp: Kayıt ol
+  or: veya
+  github: GitHub ile devam et
+  errBadCredentials: E-posta veya şifre hatalı.
+  errUserExists: Bu e-postayla kayıtlı bir hesap var.
+  errEmailInUse: Bu e-posta kullanımda.
+  errPasswordShort: Şifre çok kısa.
+  errTooMany: Çok deneme — biraz sonra tekrar dene.
+  requestFailed: İstek başarısız oldu.
+  serverUnreachable: Sunucuya ulaşılamadı.
+  githubFailed: GitHub ile giriş başlatılamadı.
+
+invite:
+  title: Proje daveti
+  checking: Davet denetleniyor…
+  accept: Daveti kabul et
+  loginFirst: Önce giriş yapın
+
+landing:
+  title: WuppyCMS — Git tabanlı CMS
+  description: İçerik senin GitHub reponda yaşar; WuppyCMS modern bir editör ve boru hattı verir.
+  getStart: Ücretsiz başla
+  tagline: İçerik = git · Build = CI · Sunucu = yok
+  heroLine1: İçerik senin olsun.
+  heroLine2: Editör keyfi WuppyCMS'dan.
+  heroBody: "WuppyCMS, Astro siteler için yapay zekâ destekli, git tabanlı bir CMS: içerik GitHub reponda yaşar, her kayıt gerçek bir commit'tir, build'ler ücretsiz CI'da koşar."
+  stepN: "{number}. adım"
+  step1Title: Reponu bağla
+  step1Text: GitHub hesabınla gir, içerik reponu seç. Hiçbir şey kopyalanmaz — içerik senin reponda kalır.
+  step2Title: Editörde düzenle
+  step2Text: Şemadan üretilen frontmatter formu, gövde editörü, dosya ağacı. Her kayıt gerçek bir commit.
+  step3Title: CI'da derle, yayınla
+  step3Text: Push'ta build ücretsiz CI'da koşar, çıktı CDN'e basılır. Sunucu yok, konteyner yok.
+  footer: WuppyCMS — içerik repoda, düzenleme sende.
+
+project:
+  title: Projeler
+  mine: Projelerin
+  new: Yeni proje
+  newHeading: Yeni proje — bir depo seç
+  newHint: GitHub hesabındaki depolar listelenir. Seçtiğin depo bir projeye bağlanır; içerik repoda kalır, hiçbir şey taşınmaz.
+  filterPlaceholder: Depolarda filtrele
+  private: gizli
+  public: açık
+  noMatch: Eşleşme yok
+  open: Aç
+  remove: Projeyi kaldır
+  empty: 'Henüz proje yok. "+ Yeni proje" ile başla.'
+  reposFailed: Depolar alınamadı.
+  createFailed: Proje oluşturulamadı.
+  requestStatus: "İstek başarısız ({status})"
+
+build:
+  kicker: With AI
+  title: Build a site that's yours
+  subtitle: Fikrinizi anlatın. WuppyCMS Astro boilerplate'ten bir site kurup GitHub'ınıza gönderir.
+  placeholder: Kurmak istediğiniz siteyi anlatın…
+  backToProjects: Projelere dön
+  continue: Oluştur
+  examples: Şunlardan birini deneyin
+  exPortfolio: Fotoğraf portföyü
+  exBakery: Mahalle fırını
+  exMagazine: Bağımsız dergi
+  questionsTitle: Netleştirici sorular
+  questionsSubtitle: İstediğinizi kurmama yardımcı olun.
+  back: Geri
+  skip: Atla
+  next: İleri
+  submit: Gönder
+  close: Kapat
+  designTitle: Kendinize göre yapın
+  designSubtitle: Tasarım sisteminden bir ana renk seçin, sonra depoyu onaylayın.
+  siteName: Site adı
+  tagline: Kısa açıklama
+  repoName: Depo adı
+  private: Gizli depo
+  color: Ana renk
+  create: AI ile site oluştur
+  creating: Siteniz oluşturuluyor…
+  creatingHint: Astro boilerplate GitHub'ınıza gönderiliyor. AI brief editörde otomatik başlayacak.
+  error: Site oluşturulamadı.
+  cancel: İptal
+  checkFailed: Bu depo kontrol edilemedi.
+  notAstroTitle: Bu depo Astro değil
+  notAstroBody: "{repo} bir Astro sitesi gibi görünmüyor. Bunun yerine Astro boilerplate'ten AI ile yeni bir site başlatabilirsiniz."
+  notAstroAction: AI ile oluştur
+  chooseAnother: Başka depo seç
+  startWithAi: AI ile oluştur
+  q:
+    name: Sitenin adı ne olsun?
+    nameWhy: Bu, marka adı olur.
+    type: Ne tür bir site?
+    typeWhy: Ana sayfa bölümlerini belirler.
+    audience: Kimin için?
+    audienceWhy: Tonu ve örnekleri belirler.
+    tone: Nasıl bir ton?
+    toneWhy: Metin ve düzeni yönlendirir.
+    sections: Hangi bölümler olsun?
+    sectionsWhy: Daha sonra değiştirebilirsiniz.
+    portfolio: Portföy
+    business: İşletme
+    blog: Blog
+    product: Ürün
+    other: Diğer
+    minimal: Minimal
+    bold: Cesur
+    warm: Sıcak
+    technical: Teknik
+    about: Hakkında
+    services: Hizmetler
+    work: Çalışmalar
+    sectionBlog: Blog
+    contact: İletişim
+    custom: Cevabınızı yazın
+    customOr: Veya kendi cevabınızı ekleyin
+
+widget:
+  launcher: AI
+  open: Yapay zekâ ajanını aç
+  agentTitle: WuppyCMS Ajanı
+  close: Kapat
+  closeEsc: Kapat (Esc)
+  collapse: Paneli daralt
+  expand: Paneli genişlet
+  historyShow: Sohbet geçmişini göster
+  historyHide: Sohbet geçmişini gizle
+  preview: Önizleme
+  newChat: Yeni sohbet
+  noHistory: Henüz sohbet yok.
+  messageCount: "{count} mesaj"
+  action: İşlem
+  editMode: Düzenle
+  insertMode: Yeni bölüm ekle
+  insertPosition: Ekleme konumu
+  insertAfter: Sonrasına
+  insertBefore: Öncesine
+  emptyTitle: Sıradaki değişikliği isteyin
+  emptyBody: Önizlemede bir öğe seçin ya da düzenlemeyi yazın. Her yazma, sonu (via WuppyCMS) ile biten gerçek bir commit olur.
+  undo: Geri al
+  undoing: Geri alınıyor…
+  undone: Geri alındı
+  elements: "{count} öğe"
+  copy: Kopyala
+  edit: Düzenle
+  composerPlaceholder: Sıradaki değişiklikleri sorun…
+  pick: Öğe seç
+  pickUnavailable: Öğe seçici kullanılamıyor (önizleme köprüsü bulunamadı)
+  write: Sohbete yaz
+  configure: AI'ı yapılandır
+  model: Model
+  send: Gönder
+  stop: Durdur
+  reload: Önizlemeyi yenile
+  commitNote: Değişiklikler gerçek Git commit'leridir. Yayındaki önizleme bir sonraki build'de yansıtır.
+  live: Canlı
+  activePreview: Etkin önizleme
+  makeActive: Bu pencereyi etkinleştir
+  previewUnavailable: Önizleme yok
+  previewUnavailableBody: Ajanın canlı sayfayı gösterip düzenleyebilmesi için Site ayarlarına bir site URL'i ekleyin.
+  openPage: Sayfa aç
+  pages: Sayfalar…
+  back: Geri
+  forward: İleri
+  reloadShort: Yenile
+  bridgeOn: köprü ✓
+  bridgeOff: köprü yok
+  bridgeOnTitle: Öğe seçici köprüsü bağlı
+  bridgeOffTitle: Site şablonu köprüsü bulunamadı; seçici devre dışı.
+  resize: Sohbet panelini yeniden boyutlandır
+  resizeHint: Boyutlandırmak için sürükleyin · sıfırlamak için çift tıklayın
+  timeout: Koşu 3 dakikadır ilerlemiyor (zaman aşımı). Tekrar deneyin.
+  stopping: Durduruluyor…
+  done: Tamamlandı · {seconds}sn
+  thinking: Düşünüyor…
+  queueSend: Kuyruğa al ve gönder
+  queued: Kuyrukta
+  queuedCount: "{count} mesaj kuyrukta"
+  reattached: Süren göreve yeniden bağlanıldı…
+  selectSite: Önce bir site seçin.
+  history: Sohbet geçmişi
+  home: Ana sayfa
+  closeTab: Sekmeyi kapat
+  undoTitle: Bu mesajın yaptığı değişikliği geri al
+  toolsRunning: "Çalışıyor · {count} çağrı"
+  toolsDone: "{count} çağrı tamamlandı"
+  toolsErrors: "{count} hata"
+
+page:
+  hint: Astro sayfa kaynağını düzenle; Kaydet repoya commit atar.
+  sourceAria: Sayfa kaynağı
+  loadFailed: Sayfa yüklenemedi.
+  saveFailed: Sayfa kaydedilemedi.
+  conflict: Dosya sizde açıkken değişti — üzerine yazmadan önce yenileyin.

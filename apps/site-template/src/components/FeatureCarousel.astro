@@ -1,0 +1,114 @@
+---
+import { ArrowLeft, ArrowRight } from "@lucide/astro";
+import FeatureVisual from "./FeatureVisual.astro";
+import { features } from "@/data/site";
+import { Carousel, CarouselSlide } from "@/ui/carousel";
+---
+
+<section class="overflow-hidden bg-white py-18 md:py-24" id="ozellikler">
+	<div class="shell">
+		<div class="mx-auto max-w-4xl text-center" data-reveal>
+			<div class="inline-flex items-center gap-2 border border-neutral-300 bg-neutral-100 px-3.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-neutral-900">
+				<span class="size-2 animate-pulse rounded-full bg-primary"></span>
+				<span>AI + Git içerik altyapısı</span>
+			</div>
+			<h2 class="mx-auto mt-4 max-w-3xl text-3xl font-black uppercase leading-[1.08] tracking-[-0.04em] text-[#152033] sm:text-4xl lg:text-[40px]">
+				<span class="text-primary">İçeriği düzenle</span>, <span class="text-primary">commit et</span>, yayınla.
+			</h2>
+			<p class="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-neutral-600">
+				WuppyCMS; Astro sitenizi GitHub'a bağlar, AI ile içerik üretmenizi sağlar ve her
+				değişikliği gerçek bir commit olarak saklar. Tek bir panelde.
+			</p>
+		</div>
+
+		<div class="mt-10 overflow-hidden xl:mt-12">
+			<Carousel class="gap-5 pb-4 sm:gap-6" align="start" snapType="proximity" data-service-carousel>
+				{
+					features.map((item) => (
+						<CarouselSlide class="min-w-0 flex-[0_0_88%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] xl:flex-[0_0_25%]">
+							<article class="group h-full">
+								<div class="flex min-h-[580px] flex-col overflow-hidden rounded-[19px] border border-black/[0.06] bg-white p-5 transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_20px_42px_rgba(18,32,51,0.12)] sm:p-6">
+									<div class="flex h-14 items-start gap-4">
+										<span class="grid size-11 shrink-0 place-items-center bg-primary text-sm font-black text-white">
+											{item.number}
+										</span>
+										<h3 class="line-clamp-2 pt-0.5 text-[15px] font-black uppercase leading-[1.25] tracking-[-0.025em] text-[#152033]">
+											{item.title}
+										</h3>
+									</div>
+
+									<div class="relative mt-4 aspect-[16/9] overflow-hidden rounded-xl bg-[#1b2631]">
+										<FeatureVisual type={item.visual} />
+									</div>
+
+									<p class="mt-5 min-h-[3.25rem] text-sm leading-6 text-[#626d7c]">
+										{item.summary}
+									</p>
+
+									<ul class="mt-5 space-y-2 border-t border-black/[0.08] pt-5 text-[13px] font-bold text-[#152033]">
+										{item.benefits.map((benefit) => (
+											<li class="flex items-center before:mr-2 before:content-['→'] before:text-sm before:font-black before:text-primary">
+												<span>{benefit}</span>
+											</li>
+										))}
+									</ul>
+
+									<a
+										class="mt-auto flex h-12 items-center justify-between border border-black/15 pl-4 text-[10px] font-black uppercase leading-3 tracking-[0.035em] text-[#152033] transition hover:border-primary hover:text-primary"
+										href={item.href}
+									>
+										{item.buttonText}
+										<span class="grid h-full w-12 place-items-center bg-[#121820] text-white transition group-hover:bg-primary">
+											<ArrowRight class="size-4" />
+										</span>
+									</a>
+								</div>
+							</article>
+						</CarouselSlide>
+					))
+				}
+			</Carousel>
+		</div>
+
+		<div class="mt-9 flex flex-col items-center justify-center gap-4 text-center sm:flex-row sm:text-left">
+			<div class="flex -space-x-2" aria-hidden="true">
+				<span class="grid size-9 place-items-center rounded-full border-2 border-white bg-[#25313c] text-[10px] font-black text-white">WC</span>
+				<span class="grid size-9 place-items-center rounded-full border-2 border-white bg-primary text-base text-white">↗</span>
+			</div>
+			<p class="text-sm text-[#4f5967]">İçeriğinizi birlikte repo'ya taşıyalım.</p>
+			<div class="flex items-center gap-2" aria-label="Özellik kaydırma kontrolleri">
+				<button
+					aria-label="Önceki özellikler"
+					class="grid size-9 place-items-center rounded-full border border-black/15 text-[#152033] transition enabled:hover:border-primary enabled:hover:bg-primary enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+					data-service-prev
+					type="button"
+				>
+					<ArrowLeft class="size-4" />
+				</button>
+				<button
+					aria-label="Sonraki özellikler"
+					class="grid size-9 place-items-center rounded-full border border-black/15 text-[#152033] transition enabled:hover:border-primary enabled:hover:bg-primary enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+					data-service-next
+					type="button"
+				>
+					<ArrowRight class="size-4" />
+				</button>
+			</div>
+			<a class="inline-flex items-center gap-2 border-b border-[#1e2936] pb-1 text-sm font-bold text-[#152033] transition hover:border-primary hover:text-primary" href="/#akis">
+				Tüm akışı görün <ArrowRight class="size-4" />
+			</a>
+		</div>
+	</div>
+</section>
+
+<script is:inline>
+	document.addEventListener("DOMContentLoaded", () => {
+		const carousel = document.querySelector("[data-service-carousel]");
+		document.querySelector("[data-service-prev]")?.addEventListener("click", () => {
+			carousel?.scrollBy({ left: -(carousel.clientWidth / 2), behavior: "smooth" });
+		});
+		document.querySelector("[data-service-next]")?.addEventListener("click", () => {
+			carousel?.scrollBy({ left: carousel.clientWidth / 2, behavior: "smooth" });
+		});
+	});
+</script>

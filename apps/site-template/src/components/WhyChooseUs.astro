@@ -1,0 +1,118 @@
+---
+import EditorMockup from "./EditorMockup.astro";
+import { stats, whyFeaturesLeft, whyFeaturesRight } from "@/data/site";
+---
+
+<section class="relative overflow-hidden bg-white py-20 lg:py-28" id="neden-biz">
+	<div class="shell">
+		<div class="mx-auto max-w-4xl text-center" data-reveal>
+			<div class="inline-block">
+				<span class="inline-block -skew-x-12 bg-primary px-5 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-white">
+					<span class="inline-block skew-x-12">Neden WuppyCMS?</span>
+				</span>
+			</div>
+			<h2 class="mt-5 text-3xl font-black uppercase leading-tight tracking-tight text-black sm:text-4xl lg:text-5xl">
+				İçerik yönetiminde kontrol, hız ve şeffaflık.
+			</h2>
+			<p class="mx-auto mt-4 max-w-2xl text-sm font-normal leading-relaxed text-neutral-600 sm:text-base">
+				İçeriğiniz repoda kalır, AI önerir, siz onaylarsınız. Her adım görünür; hiçbir değişiklik
+				sessizce yayınlanmaz.
+			</p>
+		</div>
+
+		<div class="why-us-grid mt-14 grid grid-cols-1 items-center gap-8 lg:mt-18 lg:grid-cols-12 lg:gap-4">
+			<div class="order-2 flex flex-col gap-8 lg:order-1 lg:col-span-3">
+				{
+					whyFeaturesLeft.map((feat) => (
+						<div class="why-feat-left group relative border-l-4 border-primary py-2 pl-5" data-reveal>
+							<h3 class="text-base font-black uppercase tracking-tight text-black transition-colors group-hover:text-primary sm:text-lg">
+								{feat.title}
+							</h3>
+							<p class="mt-2 text-xs font-normal leading-relaxed text-neutral-600 sm:text-sm">
+								{feat.description}
+							</p>
+						</div>
+					))
+				}
+			</div>
+
+			<div class="why-car-center order-1 flex items-center justify-center lg:order-2 lg:col-span-6" data-reveal>
+				<EditorMockup />
+			</div>
+
+			<div class="order-3 flex flex-col gap-8 lg:col-span-3">
+				{
+					whyFeaturesRight.map((feat) => (
+						<div class="why-feat-right group relative border-l-4 border-primary py-2 pl-5 lg:border-l-0 lg:border-r-4 lg:pl-0 lg:pr-5 lg:text-right" data-reveal>
+							<h3 class="text-base font-black uppercase tracking-tight text-black transition-colors group-hover:text-primary sm:text-lg">
+								{feat.title}
+							</h3>
+							<p class="mt-2 text-xs font-normal leading-relaxed text-neutral-600 sm:text-sm">
+								{feat.description}
+							</p>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<div class="why-us-stats mt-16 grid grid-cols-2 gap-8 border-t border-neutral-200 pt-12 md:grid-cols-4 lg:mt-24 lg:gap-10">
+			{
+				stats.map((stat) => (
+					<div class="group flex flex-col items-center text-center">
+						<div class="flex items-baseline justify-center text-4xl font-black tracking-tight text-black transition-colors group-hover:text-primary sm:text-5xl lg:text-6xl">
+							<span class="countup-num" data-target={stat.target}>0</span>
+							{stat.suffix && <span class="ml-0.5 text-primary">{stat.suffix}</span>}
+						</div>
+						<div class="mt-2 h-0.5 w-8 bg-primary transition-all duration-300 group-hover:w-14"></div>
+						<h4 class="mt-3 text-xs font-black uppercase tracking-wider text-black sm:text-sm">
+							{stat.label}
+						</h4>
+						<p class="mt-1 max-w-[13rem] text-xs leading-relaxed text-neutral-600">
+							{stat.description}
+						</p>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<script>
+	const initCounters = () => {
+		const stats = document.querySelector(".why-us-stats");
+		if (!stats) return;
+		const nums = stats.querySelectorAll<HTMLElement>(".countup-num");
+		if (!nums.length) return;
+
+		const animate = (el: HTMLElement) => {
+			const target = Number(el.dataset.target || "0");
+			const duration = 1600;
+			const start = performance.now();
+			const tick = (now: number) => {
+				const progress = Math.min((now - start) / duration, 1);
+				const eased = 1 - Math.pow(1 - progress, 3);
+				el.textContent = String(Math.round(target * eased));
+				if (progress < 1) requestAnimationFrame(tick);
+			};
+			requestAnimationFrame(tick);
+		};
+
+		let done = false;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting || done) return;
+					done = true;
+					nums.forEach(animate);
+					observer.disconnect();
+				});
+			},
+			{ threshold: 0.25 },
+		);
+		observer.observe(stats);
+	};
+
+	initCounters();
+	document.addEventListener("astro:page-load", initCounters);
+</script>

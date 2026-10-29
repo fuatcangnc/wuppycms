@@ -1,0 +1,15 @@
+---
+// /admin — GitCMS/TuranCMS düzeni; oturum koruması sayfada, tüm etkileşim tek
+// React adasında. Ham dosya ağacı gösterilmez; her işlem repoda gerçek bir
+// commit'tir.
+import AdminShell from "@/components/admin/AdminShell.astro";
+import { getSession } from "@/lib/session";
+
+const session = await getSession(Astro);
+if (!session) {
+	const next = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+	return Astro.redirect(`/login?next=${next}`);
+}
+---
+
+<AdminShell session={session} />

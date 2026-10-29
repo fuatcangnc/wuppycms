@@ -1,0 +1,80 @@
+---
+import { Check, GitBranch, Sparkles } from "@lucide/astro";
+---
+
+<div class="relative w-full max-w-[720px]">
+	<div class="pointer-events-none absolute -inset-4 bg-[radial-gradient(#d4d4d4_1px,transparent_1px)] [background-size:18px_18px] opacity-60" aria-hidden="true"></div>
+	<div class="relative -rotate-1 border border-neutral-200 bg-neutral-100 p-2 shadow-[0_26px_60px_-26px_rgba(0,0,0,.35)]">
+		<div class="absolute -left-2 top-14 h-20 w-1 bg-primary"></div>
+		<div class="overflow-hidden border border-neutral-800 bg-[#0B0E11]">
+			<!-- Başlık -->
+			<div class="flex items-center justify-between border-b border-white/10 px-3 py-2">
+				<div class="flex items-center gap-1.5">
+					<span class="size-2 rounded-full bg-white/20"></span>
+					<span class="size-2 rounded-full bg-white/20"></span>
+					<span class="size-2 rounded-full bg-primary"></span>
+				</div>
+				<span class="font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">wuppycms / editör</span>
+				<span class="inline-flex items-center gap-1 border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wider text-primary">
+					<Sparkles size={9} /> AI
+				</span>
+			</div>
+
+			<div class="grid grid-cols-[4.6rem_1fr] sm:grid-cols-[5.5rem_1fr]">
+				<!-- Dosya ağacı -->
+				<div class="border-r border-white/10 bg-white/[0.02] p-2 font-mono text-[8px] leading-5 text-white/45 sm:text-[9px]">
+					<p class="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">src</p>
+					<p class="text-white/70">pages</p>
+					<p class="pl-2 text-primary">index.astro</p>
+					<p class="pl-2">blog.astro</p>
+					<p class="text-white/70">components</p>
+					<p class="pl-2">Hero.astro</p>
+					<p class="pl-2">About.astro</p>
+					<p class="text-white/70">content</p>
+					<p class="pl-2">blog/</p>
+				</div>
+
+				<!-- Kod -->
+				<div class="min-w-0">
+					<div class="flex items-center gap-2 border-b border-white/10 px-3 py-1.5 font-mono text-[8px] text-white/40">
+						<span class="border-b border-primary pb-1 text-white/80">index.astro</span>
+						<span>About.astro</span>
+					</div>
+					<pre class="overflow-hidden p-3 font-mono text-[8.5px] leading-[1.8] text-white/65 sm:text-[10px]"><span class="text-white/25">1</span>  <span class="text-white/30">---</span>
+<span class="text-white/25">2</span>  <span class="text-primary">import</span> Base <span class="text-primary">from</span> <span class="text-amber-300">"../layouts/Base.astro"</span>
+<span class="text-white/25">3</span>  <span class="text-primary">const</span> title = <span class="text-amber-300">"WuppyCMS"</span>
+<span class="text-white/25">4</span>  <span class="text-white/30">---</span>
+<span class="text-white/25">5</span>
+<span class="text-white/25">6</span>  <span class="text-sky-300">&lt;Base</span> <span class="text-primary">title</span>=<span class="text-amber-300">&#123;title&#125;</span><span class="text-sky-300">&gt;</span>
+<span class="text-white/25">7</span>    <span class="text-sky-300">&lt;h1&gt;</span>İçerik repoda yaşar<span class="text-sky-300">&lt;/h1&gt;</span>
+<span class="text-white/25">8</span>    <span class="text-sky-300">&lt;p&gt;</span>AI ile düzenle, commit ile yayınla.<span class="text-sky-300">&lt;/p&gt;</span>
+<span class="text-white/25">9</span>  <span class="text-sky-300">&lt;/Base&gt;</span></pre>
+
+					<!-- AI prompt -->
+					<div class="m-2 mt-0 flex items-center gap-2 border border-primary/30 bg-primary/10 px-2.5 py-2">
+						<Sparkles size={11} class="shrink-0 text-primary" />
+						<span class="truncate font-mono text-[8px] text-white/75 sm:text-[9px]">Hero başlığını daha net yap, CTA ekle…</span>
+						<span class="ml-auto grid size-5 shrink-0 place-items-center bg-primary text-white">
+							<span class="text-[10px] font-black">↵</span>
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex items-center justify-between border-t border-white/10 px-3 py-2 font-mono text-[8px] text-white/40 sm:text-[9px]">
+				<span class="inline-flex items-center gap-1"><GitBranch size={10} class="text-primary" /> main</span>
+				<span class="inline-flex items-center gap-1 text-emerald-400"><Check size={10} /> diff hazır</span>
+				<span>UTF-8 · Astro</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Yüzen commit kartı -->
+	<div class="absolute -bottom-5 -right-2 hidden items-center gap-2 border border-neutral-200 bg-white px-3 py-2 shadow-xl sm:flex">
+		<span class="grid size-7 place-items-center bg-primary text-white"><GitBranch size={14} /></span>
+		<div class="leading-tight">
+			<p class="font-mono text-[9px] font-bold text-neutral-950">3f2a1c</p>
+			<p class="text-[9px] font-bold uppercase tracking-wider text-neutral-500">AI commit</p>
+		</div>
+	</div>
+</div>

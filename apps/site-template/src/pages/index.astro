@@ -1,0 +1,168 @@
+---
+import { Icon } from "astro-icon/components";
+import { ArrowRight, Check, FileCode2, ShieldCheck, Sparkles } from "@lucide/astro";
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import HeroPipeline from "@/components/HeroPipeline.astro";
+import FeatureCarousel from "@/components/FeatureCarousel.astro";
+import Pillars from "@/components/Pillars.astro";
+import SupportedContent from "@/components/SupportedContent.astro";
+import WhyChooseUs from "@/components/WhyChooseUs.astro";
+import ProcessSection from "@/components/ProcessSection.astro";
+import UseCases from "@/components/UseCases.astro";
+import LatestPosts from "@/components/LatestPosts.astro";
+import ContactSection from "@/components/ContactSection.astro";
+import SiteFaq from "@/components/SiteFaq.astro";
+import { siteSettings } from "@/data/site";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@graph": [
+		{
+			"@type": "WebSite",
+			"@id": `${Astro.url.origin}/#website`,
+			"url": Astro.url.origin,
+			"name": siteSettings.brandName,
+			"description": siteSettings.description,
+		},
+		{
+			"@type": "SoftwareApplication",
+			"name": siteSettings.brandName,
+			"applicationCategory": "ContentManagementApplication",
+			"operatingSystem": "Web",
+			"description": siteSettings.description,
+		},
+	],
+};
+---
+
+<Base
+	title={`${siteSettings.brandName} — ${siteSettings.tagline}`}
+	description={siteSettings.description}
+>
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+	<main class="home">
+		<!-- Hero -->
+		<section class="mb-8 py-4 sm:mb-12 sm:py-6 lg:mb-16 lg:py-8">
+			<div class="mx-auto w-[95vw]">
+				<div
+					class="relative isolate flex min-h-[580px] items-center overflow-hidden rounded-none border border-neutral-300 bg-white px-6 py-12 text-black shadow-[0_20px_50px_-20px_rgba(0,0,0,0.08)] sm:min-h-[640px] sm:px-12 sm:py-16 lg:min-h-[700px] lg:px-16 lg:py-20"
+				>
+					<div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(#e5e5e5_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-70" aria-hidden="true"></div>
+					<div class="pointer-events-none absolute -right-20 -top-20 -z-10 size-96 rounded-full bg-primary/5 blur-3xl" aria-hidden="true"></div>
+					<div class="pointer-events-none absolute -bottom-20 -left-20 -z-10 size-96 rounded-full bg-neutral-900/5 blur-3xl" aria-hidden="true"></div>
+
+					<div class="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14 xl:gap-16">
+						<div class="w-full" data-reveal>
+							<div class="inline-flex items-center gap-2.5 border border-neutral-300 bg-neutral-100 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-black shadow-2xs sm:text-xs">
+								<span class="size-2 animate-pulse rounded-full bg-primary"></span>
+								<span>Git tabanlı içerik yönetimi</span>
+							</div>
+
+							<h1 class="mt-5 break-words text-[1.55rem] font-black uppercase leading-[1.1] tracking-[-0.03em] text-black sm:text-4xl md:text-5xl lg:text-[44px]">
+								<span class="text-primary">İçeriğiniz GitHub'da</span> yaşasın.{" "}
+								<br class="hidden sm:block" />
+								<span class="text-primary">AI ile düzenleyin.</span>
+							</h1>
+
+							<p class="mt-4 max-w-2xl text-base font-medium leading-relaxed text-neutral-800 sm:text-lg lg:max-w-3xl">
+								WuppyCMS; Astro sitenizi GitHub deposuna bağlar, AI ile içerik düzenlemenizi
+								sağlar ve her değişikliği gerçek bir commit olarak saklar. Veritabanı kilidi
+								yok, vendor lock-in yok.
+							</p>
+
+							<div class="mt-7 grid max-w-xl grid-cols-1 gap-5 border-y border-neutral-200 py-5 sm:grid-cols-3 sm:gap-6">
+								<div>
+									<strong class="block text-2xl font-black tracking-tight text-black sm:text-3xl">Git</strong>
+									<span class="text-[11px] font-bold uppercase tracking-wider text-neutral-600 sm:text-xs">İçerik repoda yaşar</span>
+								</div>
+								<div class="sm:border-l sm:border-neutral-200 sm:pl-6">
+									<strong class="block text-2xl font-black tracking-tight text-black sm:text-3xl">AI</strong>
+									<span class="text-[11px] font-bold uppercase tracking-wider text-neutral-600 sm:text-xs">Diff onayı ile</span>
+								</div>
+								<div class="sm:border-l sm:border-neutral-200 sm:pl-6">
+									<strong class="block text-2xl font-black tracking-tight text-primary sm:text-3xl">1 Panel</strong>
+									<span class="text-[11px] font-bold uppercase tracking-wider text-neutral-600 sm:text-xs">Sayfa, blog, medya</span>
+								</div>
+							</div>
+
+							<div class="mt-7 flex flex-wrap items-center gap-4">
+								<a
+									href="/#iletisim"
+									class="group inline-flex items-center justify-center gap-3 bg-primary px-8 py-4.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-[1.02] hover:bg-[#b84d12] sm:text-[13px]"
+								>
+									<span>Demo talep et</span>
+									<ArrowRight size={16} class="transition-transform group-hover:translate-x-1" />
+								</a>
+								<a
+									href={siteSettings.github}
+									target="_blank"
+									rel="noreferrer"
+									class="group inline-flex items-center justify-center gap-3 border-2 border-black bg-white px-8 py-4.5 text-xs font-black uppercase tracking-wider text-black shadow-sm transition-all duration-300 hover:scale-[1.02] hover:bg-black hover:text-white sm:text-[13px]"
+								>
+									<Icon name="simple-icons:github" size={16} />
+									<span>GitHub'da incele</span>
+									<ArrowRight size={16} class="transition-transform group-hover:translate-x-1" />
+								</a>
+							</div>
+
+							<a
+								href="/blog"
+								class="mt-7 inline-flex items-center gap-3.5 border border-neutral-300 bg-white p-3 text-black shadow-2xs transition hover:border-primary/60 hover:shadow-md"
+							>
+								<span class="grid size-10 place-items-center border border-neutral-300 bg-neutral-100 text-primary">
+									<FileCode2 size={22} />
+								</span>
+								<div class="text-left leading-tight">
+									<div class="flex items-center gap-2 text-sm font-black text-black">
+										<span>Astro + Tailwind 4</span>
+										<span class="text-primary">Bejamas UI</span>
+									</div>
+									<p class="mt-0.5 text-xs font-medium text-neutral-600">Şablonu ve blogu inceleyin</p>
+								</div>
+							</a>
+						</div>
+
+						<div class="relative mt-8 w-full max-w-[620px] space-y-4 lg:mt-0 lg:max-w-none" data-reveal>
+							<HeroPipeline />
+
+							<div class="grid w-fit grid-cols-1 gap-2.5 text-xs font-bold text-neutral-800 sm:grid-cols-[auto_auto] sm:text-[13px]">
+								<span class="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 shadow-xs transition-all hover:border-neutral-300">
+									<ShieldCheck size={15} class="shrink-0 text-primary stroke-[2.2]" />
+									<span>Git destekli içerik</span>
+								</span>
+								<span class="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 shadow-xs transition-all hover:border-neutral-300">
+									<Sparkles size={15} class="shrink-0 text-primary stroke-[2.2]" />
+									<span>AI önerisi, diff onayı</span>
+								</span>
+								<span class="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 shadow-xs transition-all hover:border-neutral-300">
+									<Check size={15} class="shrink-0 text-primary stroke-[2.8]" />
+									<span>SHA çakışma kontrolü</span>
+								</span>
+								<span class="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 shadow-xs transition-all hover:border-neutral-300">
+									<Check size={15} class="shrink-0 text-primary stroke-[2.8]" />
+									<span>Cloudflare dağıtımı</span>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<FeatureCarousel />
+		<Pillars />
+		<SupportedContent />
+		<WhyChooseUs />
+		<ProcessSection />
+		<UseCases />
+		<LatestPosts posts={posts} />
+		<ContactSection />
+		<SiteFaq />
+	</main>
+</Base>

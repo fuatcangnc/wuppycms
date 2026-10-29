@@ -1,0 +1,24 @@
+---
+// Admin sayfası kabuğu — React adası. Oturum kontrolü sayfa tarafında kalır
+// (component içinden Astro.redirect çalışmaz; ResponseSentError üretir).
+//
+// Açılış verisi sunucuda hazırlanır (loadBoot → süreç içi /api çağrıları) ve
+// adaya `boot` olarak verilir; ada ilk ekranı iskeletsiz çizer. Sonraki
+// gezinme/etkileşim istemcide /api üzerinden çalışmaya devam eder (ADR 0005).
+import AdminApp from "@/components/admin/AdminApp";
+import { loadBoot } from "@/lib/admin/boot-ssr";
+import Layout from "@/layouts/Layout.astro";
+
+const { session } = Astro.props as {
+	session: Awaited<ReturnType<typeof import("@/lib/session").getSession>>;
+};
+const boot = await loadBoot(Astro.request, session);
+// Kalıcı gözlemlenebilirlik: `wrangler tail` ile tohumun rotaya göre ne
+// ürettiği (veya neden null döndüğü) görülebilir.
+console.info(`[boot] ${Astro.url.pathname} → ${boot ? Object.keys(boot).join(",") : "null"}`);
+---
+
+<Layout>
+	{/* Router/Query istemcide kurulur; workerd SSR'da document yok → client:only. */}
+	<AdminApp client:only="react" boot={boot ?? undefined} />
+</Layout>

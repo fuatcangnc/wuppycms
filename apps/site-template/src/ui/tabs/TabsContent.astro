@@ -1,0 +1,20 @@
+---
+interface Props {
+  value: string
+  class?: string
+}
+
+const { value, class: className } = Astro.props
+---
+
+<div
+  data-slot="tabs-content"
+  data-tabs-content
+  data-value={value}
+  role="tabpanel"
+  data-state="inactive"
+  style="display:none"
+  class:list={['mt-8 focus-visible:outline-none', className]}
+>
+  <slot />
+</div>

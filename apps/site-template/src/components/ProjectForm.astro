@@ -1,0 +1,147 @@
+---
+import { ArrowRight, CircleCheck, Mail, Zap } from "@lucide/astro";
+import { siteSettings } from "@/data/site";
+
+interface Props {
+	title?: string;
+	hideHeading?: boolean;
+}
+
+const { title = "Demo talep edin", hideHeading = false } = Astro.props;
+---
+
+<div class="relative w-full border border-neutral-300 bg-white p-6 text-neutral-950 shadow-lg sm:p-10">
+	<div class="absolute inset-x-0 top-0 h-1.5 bg-primary"></div>
+
+	<form
+		class="grid w-full gap-5"
+		data-contact-form
+		data-email={siteSettings.email}
+		action={`mailto:${siteSettings.email}`}
+		method="post"
+		enctype="text/plain"
+	>
+		{
+			!hideHeading && (
+				<div class="grid gap-1.5 border-b border-neutral-200 pb-4">
+					<span class="text-[11px] font-black uppercase tracking-[.18em] text-primary">Demo & iletişim</span>
+					<h2 class="text-2xl font-black uppercase tracking-tight text-neutral-950">{title}</h2>
+					<p class="text-xs leading-relaxed text-neutral-600">
+						Reponuzu, içerik hacminizi ve ihtiyacınızı iletin; demo ve sonraki adımları birlikte planlayalım.
+					</p>
+				</div>
+			)
+		}
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="grid gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-800">
+				Ad Soyad *
+				<input
+					class="w-full border border-neutral-300 bg-neutral-50/50 px-4 py-3 text-sm font-semibold text-neutral-900 outline-none transition placeholder:font-normal placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+					required
+					name="fullName"
+					autocomplete="name"
+					placeholder="Adınız Soyadınız"
+				/>
+			</label>
+
+			<label class="grid gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-800">
+				E-posta *
+				<input
+					class="w-full border border-neutral-300 bg-neutral-50/50 px-4 py-3 text-sm font-semibold text-neutral-900 outline-none transition placeholder:font-normal placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+					required
+					type="email"
+					name="email"
+					autocomplete="email"
+					placeholder="ornek@site.com"
+				/>
+			</label>
+
+			<label class="grid gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-800">
+				Site / repo
+				<input
+					class="w-full border border-neutral-300 bg-neutral-50/50 px-4 py-3 text-sm font-semibold text-neutral-900 outline-none transition placeholder:font-normal placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+					name="repo"
+					placeholder="github.com/kullanici/repo"
+				/>
+			</label>
+
+			<label class="grid gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-800">
+				İçerik hacmi
+				<select
+					class="w-full border border-neutral-300 bg-neutral-50/50 px-4 py-3 text-sm font-semibold text-neutral-900 outline-none transition focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+					name="volume"
+				>
+					<option value="1-10 sayfa">1–10 sayfa</option>
+					<option value="10-50 sayfa">10–50 sayfa</option>
+					<option value="50+ sayfa">50+ sayfa</option>
+					<option value="Henüz planlıyorum">Henüz planlıyorum</option>
+				</select>
+			</label>
+
+			<label class="grid gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-800 sm:col-span-2">
+				İhtiyacınız
+				<textarea
+					class="min-h-24 w-full resize-y border border-neutral-300 bg-neutral-50/50 px-4 py-3 text-sm font-semibold text-neutral-900 outline-none transition placeholder:font-normal placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+					name="message"
+					rows="3"
+					placeholder="Mevcut siteniz, içerik tipiniz veya demo beklentiniz..."
+				></textarea>
+			</label>
+		</div>
+
+		<label class="flex cursor-pointer select-none items-start gap-2.5 text-xs leading-relaxed text-neutral-600">
+			<input class="mt-0.5 size-4 rounded-none accent-primary" required type="checkbox" name="consent" />
+			<span>İletişim bilgilerimin demo ve geri dönüş amacıyla kullanılmasını onaylıyorum.</span>
+		</label>
+
+		<button
+			class="group inline-flex min-h-13 w-full items-center justify-center gap-3 bg-neutral-950 px-8 py-4 text-xs font-black uppercase tracking-wider text-white shadow-md transition-all duration-300 hover:bg-primary hover:shadow-primary/30 sm:text-sm"
+			type="submit"
+		>
+			<span>E-posta ile gönder</span>
+			<ArrowRight class="size-4 transition-transform group-hover:translate-x-1" />
+		</button>
+
+		<div class="flex items-center justify-center border-t border-neutral-200 pt-4 text-[11px] font-bold text-neutral-500">
+			<span class="inline-flex items-center gap-1.5 text-primary">
+				<Zap class="size-3.5" />
+				Ortalama yanıt: 1 iş günü
+			</span>
+		</div>
+
+		<p class="flex items-center gap-2 border border-emerald-300 bg-emerald-50 p-3 text-xs font-bold text-emerald-800" data-form-status hidden>
+			<CircleCheck size={18} class="shrink-0 text-emerald-600" />
+			<span>Bilgileriniz hazırlandı; e-posta istemciniz açılıyor...</span>
+		</p>
+
+		<p class="flex items-center justify-center gap-1.5 text-center text-[10px] font-medium text-neutral-400">
+			<Mail size={12} /> {siteSettings.email}
+		</p>
+	</form>
+</div>
+
+<script>
+	document.querySelectorAll<HTMLFormElement>("[data-contact-form]").forEach((form) => {
+		form.addEventListener("submit", (event) => {
+			event.preventDefault();
+			const data = new FormData(form);
+			const email = form.dataset.email || "merhaba@wuppycms.dev";
+			const subject = `WuppyCMS demo talebi — ${data.get("fullName") || "Yeni talep"}`;
+			const body = [
+				`Ad Soyad: ${data.get("fullName") || "-"}`,
+				`E-posta: ${data.get("email") || "-"}`,
+				`Site / repo: ${data.get("repo") || "-"}`,
+				`İçerik hacmi: ${data.get("volume") || "-"}`,
+				"",
+				"İhtiyaç:",
+				String(data.get("message") || "-"),
+				"",
+				"WuppyCMS demo talebi.",
+			].join("\n");
+			const status = form.querySelector<HTMLElement>("[data-form-status]");
+			if (status) status.removeAttribute("hidden");
+			window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+		});
+	});
+</script>

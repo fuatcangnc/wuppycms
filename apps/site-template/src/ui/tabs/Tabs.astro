@@ -1,0 +1,47 @@
+---
+/**
+ * Bejamas UI Tabs - Root container
+ * Manages active tab state via data attributes
+ */
+interface Props {
+  defaultValue?: string
+  class?: string
+}
+
+const { defaultValue, class: className } = Astro.props
+---
+
+<div data-tabs-root data-default-value={defaultValue} class={className}>
+  <slot />
+</div>
+
+<script>
+  document.querySelectorAll('[data-tabs-root]').forEach((root) => {
+    const triggers = root.querySelectorAll('[data-tabs-trigger]')
+    const contents = root.querySelectorAll('[data-tabs-content]')
+    const defaultValue = root.getAttribute('data-default-value')
+
+    function activate(value: string) {
+      triggers.forEach((t) => {
+        const isActive = t.getAttribute('data-value') === value
+        t.setAttribute('data-state', isActive ? 'active' : 'inactive')
+        t.setAttribute('aria-selected', String(isActive))
+      })
+      contents.forEach((c) => {
+        const isActive = c.getAttribute('data-value') === value
+        c.setAttribute('data-state', isActive ? 'active' : 'inactive')
+        const el = c as HTMLElement
+        el.style.display = isActive ? '' : 'none'
+      })
+    }
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        activate(trigger.getAttribute('data-value') || '')
+      })
+    })
+
+    if (defaultValue) activate(defaultValue)
+    else if (triggers.length > 0) activate(triggers[0].getAttribute('data-value') || '')
+  })
+</script>

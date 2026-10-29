@@ -1,0 +1,23 @@
+---
+title: Astro içerik koleksiyonları notları
+description: content.config.ts ve Zod şemaları neden bu kadar iyi?
+pubDate: 2026-10-14
+tags: [astro, içerik]
+author: fuat
+---
+
+`src/content.config.ts` içindeki Zod şeması hem editördeki formu hem de
+build sırasında veri doğrulamasını besler.
+
+- Şemaya aykırı frontmatter → build patlar, bozuk sayfa yayınlanmaz.
+- Editör formu şemadan üretilir → elle dosya yazma zorunluluğu kalmaz.
+- Tip güvenli `getCollection()` → sayfalarda `data.*` alanları otomatik tamamlanır.
+
+```ts
+const blog = defineCollection({
+	schema: z.object({
+		title: z.string(),
+		pubDate: z.coerce.date(),
+	}),
+});
+```

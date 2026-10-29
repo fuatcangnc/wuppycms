@@ -1,0 +1,424 @@
+---
+// WuppyCMS önizleme köprüsü (ADR 0008).
+//
+// Bu betik yalnızca sayfa bir üst pencereye gömülüyken ve üst pencere
+// `wuppycms:hello` gönderdiğinde etkinleşir. Normal ziyaretçi için hiçbir şey
+// yapmaz: dinleyici yok, görünür katman yok, veri gönderimi yok.
+//
+// Protokol (postMessage):
+//   parent → site : wuppycms:hello | wuppycms:pick-mode {on} | wuppycms:unpick {path,label}
+//                   wuppycms:place {path,label,position,scroll} | wuppycms:skeleton {path,label,position}
+//                   wuppycms:skeleton-clear | wuppycms:soft-refresh {path,requestId}
+//                   wuppycms:reload | wuppycms:back | wuppycms:forward
+//   site → parent : wuppycms:ready | wuppycms:pick {selection} | wuppycms:page {path,title}
+//                   wuppycms:navigate {href}
+---
+
+<script is:inline>
+	(() => {
+		if (window.parent === window) return;
+
+		let active = false;
+		let picking = false;
+		let overlay = null;
+		let overlayTag = null;
+		let current = null;
+		/** path+label → seçilmiş element (kaldırma için). */
+		const picked = new Map();
+		let marker = null;
+		let skeleton = null;
+
+		const post = (message) => {
+			try {
+				window.parent.postMessage(message, "*");
+			} catch {
+				// üst pencere erişilemez
+			}
+		};
+
+		const labelOf = (element) => {
+			let name = element.tagName.toLowerCase();
+			if (element.id) name += `#${element.id}`;
+			else if (typeof element.className === "string" && element.className.trim()) {
+				const first = element.className.trim().split(/\s+/)[0];
+				if (first && !first.startsWith("wuppycms-")) name += `.${first}`;
+			}
+			return name.length > 34 ? `${name.slice(0, 34)}…` : name;
+		};
+
+		const cssPath = (element) => {
+			const parts = [];
+			let node = element;
+			let guard = 0;
+			while (node && node.nodeType === 1 && guard < 5) {
+				if (node === document.body || node === document.documentElement) break;
+				let part = node.tagName.toLowerCase();
+				if (node.id) {
+					parts.unshift(`#${node.id}`);
+					break;
+				}
+				const parent = node.parentElement;
+				if (parent) {
+					const siblings = Array.from(parent.children).filter((child) => child.tagName === node.tagName);
+					if (siblings.length > 1) part += `:nth-of-type(${siblings.indexOf(node) + 1})`;
+				}
+				parts.unshift(part);
+				node = parent;
+				guard += 1;
+			}
+			return parts.join(" > ");
+		};
+
+		const contentOf = (element) => {
+			const host = element.closest("[data-wuppycms-content]");
+			if (host) {
+				try {
+					const parsed = JSON.parse(host.getAttribute("data-wuppycms-content") || "{}");
+					if (parsed && typeof parsed === "object") return parsed;
+				} catch {
+					// geçersiz JSON — aşağıdaki özniteliklere düş
+				}
+			}
+			const collection = element.closest("[data-wuppycms-collection]");
+			if (!collection) return null;
+			return {
+				collection: collection.getAttribute("data-wuppycms-collection") || undefined,
+				slug: collection.getAttribute("data-wuppycms-slug") || undefined,
+				field: element.closest("[data-wuppycms-field]")?.getAttribute("data-wuppycms-field") || undefined,
+			};
+		};
+
+		const describe = (element) => {
+			const text = (element.textContent || "").replace(/\s+/g, " ").trim().slice(0, 300);
+			const html = element.outerHTML
+				.replace(/\s+/g, " ")
+				.replace(/\s*wuppycms-picked\s*/g, " ")
+				.replace(/ class="\s+/g, ' class="')
+				.slice(0, 700);
+			return {
+				tag: element.tagName.toLowerCase(),
+				label: labelOf(element),
+				text,
+				html,
+				path: cssPath(element),
+				content: contentOf(element),
+			};
+		};
+
+		const ensureOverlay = () => {
+			if (overlay) return;
+			const style = document.createElement("style");
+			style.textContent =
+				"html.wuppycms-picking,html.wuppycms-picking *{cursor:crosshair !important}" +
+				"[data-wuppycms-picked]{outline:2px solid #dd641e !important;outline-offset:2px}" +
+				"@keyframes wuppycms-pulse{0%,100%{opacity:.55}50%{opacity:1}}" +
+				".wuppycms-insert-marker{position:relative;height:0;border-top:3px solid #dd641e;margin:5px 0;pointer-events:none;z-index:2147483000}" +
+				".wuppycms-insert-marker>span{position:absolute;right:0;top:-11px;background:#dd641e;color:#fff;font:800 9px/1.5 ui-sans-serif,system-ui;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;white-space:nowrap}" +
+				".wuppycms-insert-skeleton{position:relative;box-sizing:border-box;width:100%;margin:10px 0;border:1px solid #e5e5e5;border-top:3px solid #dd641e;background:#fafafa;padding:18px;z-index:1;pointer-events:none;overflow:hidden}" +
+				".wuppycms-insert-skeleton__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;font:800 10px/1.4 ui-sans-serif,system-ui;letter-spacing:.12em;text-transform:uppercase;color:#dd641e}" +
+				".wuppycms-insert-skeleton__dot{display:inline-block;width:6px;height:6px;margin-right:6px;background:#dd641e;vertical-align:1px}" +
+				".wuppycms-insert-skeleton__line{height:10px;margin-top:10px;background:#e5e5e5;animation:wuppycms-pulse 1.6s ease-in-out infinite}" +
+				".wuppycms-insert-skeleton__line--title{height:18px;width:58%;background:#d4d4d4}" +
+				".wuppycms-insert-skeleton__line--wide{width:92%}" +
+				".wuppycms-insert-skeleton__line--mid{width:76%;animation-delay:.15s}" +
+				".wuppycms-insert-skeleton__hint{margin-top:14px;font:500 10px/1.5 ui-sans-serif,system-ui;color:#737373}";
+			document.head.appendChild(style);
+			overlay = document.createElement("div");
+			overlay.style.cssText =
+				"position:fixed;z-index:2147483000;pointer-events:none;border:2px solid #4f8cff;" +
+				"border-radius:6px;box-sizing:border-box;display:none;background:rgba(79,140,255,.06)";
+			overlayTag = document.createElement("span");
+			overlayTag.style.cssText =
+				"position:absolute;top:-20px;left:-2px;background:#4f8cff;color:#fff;" +
+				"font:500 10.5px/1.6 ui-sans-serif,system-ui;padding:1px 6px;border-radius:4px 4px 0 0;" +
+				"white-space:nowrap;max-width:260px;overflow:hidden";
+			overlay.appendChild(overlayTag);
+			document.documentElement.appendChild(overlay);
+		};
+
+		const targetFor = (path, label) => {
+			const selected = picked.get(`${path}|${label}`);
+			if (selected && selected.isConnected) return selected;
+			try {
+				return document.querySelector(path);
+			} catch {
+				return null;
+			}
+		};
+
+		const clearMarker = () => {
+			if (marker) marker.remove();
+			marker = null;
+		};
+
+		const clearSkeleton = () => {
+			if (skeleton) skeleton.remove();
+			skeleton = null;
+		};
+
+		const clearInsertion = () => {
+			clearMarker();
+			clearSkeleton();
+		};
+
+		const placeMarker = (path, label, position, scroll) => {
+			clearMarker();
+			const target = targetFor(path, label);
+			if (!target || !target.parentElement) return;
+			marker = document.createElement("div");
+			marker.className = "wuppycms-insert-marker";
+			marker.setAttribute("data-wuppycms-place", "");
+			const tag = document.createElement("span");
+			tag.textContent = position === "before" ? "Insert before" : "Insert after";
+			marker.appendChild(tag);
+			if (position === "before") target.before(marker);
+			else target.after(marker);
+			if (scroll) target.scrollIntoView({ behavior: "smooth", block: "center" });
+		};
+
+		const placeSkeleton = (path, label, position, message) => {
+			clearInsertion();
+			const target = targetFor(path, label);
+			skeleton = document.createElement("div");
+			skeleton.className = "wuppycms-insert-skeleton";
+			skeleton.setAttribute("data-wuppycms-skeleton", "");
+			skeleton.setAttribute("role", "status");
+			skeleton.setAttribute("aria-label", "AI is preparing a new section");
+			if (target) {
+				const rect = target.getBoundingClientRect();
+				skeleton.style.width = `${Math.max(80, Math.round(rect.width))}px`;
+				skeleton.style.height = `${Math.max(56, Math.round(rect.height))}px`;
+				skeleton.style.maxWidth = "100%";
+			} else {
+				skeleton.style.minHeight = "170px";
+			}
+			const head = document.createElement("div");
+			head.className = "wuppycms-insert-skeleton__head";
+			const headLabel = document.createElement("span");
+			const dot = document.createElement("span");
+			dot.className = "wuppycms-insert-skeleton__dot";
+			headLabel.append(dot, document.createTextNode(typeof message === "string" && message.trim() ? message : "Preparing new section"));
+			const aiTag = document.createElement("span");
+			aiTag.textContent = "AI";
+			head.append(headLabel, aiTag);
+			const titleLine = document.createElement("div");
+			titleLine.className = "wuppycms-insert-skeleton__line wuppycms-insert-skeleton__line--title";
+			const wideLine = document.createElement("div");
+			wideLine.className = "wuppycms-insert-skeleton__line wuppycms-insert-skeleton__line--wide";
+			const midLine = document.createElement("div");
+			midLine.className = "wuppycms-insert-skeleton__line wuppycms-insert-skeleton__line--mid";
+			const hint = document.createElement("div");
+			hint.className = "wuppycms-insert-skeleton__hint";
+			hint.textContent = "It will appear here when ready.";
+			skeleton.append(head, titleLine, wideLine, midLine, hint);
+			if (!target) {
+				(document.querySelector("main") ?? document.body).appendChild(skeleton);
+				skeleton.scrollIntoView({ behavior: "smooth", block: "center" });
+				return;
+			}
+			if (position === "before") target.before(skeleton);
+			else target.after(skeleton);
+			target.scrollIntoView({ behavior: "smooth", block: "center" });
+		};
+
+		const softRefresh = async (path, requestId) => {
+			const ack = (ok) => post({ type: "wuppycms:soft-refreshed", requestId, ok: Boolean(ok) });
+			try {
+				const currentMain = document.querySelector("main");
+				if (!currentMain) throw new Error("no-main");
+				const currentTitle = document.title;
+				let nextDoc = null;
+				let nextMain = null;
+				for (let attempt = 0; attempt < 10; attempt += 1) {
+					const res = await fetch(location.href, { cache: "no-store", credentials: "same-origin" });
+					if (!res.ok) throw new Error("fetch");
+					nextDoc = new DOMParser().parseFromString(await res.text(), "text/html");
+					nextMain = nextDoc.querySelector("main");
+					if (nextMain && nextMain.innerHTML !== currentMain.innerHTML) break;
+					await new Promise((resolve) => setTimeout(resolve, 500));
+				}
+				if (!nextDoc || !nextMain) throw new Error("no-main");
+				const shellOf = (doc, selector) => {
+					const el = doc.querySelector(selector);
+					if (!el) return "";
+					const text = (el.textContent ?? "").replace(/\s+/g, " ").trim();
+					const links = [...el.querySelectorAll("a[href]")]
+						.map((a) => a.getAttribute("href"))
+						.join("|");
+					return `${text}::${links}`;
+				};
+				if (
+					shellOf(nextDoc, "header") !== shellOf(document, "header") ||
+					shellOf(nextDoc, "footer") !== shellOf(document, "footer") ||
+					nextDoc.title !== currentTitle
+				) {
+					throw new Error("shell-changed");
+				}
+				const scroll = window.scrollY;
+				const oldStyles = Array.from(document.querySelectorAll("style[data-vite-dev-id]"));
+				nextDoc.querySelectorAll("style[data-vite-dev-id]").forEach((style) => {
+					document.head.appendChild(document.importNode(style, true));
+				});
+				oldStyles.forEach((style) => style.remove());
+				const existingLinks = new Set(
+					Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.getAttribute("href")),
+				);
+				nextDoc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+					if (link.getAttribute("href") && !existingLinks.has(link.getAttribute("href"))) {
+						document.head.appendChild(document.importNode(link, true));
+					}
+				});
+				clearInsertion();
+				currentMain.replaceWith(document.importNode(nextMain, true));
+				let target = null;
+				if (path) {
+					try {
+						target = document.querySelector(path);
+					} catch {
+						target = null;
+					}
+				}
+				if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+				else window.scrollTo(0, scroll);
+				ack(true);
+			} catch {
+				ack(false);
+			}
+		};
+
+		const onMove = (event) => {
+			if (!picking || !overlay) return;
+			const target = event.target;
+			if (!(target instanceof Element) || target === overlay || target === document.documentElement) {
+				overlay.style.display = "none";
+				return;
+			}
+			const rect = target.getBoundingClientRect();
+			overlay.style.display = "block";
+			overlay.style.left = `${rect.left}px`;
+			overlay.style.top = `${rect.top}px`;
+			overlay.style.width = `${rect.width}px`;
+			overlay.style.height = `${rect.height}px`;
+			overlayTag.textContent = labelOf(target);
+			current = target;
+		};
+
+		const onClick = (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+
+			if (picking) {
+				event.preventDefault();
+				event.stopPropagation();
+				if (overlay) overlay.style.display = "none";
+				clearMarker();
+				const selection = describe(target);
+				const key = `${selection.path}|${selection.label}`;
+				const existing = picked.get(key);
+				const additive = Boolean(event.metaKey || event.ctrlKey || event.shiftKey);
+				// Yeni seçim varsayılan olarak ÖNCEKİNİ DEĞİŞTİRİR. Çoklu seçim
+				// yalnızca ⌘/Ctrl/Shift basılıyken eklenir (turan-widget paritesi).
+				if (!additive) {
+					for (const [oldKey, oldElement] of picked) {
+						if (oldKey !== key) {
+							if (oldElement.isConnected) oldElement.removeAttribute("data-wuppycms-picked");
+							picked.delete(oldKey);
+						}
+					}
+				}
+				if (existing && existing.isConnected) existing.removeAttribute("data-wuppycms-picked");
+				target.setAttribute("data-wuppycms-picked", "");
+				picked.set(key, target);
+				post({ type: "wuppycms:pick", selection, additive });
+				return;
+			}
+
+			const anchor = target.closest("a[href]");
+			if (!anchor || anchor.target === "_blank") return;
+			const href = anchor.getAttribute("href");
+			if (!href || href.startsWith("#") || /^(mailto:|tel:|javascript:)/i.test(href)) return;
+			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+			event.preventDefault();
+			event.stopPropagation();
+			try {
+				post({ type: "wuppycms:navigate", href: new URL(href, location.href).toString() });
+			} catch {
+				// geçersiz URL
+			}
+		};
+
+		const onMessage = (event) => {
+			if (event.source !== window.parent) return;
+			const data = event.data;
+			if (!data || typeof data.type !== "string") return;
+
+			if (data.type === "wuppycms:hello") {
+				ensureOverlay();
+				if (!active) {
+					document.addEventListener("mousemove", onMove, true);
+					document.addEventListener("click", onClick, true);
+					active = true;
+				}
+				post({ type: "wuppycms:ready", capabilities: { softRefresh: true, skeleton: true } });
+				post({ type: "wuppycms:page", path: location.pathname, title: document.title });
+				return;
+			}
+			if (data.type === "wuppycms:pick-mode") {
+				picking = Boolean(data.on);
+				document.documentElement.classList.toggle("wuppycms-picking", picking);
+				if (!picking && overlay) overlay.style.display = "none";
+				return;
+			}
+			if (data.type === "wuppycms:unpick") {
+				const key = `${data.path}|${data.label}`;
+				const element = picked.get(key);
+				if (element) element.removeAttribute("data-wuppycms-picked");
+				picked.delete(key);
+				return;
+			}
+			if (data.type === "wuppycms:place") {
+				if (typeof data.path === "string") {
+					placeMarker(
+						data.path,
+						typeof data.label === "string" ? data.label : "",
+						data.position === "before" ? "before" : "after",
+						Boolean(data.scroll),
+					);
+				}
+				return;
+			}
+			if (data.type === "wuppycms:skeleton") {
+				if (typeof data.path === "string") {
+					placeSkeleton(
+						data.path,
+						typeof data.label === "string" ? data.label : "",
+						data.position === "before" ? "before" : "after",
+						typeof data.message === "string" ? data.message : "",
+					);
+				}
+				return;
+			}
+			if (data.type === "wuppycms:skeleton-clear") {
+				clearInsertion();
+				return;
+			}
+			if (data.type === "wuppycms:soft-refresh") {
+				void softRefresh(typeof data.path === "string" ? data.path : null, data.requestId);
+				return;
+			}
+			if (data.type === "wuppycms:reload") {
+				location.reload();
+				return;
+			}
+			if (data.type === "wuppycms:back") {
+				history.back();
+				return;
+			}
+			if (data.type === "wuppycms:forward") {
+				history.forward();
+			}
+		};
+
+		window.addEventListener("message", onMessage);
+	})();
+</script>

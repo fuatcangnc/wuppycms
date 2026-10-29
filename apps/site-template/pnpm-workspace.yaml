@@ -1,0 +1,3 @@
+# Bağımsız kurulum (müşteri reposu) için pnpm ayarları.
+allowBuilds:
+  esbuild: true

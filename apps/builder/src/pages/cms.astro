@@ -1,0 +1,11 @@
+---
+// Eski CMS adresi — admin arayüzüne yönlendirir (?repo= ?site= olarak taşınır).
+import { getSession } from "@/lib/session";
+
+const repo = Astro.url.searchParams.get("repo") ?? Astro.url.searchParams.get("site");
+const target = "/admin" + (repo ? `?site=${encodeURIComponent(repo)}` : "");
+if (!(await getSession(Astro))) {
+	return Astro.redirect(`/login?next=${encodeURIComponent(target)}`);
+}
+return Astro.redirect(target);
+---

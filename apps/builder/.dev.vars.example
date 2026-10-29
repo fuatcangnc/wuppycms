@@ -1,0 +1,16 @@
+# Yerel geliştirme sırları — bu dosyayı .dev.vars olarak kopyalayın.
+#
+# Geliştirme kolaylığı: tek kullanıcılı GitHub token'ı (repo okuma/yazma).
+# Üretimde kimlik better-auth oturumundan gelir; token git_connections
+# tablosunda şifreli saklanır.
+GITHUB_TOKEN=
+
+# Token şifreleme anahtarı — 64 hex karakter: openssl rand -hex 32
+TOKEN_ENCRYPTION_KEY=
+
+# better-auth
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:4321
+# GitHub OAuth App (callback: <origin>/api/auth/callback/github)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=

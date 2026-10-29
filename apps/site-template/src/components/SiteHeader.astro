@@ -1,0 +1,197 @@
+---
+import { Icon } from "astro-icon/components";
+import { ArrowRight, ChevronDown, ChevronRight, Mail, Menu, X } from "@lucide/astro";
+import Brand from "./Brand.astro";
+import { navItems, siteSettings } from "@/data/site";
+import {
+	NavigationMenu,
+	NavigationMenuContent,
+	NavigationMenuItem,
+	NavigationMenuLink,
+	NavigationMenuList,
+	NavigationMenuTrigger,
+	navigationMenuTriggerStyle,
+} from "@/ui/navigation-menu";
+
+const isActive = (href: string) => {
+	// Anchor bağlantıları (/#ozellikler gibi) sayfa yüklendiğinde aktif sayılmaz;
+	// aksi halde ana sayfada birden fazla menü öğesi altı çizili görünür.
+	if (href.includes("#")) return false;
+	if (href === "/") return Astro.url.pathname === "/";
+	return Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
+};
+---
+
+<header
+	id="site-header"
+	class="group/header sticky top-0 z-50 bg-white transition-all duration-300"
+	data-sticky="false"
+>
+	<!-- Üst bilgi çubuğu -->
+	<div class="hidden border-b border-white/10 bg-[#111111] text-white transition-all duration-200 lg:block group-data-[sticky=true]/header:hidden">
+		<div class="mx-auto flex min-h-9 w-[95vw] items-center justify-between px-2 text-xs">
+			<span class="font-medium text-white/70">
+				İçeriğiniz GitHub'da yaşasın. AI ile düzenleyin, commit ile yayınlayın.
+			</span>
+			<div class="flex h-9 items-stretch">
+				<a
+					href={`mailto:${siteSettings.email}`}
+					class="inline-flex items-center gap-2 border-l border-white/10 px-4 text-[11px] font-bold text-white/90 transition-colors hover:text-primary"
+				>
+					<Mail size={13} /> {siteSettings.email}
+				</a>
+				<a
+					href={siteSettings.github}
+					target="_blank"
+					rel="noreferrer"
+					class="inline-flex items-center gap-2 border-l border-white/10 px-4 text-[11px] font-bold text-white/90 transition-colors hover:text-primary"
+				>
+					<Icon name="simple-icons:github" size={13} /> GitHub
+				</a>
+				<span class="inline-flex items-center gap-1.5 border-l border-white/10 px-4 text-[11px] font-bold text-white/90">
+					TR <ChevronDown size={12} />
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="py-2.5 transition-all duration-300">
+		<div
+			class="nav-shell mx-auto flex min-h-[4.5rem] w-[95vw] items-center justify-between border border-neutral-200/80 bg-white px-5 shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-300 group-data-[sticky=true]/header:border-white/12 group-data-[sticky=true]/header:bg-[#111111]/95 group-data-[sticky=true]/header:shadow-2xl group-data-[sticky=true]/header:backdrop-blur-md"
+		>
+			<div class="shrink-0"><Brand /></div>
+
+			<NavigationMenu class="hidden lg:flex" aria-label="Ana menü" openOnFocus>
+				<NavigationMenuList class="gap-1">
+					{
+						navItems.map((item) => (
+							<NavigationMenuItem value={item.label.toLowerCase()}>
+								{item.children ? (
+									<>
+										<NavigationMenuTrigger class={isActive(item.href) ? "!border-primary !text-primary !font-black" : ""}>
+											<span>{item.label}</span>
+										</NavigationMenuTrigger>
+										<NavigationMenuContent class="w-72 border border-neutral-200 bg-white shadow-2xl sm:w-80">
+											<div class="grid gap-1 p-2">
+												{item.children.map(([label, href]) => (
+													<NavigationMenuLink
+														href={href}
+														class="flex items-center justify-between px-3 py-2 text-xs font-bold text-neutral-900 transition-colors hover:bg-primary hover:!text-white"
+													>
+														<span>{label}</span>
+														<ChevronRight size={13} />
+													</NavigationMenuLink>
+												))}
+											</div>
+										</NavigationMenuContent>
+									</>
+								) : (
+									<NavigationMenuLink
+										href={item.href}
+										class={navigationMenuTriggerStyle({
+											class: `flex items-center ${isActive(item.href) ? "!border-primary !text-primary !font-black" : ""}`,
+										})}
+									>
+										<span>{item.label}</span>
+									</NavigationMenuLink>
+								)}
+							</NavigationMenuItem>
+						))
+					}
+				</NavigationMenuList>
+			</NavigationMenu>
+
+			<div class="flex items-center gap-2 lg:ml-0">
+				<a
+					class="hidden h-9 items-center gap-1.5 bg-primary px-3 text-[11px] font-black uppercase tracking-wider text-white shadow-sm transition hover:bg-black sm:inline-flex sm:h-10 sm:gap-2 sm:px-3.5 sm:text-xs"
+					href="/#iletisim"
+				>
+					<span class="grid size-4.5 place-items-center bg-black text-white sm:size-5">
+						<ArrowRight size={12} class="sm:hidden" />
+						<ArrowRight size={13} class="hidden sm:block" />
+					</span>
+					<span>Demo talep et</span>
+				</a>
+				<a
+					class="icon-button hidden size-10 place-items-center border border-neutral-200 text-neutral-900 transition hover:border-primary hover:text-primary lg:grid group-data-[sticky=true]/header:border-white/20 group-data-[sticky=true]/header:text-white"
+					aria-label="GitHub deposu"
+					href={siteSettings.github}
+					target="_blank"
+					rel="noreferrer"
+				>
+					<Icon name="simple-icons:github" size={17} />
+				</a>
+				<a
+					class="icon-button hidden size-10 place-items-center border border-neutral-200 text-neutral-900 transition hover:border-primary hover:text-primary lg:grid group-data-[sticky=true]/header:border-white/20 group-data-[sticky=true]/header:text-white"
+					aria-label="E-posta gönder"
+					href={`mailto:${siteSettings.email}`}
+				>
+					<Mail size={17} />
+				</a>
+			</div>
+
+			<details class="group/mobile relative ml-auto lg:hidden">
+				<summary
+					aria-label="Menüyü aç"
+					class="grid size-10 cursor-pointer list-none place-items-center text-neutral-900 group-data-[sticky=true]/header:text-white"
+				>
+					<Menu class="group-open/mobile:hidden" size={23} />
+					<X class="hidden group-open/mobile:block" size={23} />
+				</summary>
+				<nav
+					aria-label="Mobil menü"
+					class="absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2.5rem))] border border-neutral-200 bg-white p-4 text-neutral-900 shadow-2xl sm:p-5"
+				>
+					<ul class="flex flex-col gap-0.5">
+						{
+							navItems.map((item) => (
+								<li>
+									{item.children ? (
+										<details class="border-b border-neutral-100 py-1">
+											<summary class="flex cursor-pointer list-none items-center justify-between py-2.5 text-sm font-bold text-neutral-900 sm:py-3">
+												<span>{item.label}</span>
+												<ChevronDown size={17} />
+											</summary>
+											<ul class="flex flex-col gap-1 pb-2 pl-2 pt-1.5">
+												{item.children.map(([label, href]) => (
+													<li>
+														<a
+															class="block rounded-md px-3 py-2.5 text-xs font-semibold text-neutral-900 transition-colors hover:bg-primary hover:!text-white"
+															href={href}
+														>
+															{label}
+														</a>
+													</li>
+												))}
+											</ul>
+										</details>
+									) : (
+										<a
+											class="flex items-center justify-between border-b border-neutral-100 py-3 text-sm font-bold text-neutral-900 transition-colors hover:text-primary sm:py-3.5"
+											href={item.href}
+										>
+											<span>{item.label}</span>
+											<ArrowRight size={16} />
+										</a>
+									)}
+								</li>
+							))
+						}
+					</ul>
+					<a
+						class="mt-4 flex items-center justify-between bg-primary p-3.5 text-xs font-black uppercase text-white shadow-sm transition-colors hover:bg-black"
+						href="/#iletisim"
+					>
+						Demo talep et <ArrowRight size={16} />
+					</a>
+					<a
+						class="mt-2 flex items-center gap-2 border border-neutral-200 p-3 text-[11px] font-bold text-neutral-600 transition-colors hover:border-primary hover:text-primary"
+						href={`mailto:${siteSettings.email}`}
+					>
+						<Mail size={14} /> {siteSettings.email}
+					</a>
+				</nav>
+			</details>
+		</div>
+	</div>
+</header>

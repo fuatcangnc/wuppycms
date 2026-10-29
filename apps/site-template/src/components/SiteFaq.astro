@@ -1,0 +1,68 @@
+---
+import { ArrowRight, Mail } from "@lucide/astro";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui/accordion";
+import { faqs, siteSettings } from "@/data/site";
+---
+
+<section class="bg-white py-20 md:py-24" id="sss">
+	<div class="shell">
+		<div class="grid items-end gap-5 md:grid-cols-[10rem_1fr]" data-reveal>
+			<h3 class="w-fit -skew-x-12 bg-primary px-7 py-3 text-xs font-black uppercase italic tracking-[.12em] text-white">
+				<span class="block skew-x-12">SSS</span>
+			</h3>
+			<div>
+				<h2 class="text-4xl font-black uppercase leading-none tracking-[-.055em] text-neutral-950 md:text-6xl">
+					WuppyCMS hakkında merak edilenler
+				</h2>
+				<p class="mt-4 text-sm leading-7 text-black/70">
+					Git, AI, Astro ve dağıtım akışıyla ilgili en sık sorulan sorular.
+				</p>
+			</div>
+		</div>
+
+		<div class="mt-12 grid grid-cols-1 items-start gap-4 lg:grid-cols-2 lg:gap-6" data-reveal>
+			<Accordion type="single" class="space-y-3">
+				{
+					faqs.slice(0, 4).map(([question, answer], index) => (
+						<AccordionItem value={`faq-col1-${index}`} open={index === 0}>
+							<AccordionTrigger class="text-left text-sm font-black sm:text-base">{question}</AccordionTrigger>
+							<AccordionContent class="text-xs leading-relaxed text-neutral-600 sm:text-sm">{answer}</AccordionContent>
+						</AccordionItem>
+					))
+				}
+			</Accordion>
+			<Accordion type="single" class="space-y-3">
+				{
+					faqs.slice(4).map(([question, answer], index) => (
+						<AccordionItem value={`faq-col2-${index}`}>
+							<AccordionTrigger class="text-left text-sm font-black sm:text-base">{question}</AccordionTrigger>
+							<AccordionContent class="text-xs leading-relaxed text-neutral-600 sm:text-sm">{answer}</AccordionContent>
+						</AccordionItem>
+					))
+				}
+			</Accordion>
+		</div>
+
+		<div class="mt-12 border border-neutral-200 bg-neutral-50/70 p-6 sm:p-8" data-reveal>
+			<div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+				<div>
+					<span class="inline-block text-[11px] font-black uppercase tracking-wider text-primary">Doğrudan destek</span>
+					<h3 class="mt-1 text-xl font-black uppercase tracking-tight text-neutral-950 sm:text-2xl">
+						Başka sorunuz mu var?
+					</h3>
+					<p class="mt-1.5 max-w-2xl text-xs leading-relaxed text-neutral-600 sm:text-sm">
+						Reponuzu veya aklınıza takılan soruyu e-posta ile iletin; demo kapsamını birlikte netleştirelim.
+					</p>
+				</div>
+				<a
+					href={`mailto:${siteSettings.email}?subject=WuppyCMS%20sorusu`}
+					class="group inline-flex shrink-0 items-center justify-center gap-3 bg-primary px-8 py-4 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.02] hover:bg-[#b84d12] sm:text-[13px]"
+				>
+					<Mail class="size-5 shrink-0" />
+					<span>E-posta gönder</span>
+					<ArrowRight size={16} class="transition-transform group-hover:translate-x-1" />
+				</a>
+			</div>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,132 @@
+---
+import { ArrowRight, CalendarDays, Clock } from "@lucide/astro";
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import InternalHero from "@/components/InternalHero.astro";
+import Tabs from "@/ui/tabs/Tabs.astro";
+import TabsContent from "@/ui/tabs/TabsContent.astro";
+import TabsList from "@/ui/tabs/TabsList.astro";
+import TabsTrigger from "@/ui/tabs/TabsTrigger.astro";
+
+const allPosts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const tags = Array.from(new Set(allPosts.flatMap((post) => post.data.tags))).sort((a, b) =>
+	a.localeCompare(b, "tr"),
+);
+const categories = [{ slug: "tumu", label: "Tümü" }, ...tags.map((tag) => ({ slug: tag, label: tag }))];
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+const readTime = (body: string) => `${Math.max(1, Math.ceil(body.split(/\s+/).length / 200))} dk`;
+const tones = ["dark", "orange", "light"] as const;
+---
+
+<Base
+	title="Blog | WuppyCMS"
+	description="Git tabanlı içerik, Astro, tasarım sistemleri ve AI destekli editör üzerine WuppyCMS notları."
+>
+	<main>
+		<InternalHero
+			eyebrow="WuppyCMS Journal"
+			title="Blog"
+			description="Git tabanlı içerik, Astro, tasarım sistemleri ve AI destekli editör üzerine notlar. Her yazı repoda yaşar, her düzeltme bir commit'tir."
+		/>
+
+		<section class="bg-white py-14 sm:py-20">
+			<div class="shell max-w-6xl">
+				<Tabs defaultValue="tumu">
+					<div class="flex justify-center">
+						<TabsList class="max-w-full overflow-x-auto">
+							{categories.map((category) => <TabsTrigger value={category.slug}>{category.label}</TabsTrigger>)}
+						</TabsList>
+					</div>
+
+					{
+						categories.map((category) => {
+							const posts =
+								category.slug === "tumu"
+									? allPosts
+									: allPosts.filter((post) => post.data.tags.includes(category.slug));
+							return (
+								<TabsContent value={category.slug}>
+									<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+										{posts.map((post, index) => {
+											const tone = tones[index % tones.length];
+											const tag = post.data.tags[0] || "İçerik";
+											return (
+												<article
+													class="group flex flex-col border border-neutral-200 bg-white transition-all duration-200 hover:border-primary hover:shadow-sm"
+													data-wuppycms-content={JSON.stringify({ collection: "blog", slug: post.id })}
+												>
+													<a href={`/blog/${post.id}`} class="block overflow-hidden border-b border-neutral-200">
+														<div
+															class:list={[
+																"relative flex aspect-video flex-col justify-between overflow-hidden p-5",
+																tone === "dark" && "bg-[#0B0E11] text-white",
+																tone === "orange" && "bg-primary text-white",
+																tone === "light" && "bg-neutral-100 text-neutral-950",
+															]}
+														>
+															<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:18px_18px] opacity-[0.12]" aria-hidden="true"></div>
+															<div class="relative flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-[0.16em]">
+																<span>{tag}</span>
+																<span>{String(index + 1).padStart(2, "0")}</span>
+															</div>
+															<div class="relative flex items-end justify-between gap-3">
+																<span class="font-mono text-[clamp(2rem,4vw,3.5rem)] font-black leading-none tracking-[-0.08em] opacity-20">
+																	{post.data.title.slice(0, 1)}
+																</span>
+																<span class="text-right font-mono text-[9px] uppercase tracking-[0.14em] opacity-60">
+																	{post.data.author}
+																</span>
+															</div>
+														</div>
+													</a>
+													<div class="flex flex-1 flex-col p-5 sm:p-6">
+														<div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
+															<span class="bg-primary/10 px-2 py-0.5 text-primary">{tag}</span>
+														</div>
+														<h2
+															class="mt-3 text-base font-black leading-tight text-neutral-950 transition-colors group-hover:text-primary sm:text-lg"
+															data-wuppycms-field="title"
+														>
+															<a href={`/blog/${post.id}`}>{post.data.title}</a>
+														</h2>
+														<p class="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-600" data-wuppycms-field="description">
+															{post.data.description}
+														</p>
+														<div class="mt-auto flex items-center justify-between pt-4 text-[11px] text-neutral-500">
+															<span class="inline-flex items-center gap-1.5">
+																<CalendarDays size={13} />
+																{formatDate(post.data.pubDate)}
+															</span>
+															<span class="inline-flex items-center gap-1.5">
+																<Clock size={13} />
+																{readTime(post.body ?? "")}
+															</span>
+														</div>
+														<a
+															href={`/blog/${post.id}`}
+															class="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-primary transition-all group-hover:gap-3"
+														>
+															Yazıyı oku <ArrowRight size={14} />
+														</a>
+													</div>
+												</article>
+											);
+										})}
+									</div>
+									{posts.length === 0 && (
+										<p class="py-12 text-center text-sm text-neutral-500">Bu kategoride henüz yazı yok.</p>
+									)}
+								</TabsContent>
+							);
+						})
+					}
+				</Tabs>
+			</div>
+		</section>
+	</main>
+</Base>

@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+  # Şablon bağımsız bir projedir (müşteri reposuna kopyalanır); monorepo'ya dahil değil.
+  - "!apps/site-template"
+
+minimumReleaseAgeExclude:
+  - miniflare@5.20261012.0-beta
+  - wrangler@4.151.0
+allowBuilds:
+  esbuild: true
+  workerd: true

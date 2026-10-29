@@ -1,0 +1,201 @@
+---
+import { CircleCheck, ChevronRight, GitBranch } from "@lucide/astro";
+
+const steps = [
+	{
+		num: "01",
+		title: "Repoyu bağla",
+		desc: "GitHub reposu taranır; Astro sayfaları ve içerik koleksiyonları otomatik keşfedilir.",
+		tag: "GitHub",
+	},
+	{
+		num: "02",
+		title: "AI ile düzenle",
+		desc: "Doğal dil isteği yalnızca ilgili bölüme uygulanır; sayfanın geri kalanı korunur.",
+		tag: "AI",
+	},
+	{
+		num: "03",
+		title: "Diff'i onayla",
+		desc: "Değişiklik önizlemesi, etkilenen dosyalar ve SHA çakışma kontrolü birlikte gösterilir.",
+		tag: "Review",
+	},
+	{
+		num: "04",
+		title: "Commit et",
+		desc: "Anlamlı commit mesajıyla kayıt oluşur; geçmiş ve geri alma her zaman mümkündür.",
+		tag: "Git",
+	},
+	{
+		num: "05",
+		title: "Yayınla",
+		desc: "CI build alır, site Cloudflare'a dağıtılır. Canlı URL ve build durumu panelde görünür.",
+		tag: "Deploy",
+	},
+];
+---
+
+<div class="vehicle-blueprint-hub relative w-full select-none overflow-hidden border border-neutral-200/90 bg-neutral-50/70 p-4 shadow-sm sm:p-6" data-hero-blueprint>
+	<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(#d4d4d4_1px,transparent_1px)] [background-size:20px_20px] opacity-70" aria-hidden="true"></div>
+
+	<div class="relative z-10 mb-4 flex items-center justify-between border-b border-neutral-200/80 pb-3 text-xs">
+		<div class="flex items-center gap-2 font-mono font-bold text-neutral-800">
+			<span class="size-2 rounded-full bg-primary shadow-[0_0_6px_rgba(221,100,30,0.8)]"></span>
+			<span class="tracking-wider uppercase">WUPPY 360 // GIT İÇERİK AKIŞI</span>
+		</div>
+		<div class="flex items-center gap-2 font-mono text-[11px] text-neutral-500">
+			<span class="hidden sm:inline">OTOMATİK AKIŞ:</span>
+			<span class="border border-primary/20 bg-primary/10 px-2 py-0.5 font-bold text-primary" data-hero-counter>01 / 05</span>
+		</div>
+	</div>
+
+	<!-- Kod penceresi -->
+	<div class="relative mx-auto aspect-[16/10.4] w-full max-w-full" aria-hidden="true">
+		<div class="absolute inset-0 flex flex-col overflow-hidden border border-neutral-800 bg-[#0B0E11] shadow-[0_18px_40px_-18px_rgba(0,0,0,.5)]">
+			<div class="flex items-center justify-between border-b border-white/10 px-3 py-2 sm:px-4">
+				<span class="inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/45">
+					<GitBranch size={12} class="text-primary" />
+					src/pages/index.astro
+				</span>
+				<span class="flex gap-1.5">
+					<span class="size-1.5 rounded-full bg-white/20"></span>
+					<span class="size-1.5 rounded-full bg-white/20"></span>
+					<span class="size-1.5 rounded-full bg-primary"></span>
+				</span>
+			</div>
+
+			<div class="flex-1 overflow-hidden p-3 font-mono text-[9px] leading-[1.75] text-white/65 sm:p-4 sm:text-[10.5px] sm:leading-[1.9]">
+				<div class="grid grid-cols-[1.4rem_1fr] gap-x-2">
+					<span class="text-right text-white/20">1</span><span><span class="text-white/30">---</span></span>
+					<span class="text-right text-white/20">2</span><span><span class="text-primary">title:</span> WuppyCMS</span>
+					<span class="text-right text-white/20">3</span><span><span class="text-primary">description:</span> Git tabanlı içerik</span>
+					<span class="text-right text-white/20">4</span><span><span class="text-white/30">---</span></span>
+					<span class="text-right text-white/20">5</span><span></span>
+					<span class="text-right text-white/20">6</span><span><span class="text-sky-300">&lt;h1&gt;</span>&#123;title&#125;<span class="text-sky-300">&lt;/h1&gt;</span></span>
+					<span class="text-right text-white/20">7</span><span><span class="text-sky-300">&lt;p&gt;</span>İçerik repoda yaşar.<span class="text-sky-300">&lt;/p&gt;</span></span>
+					<span class="text-right text-white/20">8</span><span></span>
+					<span class="text-right text-white/20">9</span><span class="text-white/30">+ &lt;!-- AI önerisi: hero bölümü --&gt;</span>
+					<span class="text-right text-white/20">10</span><span class="bg-primary/10 text-amber-200">+ &lt;section class="hero"&gt;...&lt;/section&gt;</span>
+				</div>
+			</div>
+
+			<div class="flex items-center justify-between border-t border-white/10 px-3 py-2 font-mono text-[9px] text-white/40 sm:px-4 sm:text-[10px]">
+				<span class="inline-flex items-center gap-1.5"><GitBranch size={11} class="text-primary" /> main</span>
+				<span class="inline-flex items-center gap-1.5" data-hero-stage-label>hazır</span>
+				<span class="text-emerald-400">0 error</span>
+			</div>
+		</div>
+
+		<!-- köşe vurguları -->
+		<span class="absolute -left-1 top-8 h-10 w-1 bg-primary"></span>
+		<span class="absolute -right-1 bottom-8 h-10 w-1 bg-primary"></span>
+	</div>
+
+	<div class="relative z-10 mt-4 border-t border-neutral-200/80 pt-3">
+		<div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+			{
+				steps.map((item, index) => (
+					<button
+						type="button"
+						class={`step-tab-btn group border p-1.5 text-left transition-all duration-300 sm:p-2.5 ${
+							index === 0
+								? "active border-primary bg-white shadow-sm ring-1 ring-primary/20"
+								: "border-neutral-200 bg-white/60 hover:border-neutral-300 hover:bg-white"
+						}`}
+						data-step-index={index}
+					>
+						<div class="flex items-center justify-between">
+							<span class="text-[9px] font-black text-neutral-400 transition-colors group-[.active]:text-primary sm:text-[11px]">
+								{item.num}
+							</span>
+							<span class="hidden text-[9px] font-bold uppercase text-neutral-400 group-[.active]:text-neutral-900 md:inline">
+								{item.tag}
+							</span>
+						</div>
+						<p class="mt-0.5 truncate text-[10px] font-bold text-neutral-800 group-[.active]:text-black sm:text-xs">
+							{item.title}
+						</p>
+					</button>
+				))
+			}
+		</div>
+
+		<div class="mt-3 flex items-center justify-between gap-3 border border-neutral-200 bg-white p-2.5 text-xs sm:p-3">
+			<div class="flex min-w-0 items-center gap-2">
+				<CircleCheck size={16} class="shrink-0 text-primary" />
+				<span class="shrink-0 font-bold text-black" data-hero-callout-title>01. Repoyu bağla:</span>
+				<span class="truncate text-neutral-600" data-hero-callout-desc>{steps[0].desc}</span>
+			</div>
+			<a
+				href="/#iletisim"
+				class="inline-flex shrink-0 items-center gap-1 text-[11px] font-black uppercase text-primary transition-colors hover:text-black"
+			>
+				<span>Demo</span>
+				<ChevronRight size={13} />
+			</a>
+		</div>
+	</div>
+</div>
+
+<script is:inline>
+	function initHeroBlueprint() {
+		const hub = document.querySelector("[data-hero-blueprint]");
+		if (!hub) return;
+		const tabs = hub.querySelectorAll(".step-tab-btn");
+		const counter = hub.querySelector("[data-hero-counter]");
+		const calloutTitle = hub.querySelector("[data-hero-callout-title]");
+		const calloutDesc = hub.querySelector("[data-hero-callout-desc]");
+		const stageLabel = hub.querySelector("[data-hero-stage-label]");
+		const stepData = [
+			{ num: "01", title: "Repoyu bağla:", desc: "GitHub reposu taranır; Astro sayfaları ve içerik koleksiyonları otomatik keşfedilir.", label: "repo tarandı" },
+			{ num: "02", title: "AI ile düzenle:", desc: "Doğal dil isteği yalnızca ilgili bölüme uygulanır; sayfanın geri kalanı korunur.", label: "AI önerisi hazır" },
+			{ num: "03", title: "Diff'i onayla:", desc: "Değişiklik önizlemesi, etkilenen dosyalar ve SHA çakışma kontrolü birlikte gösterilir.", label: "diff inceleniyor" },
+			{ num: "04", title: "Commit et:", desc: "Anlamlı commit mesajıyla kayıt oluşur; geçmiş ve geri alma her zaman mümkündür.", label: "commit hazır" },
+			{ num: "05", title: "Yayınla:", desc: "CI build alır, site Cloudflare'a dağıtılır. Canlı URL ve build durumu panelde görünür.", label: "deploy edildi" },
+		];
+		let current = 0;
+		let timer = null;
+		let paused = false;
+
+		function activate(index) {
+			tabs.forEach((tab, i) => {
+				const active = i === index;
+				tab.classList.toggle("active", active);
+				tab.classList.toggle("border-primary", active);
+				tab.classList.toggle("bg-white", active);
+				tab.classList.toggle("shadow-sm", active);
+				tab.classList.toggle("ring-1", active);
+				tab.classList.toggle("ring-primary/20", active);
+				tab.classList.toggle("bg-white/60", !active);
+				tab.classList.toggle("border-neutral-200", !active);
+			});
+			if (counter) counter.textContent = `0${index + 1} / 05`;
+			if (calloutTitle) calloutTitle.textContent = `${stepData[index].num}. ${stepData[index].title}`;
+			if (calloutDesc) calloutDesc.textContent = stepData[index].desc;
+			if (stageLabel) stageLabel.textContent = stepData[index].label;
+			current = index;
+		}
+
+		function next() {
+			if (paused) return;
+			activate((current + 1) % stepData.length);
+		}
+
+		if (timer) clearInterval(timer);
+		timer = setInterval(next, 3800);
+
+		tabs.forEach((tab, index) => {
+			tab.addEventListener("click", () => {
+				activate(index);
+				if (timer) clearInterval(timer);
+				timer = setInterval(next, 4800);
+			});
+			tab.addEventListener("mouseenter", () => (paused = true));
+			tab.addEventListener("mouseleave", () => (paused = false));
+		});
+	}
+
+	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initHeroBlueprint);
+	else initHeroBlueprint();
+	document.addEventListener("astro:page-load", initHeroBlueprint);
+</script>

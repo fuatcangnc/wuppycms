@@ -1,0 +1,41 @@
+---
+import { siteSettings } from "@/data/site";
+
+interface Props {
+	inverse?: boolean;
+	class?: string;
+}
+
+const { inverse = false, class: className = "" } = Astro.props;
+const wordmarkClass = inverse ? "text-white" : "text-neutral-950";
+const subClass = inverse ? "text-white/55" : "text-neutral-500";
+const brand = siteSettings.brandName;
+const suffix = brand.endsWith("CMS") ? "CMS" : "";
+const head = suffix ? brand.slice(0, -suffix.length) : brand;
+const mark = brand.slice(0, 1).toUpperCase();
+---
+
+<a
+	aria-label={`${brand} ana sayfa`}
+	class:list={["group/brand inline-flex items-center gap-3 py-1 focus:outline-none", className]}
+	href="/"
+>
+	<span class="grid size-10 shrink-0 place-items-center bg-primary text-white shadow-sm transition-transform duration-300 group-hover/brand:-rotate-3 sm:size-11">
+		<span class="font-mono text-lg font-black leading-none sm:text-xl">{mark}</span>
+	</span>
+
+	<span class="flex flex-col leading-none">
+		<span class:list={["text-[1.08rem] font-black uppercase tracking-[-0.055em] sm:text-[1.2rem]", "brand-logo--light", wordmarkClass]}>
+			{head}<span class="text-primary">{suffix}</span>
+		</span>
+		<span class:list={["mt-1 hidden text-[9px] font-bold uppercase tracking-[0.18em] sm:block", "brand-logo--light", subClass]}>
+			{siteSettings.tagline}
+		</span>
+		<span class="brand-logo--dark hidden text-[1.08rem] font-black uppercase tracking-[-0.055em] text-white sm:text-[1.2rem]">
+			{head}<span class="text-primary">{suffix}</span>
+		</span>
+		<span class="brand-logo--dark mt-1 hidden text-[9px] font-bold uppercase tracking-[0.18em] text-white/55">
+			{siteSettings.tagline}
+		</span>
+	</span>
+</a>

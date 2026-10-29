@@ -1,0 +1,16 @@
+---
+title: WuppyCMS nasıl çalışır?
+description: "Git depodan canlı siteye: kayıt → commit → CI build → deploy."
+pubDate: 2026-10-12
+tags: [mimari]
+author: fuat
+---
+
+Adım adım akış şöyle:
+
+1. **Editör:** CMS'te frontmatter formunu doldurur, gövdeyi yazarsın.
+2. **Commit:** Kaydet, GitHub API'siyle atomik commit olarak repoya düşer.
+3. **Build:** GitHub Actions `pnpm build` çalıştırır (ücretsiz CI).
+4. **Deploy:** Build çıktısı CDN'e basılır.
+
+> Kod senin reponda yaşar; WuppyCMS sadece editör ve boru hattıdır.

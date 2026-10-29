@@ -1,0 +1,121 @@
+---
+import { ArrowRight } from "@lucide/astro";
+import { pillars } from "@/data/site";
+
+const rows = [
+	{
+		accent: "primary",
+		items: [
+			["01", "src/pages/index.astro", "sayfa"],
+			["02", "src/content/blog/*.mdx", "içerik"],
+			["03", "src/components/sections/*.astro", "bölüm"],
+		],
+	},
+	{
+		accent: "emerald",
+		items: [
+			["3f2a1c", "AI: hero güncellendi", "commit"],
+			["8b1d2e", "içerik: blog eklendi", "commit"],
+			["c4a9f0", "tasarım: token güncellendi", "commit"],
+		],
+	},
+];
+---
+
+<section class="border-y border-neutral-200 bg-white py-20 lg:py-28" id="akis">
+	<div class="shell">
+		<div class="mx-auto mb-16 max-w-4xl text-center" data-reveal>
+			<div class="inline-block">
+				<span class="inline-block -skew-x-12 bg-neutral-950 px-5 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-white">
+					<span class="inline-block skew-x-12">İki ana uzmanlık</span>
+				</span>
+			</div>
+			<h2 class="mt-5 text-3xl font-black uppercase leading-tight tracking-tight text-neutral-950 sm:text-4xl lg:text-5xl">
+				AI ile düzenle, <span class="text-primary">Git ile sakla.</span>
+			</h2>
+			<p class="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-neutral-600 sm:text-base">
+				İçerik üretimi ve sürüm kontrolü aynı akışta. Her değişiklik önce öneri, sonra diff,
+				en son commit olur.
+			</p>
+		</div>
+
+		<div class="grid gap-10 lg:grid-cols-2 lg:gap-12" data-reveal>
+			{
+				pillars.map((pillar, index) => {
+					const isEmerald = pillar.accent === "emerald";
+					const accentBorder = isEmerald ? "border-t-emerald-600" : "border-t-primary";
+					const accentBg = isEmerald ? "bg-emerald-600" : "bg-primary";
+					const accentText = isEmerald ? "text-emerald-700" : "text-primary";
+					const accentHover = isEmerald ? "group-hover:text-emerald-700" : "group-hover:text-primary";
+					const accentBullet = isEmerald ? "bg-emerald-600" : "bg-primary";
+					const rowData = rows[index];
+					return (
+						<div class={`flex flex-col justify-between border border-neutral-200 border-t-4 bg-neutral-50/50 p-8 shadow-xs transition-colors hover:border-neutral-300 sm:p-10 ${accentBorder}`}>
+							<div>
+								<div class="flex items-center justify-between border-b border-neutral-200 pb-4">
+									<div class="flex items-center gap-2.5">
+										<span class={`grid size-8 place-items-center text-xs font-black text-white ${accentBg}`}>{pillar.number}</span>
+										<div>
+											<h3 class="text-lg font-black uppercase tracking-tight text-neutral-950 sm:text-xl">{pillar.title}</h3>
+											<h4 class={`text-[11px] font-bold uppercase tracking-wider ${accentText}`}>{pillar.subtitle}</h4>
+										</div>
+									</div>
+									<span class="hidden border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-neutral-400 sm:inline-block">
+										{isEmerald ? "Git & commit" : "AI & diff"}
+									</span>
+								</div>
+
+								<p class="mt-5 text-sm leading-relaxed text-neutral-600">{pillar.description}</p>
+
+								<div class="mt-6">
+									<div class="mb-1 flex items-center justify-between border-b border-neutral-200 pb-2">
+										<span class="text-[11px] font-black uppercase tracking-wider text-neutral-500">
+											{isEmerald ? "Son commit'ler" : "Düzenlenebilir kaynaklar"}
+										</span>
+										<span class={`text-[11px] font-black uppercase tracking-wider ${accentText}`}>canlı</span>
+									</div>
+									<div class="divide-y divide-neutral-200 border-b border-neutral-200">
+										{rowData.items.map(([number, name, kind]) => (
+											<div class="group flex items-center justify-between px-1 py-3 transition-colors hover:bg-white hover:pl-2.5">
+												<div class="flex min-w-0 items-center gap-3">
+													<span class={`shrink-0 font-mono text-xs font-bold text-neutral-400 ${accentHover}`}>{number}.</span>
+													<span class={`truncate text-xs font-bold text-neutral-900 transition-colors sm:text-sm ${accentHover}`}>{name}</span>
+												</div>
+												<span class={`shrink-0 pl-2 text-[9px] font-bold uppercase tracking-wider ${accentText}`}>{kind}</span>
+											</div>
+										))}
+									</div>
+								</div>
+
+								<div class="mt-6 grid grid-cols-1 gap-3 border border-neutral-200 bg-white p-4 text-xs font-bold text-neutral-800 sm:grid-cols-3">
+									{pillar.bullets.map((bullet) => (
+										<div class="flex items-center gap-2">
+											<span class={`size-1.5 ${accentBullet}`}></span>
+											<span>{bullet}</span>
+										</div>
+									))}
+								</div>
+							</div>
+
+							<div class="mt-8 flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-6">
+								<a
+									href={pillar.href}
+									class={`inline-flex min-h-12 items-center justify-center gap-2 px-7 text-xs font-black uppercase tracking-wider text-white transition-all duration-200 hover:scale-[1.01] ${isEmerald ? "bg-emerald-600 hover:bg-emerald-700" : "bg-primary hover:bg-[#b84d12]"}`}
+								>
+									<span>{pillar.cta}</span>
+									<ArrowRight class="size-4" />
+								</a>
+								<a
+									href="/#iletisim"
+									class="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-neutral-950 bg-white px-6 text-xs font-black uppercase tracking-wider text-neutral-950 transition-all duration-200 hover:bg-neutral-950 hover:text-white"
+								>
+									<span>Demo talep et</span>
+								</a>
+							</div>
+						</div>
+					);
+				})
+			}
+		</div>
+	</div>
+</section>

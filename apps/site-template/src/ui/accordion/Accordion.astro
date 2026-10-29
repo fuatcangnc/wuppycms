@@ -1,0 +1,97 @@
+---
+/**
+ * @component Accordion
+ * @title Accordion
+ * @description An interactive accordion component for showing and hiding collapsable content.
+ */
+import type { HTMLAttributes } from "astro/types";
+import { cn } from "@/lib/utils";
+
+interface Props extends HTMLAttributes<"div"> {
+  type?: "single" | "multiple";
+  class?: string;
+}
+
+const {
+  type = "single",
+  class: className = "",
+  ...props
+} = Astro.props as Props;
+---
+
+<div
+  data-slot="accordion"
+  data-type={type}
+  class={cn("w-full space-y-3", className)}
+  {...props}
+>
+  <slot />
+</div>
+
+<script>
+  const initAccordions = () => {
+    document.querySelectorAll<HTMLElement>('[data-slot="accordion"]').forEach((accordion) => {
+      const isSingle = accordion.getAttribute("data-type") === "single";
+      const items = accordion.querySelectorAll<HTMLElement>('[data-slot="accordion-item"]');
+
+      items.forEach((item) => {
+        const trigger = item.querySelector<HTMLElement>('[data-slot="accordion-trigger"]');
+        const content = item.querySelector<HTMLElement>('[data-slot="accordion-content"]');
+        const icon = item.querySelector<HTMLElement>('[data-slot="accordion-icon"]');
+
+        if (!trigger || !content) return;
+
+        trigger.addEventListener("click", () => {
+          const isOpen = item.getAttribute("data-state") === "open";
+
+          if (isSingle && !isOpen) {
+            items.forEach((otherItem) => {
+              if (otherItem !== item) {
+                otherItem.setAttribute("data-state", "closed");
+                const otherContent = otherItem.querySelector<HTMLElement>('[data-slot="accordion-content"]');
+                const otherIcon = otherItem.querySelector<HTMLElement>('[data-slot="accordion-icon"]');
+                if (otherContent) {
+                  otherContent.style.maxHeight = "0px";
+                  otherContent.setAttribute("aria-hidden", "true");
+                }
+                if (otherIcon) {
+                  otherIcon.style.transform = "rotate(0deg)";
+                }
+              }
+            });
+          }
+
+          if (isOpen) {
+            item.setAttribute("data-state", "closed");
+            content.style.maxHeight = "0px";
+            content.setAttribute("aria-hidden", "true");
+            trigger.setAttribute("aria-expanded", "false");
+            if (icon) icon.style.transform = "rotate(0deg)";
+          } else {
+            item.setAttribute("data-state", "open");
+            content.style.maxHeight = `${content.scrollHeight}px`;
+            content.setAttribute("aria-hidden", "false");
+            trigger.setAttribute("aria-expanded", "true");
+            if (icon) icon.style.transform = "rotate(180deg)";
+          }
+        });
+
+        // Initialize state on load
+        if (item.getAttribute("data-state") === "open") {
+          content.style.maxHeight = `${content.scrollHeight}px`;
+          content.setAttribute("aria-hidden", "false");
+          trigger.setAttribute("aria-expanded", "true");
+          if (icon) icon.style.transform = "rotate(180deg)";
+        } else {
+          content.style.maxHeight = "0px";
+          content.setAttribute("aria-hidden", "true");
+          trigger.setAttribute("aria-expanded", "false");
+          if (icon) icon.style.transform = "rotate(0deg)";
+        }
+      });
+    });
+  };
+
+  initAccordions();
+  document.addEventListener("astro:page-load", initAccordions);
+</script>

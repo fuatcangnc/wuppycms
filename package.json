@@ -1,0 +1,21 @@
+{
+	"name": "wuppycms",
+	"private": true,
+	"description": "WuppyCMS — AI + git tabanlı site kurucu",
+	"type": "module",
+	"packageManager": "pnpm@12.11.2",
+	"scripts": {
+		"dev": "pnpm --filter @wuppycms/builder dev",
+		"build": "pnpm -r build",
+		"typecheck": "pnpm -r typecheck",
+		"check:brand": "node scripts/check-brand.mjs",
+		"deploy": "pnpm --filter @wuppycms/builder deploy",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:report": "playwright show-report"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.56.0",
+		"typescript": "^6.0.3"
+	}
+}
