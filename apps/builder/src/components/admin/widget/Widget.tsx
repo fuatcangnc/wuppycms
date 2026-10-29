@@ -145,6 +145,20 @@ export default function AgentWidget() {
 	);
 	const model = models.find((entry) => entry.id === modelId) ?? models[0] ?? null;
 
+	// Sağlayıcı ayarında kayıtlı model değiştiyse (ör. Evren'de Qwen) onu seç;
+	// kullanıcının elle seçimi ayar değişene kadar korunur.
+	const settingsModelRef = useRef<string | null>(null);
+	useEffect(() => {
+		if (!status?.model || !models.length) return;
+		if (settingsModelRef.current === status.model) return;
+		settingsModelRef.current = status.model;
+		const configured = models.find((entry) => entry.model === status.model);
+		if (configured) {
+			setModelId(configured.id);
+			write(KEY_MODEL, configured.id);
+		}
+	}, [status?.model, models]);
+
 	// --- canvas sekmeleri ------------------------------------------------------
 	useEffect(() => {
 		if (!siteUrl) {
