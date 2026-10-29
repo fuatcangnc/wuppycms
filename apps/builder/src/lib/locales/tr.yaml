@@ -529,6 +529,11 @@ project:
 
 build:
   kicker: With AI
+  analysing: Brief analiz ediliyor
+  recommended: Önerilen
+  noQuestionsTitle: Bu brief için soru yok
+  noQuestionsBody: Açıklama yeterince net. Tasarım adımına geçip siteyi oluşturabilirsin.
+  generatingContent: İçerik yazılıyor…
   templateKicker: Tasarım
   templateTitle: Hangi tasarımla başlayalım?
   templateSubtitle: Tasarım iskeletini seç; içeriği ajan senin işine göre yazacak.

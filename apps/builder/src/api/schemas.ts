@@ -225,5 +225,23 @@ export const buildSiteSchema = z.object({
 		.string()
 		.regex(/^#[0-9a-f]{6}$/i)
 		.optional(),
-	answers: z.record(z.string(), z.string()).optional(),
+	/** Eski biçim (soru → metin) ya da yeni dinamik cevap listesi. */
+	answers: z
+		.union([
+			z.record(z.string(), z.string()),
+			z.array(
+				z.object({
+					question: z.string().trim().min(1).max(300),
+					selected: z.array(z.string().max(200)).max(8).default([]),
+					custom: z.string().max(1_000).default(""),
+				}),
+			),
+		])
+		.optional(),
+});
+
+export const buildQuestionsSchema = z.object({
+	prompt: z.string().trim().min(10, "site açıklaması en az 10 karakter").max(4_000),
+	siteName: z.string().trim().max(80).optional(),
+	template: z.string().trim().max(40).optional(),
 });

@@ -526,6 +526,11 @@ project:
 
 build:
   kicker: With AI
+  analysing: Analysing the brief
+  recommended: Recommended
+  noQuestionsTitle: No questions for this brief
+  noQuestionsBody: The brief already decides enough. Continue to design and create the site.
+  generatingContent: Writing content…
   templateKicker: Design
   templateTitle: Which design should we start from?
   templateSubtitle: Pick a design skeleton; the agent will write the content for your business.

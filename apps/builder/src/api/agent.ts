@@ -55,7 +55,7 @@ async function readSiteUrl(token: string, fullName: string, branch: string): Pro
 }
 
 /** Kayıtlı BYO AI ayarını çözer; anahtar yalnız bu istek boyunca bellekte. */
-async function resolveAiConfig(
+export async function resolveAiConfig(
 	c: Parameters<typeof requireUser>[0],
 	userId: string,
 	overrideProvider?: AiProvider,

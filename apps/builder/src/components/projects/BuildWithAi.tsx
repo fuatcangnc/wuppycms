@@ -20,17 +20,18 @@ import { t } from "@/lib/i18n";
 type Step = "template" | "prompt" | "questions" | "design" | "creating";
 
 interface BuildOption {
-	value: string;
 	label: string;
+	description?: string;
+	recommended?: boolean;
 }
 
+/** Modelin brief'e göre ürettiği soru (EmDash `ask_questions` deseni). */
 interface BuildQuestion {
-	id: string;
 	question: string;
-	why: string;
+	why?: string;
 	options?: BuildOption[];
-	multiple?: boolean;
-	customOnly?: boolean;
+	allowMultiple?: boolean;
+	allowCustom?: boolean;
 }
 
 interface Answer {
@@ -96,10 +97,12 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 	const [templates, setTemplates] = useState<SiteTemplate[]>([]);
 	const [templateId, setTemplateId] = useState("karakas");
 	const [prompt, setPrompt] = useState("");
+	const [questions, setQuestions] = useState<BuildQuestion[]>([]);
+	const [loadingQuestions, setLoadingQuestions] = useState(false);
 	const [questionIndex, setQuestionIndex] = useState(0);
-	const [answers, setAnswers] = useState<Record<string, Answer>>({});
-	const answersRef = useRef<Record<string, Answer>>({});
+	const answersRef = useRef<Record<number, Answer>>({});
 	const currentRef = useRef<Answer>({ selected: [], custom: "" });
+	const [answers, setAnswers] = useState<Record<number, Answer>>({});
 	const [selected, setSelected] = useState<string[]>([]);
 	const [custom, setCustom] = useState("");
 	const [siteName, setSiteName] = useState("");
@@ -147,72 +150,28 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 		})();
 	}, []);
 
-	const questions = useMemo<BuildQuestion[]>(
-		() => [
-			{
-				id: "name",
-				question: t("build.q.name"),
-				why: t("build.q.nameWhy"),
-				customOnly: true,
-			},
-			{
-				id: "type",
-				question: t("build.q.type"),
-				why: t("build.q.typeWhy"),
-				options: [
-					{ value: "Portfolio", label: t("build.q.portfolio") },
-					{ value: "Business", label: t("build.q.business") },
-					{ value: "Blog", label: t("build.q.blog") },
-					{ value: "Product", label: t("build.q.product") },
-					{ value: "Other", label: t("build.q.other") },
-				],
-			},
-			{
-				id: "audience",
-				question: t("build.q.audience"),
-				why: t("build.q.audienceWhy"),
-				customOnly: true,
-			},
-			{
-				id: "tone",
-				question: t("build.q.tone"),
-				why: t("build.q.toneWhy"),
-				options: [
-					{ value: "Minimal", label: t("build.q.minimal") },
-					{ value: "Bold", label: t("build.q.bold") },
-					{ value: "Warm", label: t("build.q.warm") },
-					{ value: "Technical", label: t("build.q.technical") },
-				],
-			},
-			{
-				id: "sections",
-				question: t("build.q.sections"),
-				why: t("build.q.sectionsWhy"),
-				multiple: true,
-				options: [
-					{ value: "About", label: t("build.q.about") },
-					{ value: "Services", label: t("build.q.services") },
-					{ value: "Work", label: t("build.q.work") },
-					{ value: "Blog", label: t("build.q.sectionBlog") },
-					{ value: "Contact", label: t("build.q.contact") },
-				],
-			},
-		],
-		[],
-	);
-
 	const currentQuestion = questions[questionIndex];
 	const answered = selected.length > 0 || custom.trim().length > 0;
 
+	/** Cevapları sırayla metne çevirir (sunucu da aynı biçimi kabul eder). */
+	const answerList = () =>
+		questions.map((question, index) => {
+			const answer = answersRef.current[index] ?? { selected: [], custom: "" };
+			return {
+				question: question.question,
+				selected: answer.selected,
+				custom: answer.custom,
+			};
+		});
+
 	const saveCurrent = (value: Answer) => {
-		if (!currentQuestion) return;
-		answersRef.current = { ...answersRef.current, [currentQuestion.id]: value };
+		if (!currentQuestion || !questions.length) return;
+		answersRef.current = { ...answersRef.current, [questionIndex]: value };
 		setAnswers(answersRef.current);
 	};
 
 	const loadQuestion = (index: number) => {
-		const question = questions[index];
-		const answer = question ? answersRef.current[question.id] : undefined;
+		const answer = answersRef.current[index];
 		currentRef.current = {
 			selected: answer?.selected ?? [],
 			custom: answer?.custom ?? "",
@@ -224,7 +183,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 
 	const chooseOption = (value: string) => {
 		if (!currentQuestion) return;
-		if (currentQuestion.multiple) {
+		if (currentQuestion.allowMultiple) {
 			const next = selected.includes(value)
 				? selected.filter((item) => item !== value)
 				: [...selected, value];
@@ -241,13 +200,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 		if (!currentQuestion) return;
 		saveCurrent(currentRef.current);
 		if (questionIndex >= questions.length - 1) {
-			const saved = answersRef.current;
-			const name = saved.name?.custom || saved.name?.selected[0] || custom || siteName;
-			const type = saved.type?.selected[0] || "";
-			const tone = saved.tone?.selected[0] || "";
-			setSiteName((value) => value || name || "");
-			setTagline((value) => value || [type, tone].filter(Boolean).join(" · ") || "A site built with WuppyCMS");
-			setStep("design");
+			finishQuestions();
 			return;
 		}
 		loadQuestion(questionIndex + 1);
@@ -268,10 +221,68 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 		setCustom("");
 		saveCurrent(currentRef.current);
 		if (questionIndex >= questions.length - 1) {
-			setStep("design");
+			finishQuestions();
 			return;
 		}
 		loadQuestion(questionIndex + 1);
+	};
+
+	/** Cevaplardan site adı/etiket önerisi çıkarır ve tasarım adımına geçer. */
+	const finishQuestions = () => {
+		const saved = answersRef.current;
+		const customName = questions
+			.map((question, index) => ({ question, answer: saved[index] }))
+			.find(
+				({ question, answer }) =>
+					answer?.custom.trim() &&
+					(/adı|name|isim/i.test(question.question) || !question.options?.length),
+			);
+		const chosen = questions.flatMap((question, index) =>
+			(saved[index]?.selected ?? []).map((value) => `${question.question}||${value}`),
+		);
+		const name =
+			customName?.answer?.custom.trim() ||
+			chosen.find((entry) => /adı|name|isim/i.test(entry.split("||")[0] ?? ""))?.split("||")[1] ||
+			siteName;
+		const tone = chosen.find((entry) => /ton|feel|stil|tarz|görün/i.test(entry.split("||")[0] ?? ""));
+		setSiteName((value) => value || name || "");
+		setTagline(
+			(value) => value || tone?.split("||")[1] || `${templateId === "karakas" ? "Kurumsal" : "Sade"} · WuppyCMS`,
+		);
+		setStep("design");
+	};
+
+	/** Brief'i gönderip işe özel soruları getirir. */
+	const loadQuestions = () => {
+		if (prompt.trim().length < 10 || loadingQuestions) return;
+		setLoadingQuestions(true);
+		setError("");
+		void (async () => {
+			try {
+				const res = await fetch("/api/build/questions", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					credentials: "same-origin",
+					body: JSON.stringify({ prompt, template: templateId, siteName: siteName || undefined }),
+				});
+				const data = (await res.json().catch(() => ({}))) as {
+					questions?: BuildQuestion[];
+					reason?: string;
+				};
+				const list = data.questions ?? [];
+				setQuestions(list);
+				setQuestionIndex(0);
+				answersRef.current = {};
+				currentRef.current = { selected: [], custom: "" };
+				setSelected([]);
+				setCustom("");
+				setStep("questions");
+			} catch (err) {
+				setError(err instanceof Error ? err.message : t("build.error"));
+			} finally {
+				setLoadingQuestions(false);
+			}
+		})();
 	};
 
 	const createSite = () => {
@@ -285,9 +296,9 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 		setCreating(true);
 		setError("");
 		setStep("creating");
-		const answerPairs = questions
-			.map((question) => ({ question: question.question, answer: answerText(answersRef.current[question.id]) }))
-			.filter((entry) => entry.answer.length > 0);
+		const answerPairs = answerList().filter(
+			(entry) => entry.selected.length > 0 || entry.custom.trim().length > 0,
+		);
 		void (async () => {
 			try {
 				const res = await fetch("/api/build/site", {
@@ -303,7 +314,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 						owner: owner || undefined,
 						private: privateRepo,
 						color,
-						answers: Object.fromEntries(answerPairs.map((entry) => [entry.question, entry.answer])),
+						answers: answerPairs,
 					}),
 				});
 				const data = (await res.json().catch(() => ({}))) as BuildResult & { message?: string };
@@ -327,12 +338,12 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 		})();
 	};
 
-	const defaultTagline = [
-		answersRef.current.type?.selected[0],
-		answersRef.current.tone?.selected[0],
-	]
-		.filter(Boolean)
-		.join(" · ");
+	const defaultTagline = questions.length
+		? Object.values(answersRef.current)
+				.flatMap((answer) => answer.selected)
+				.slice(0, 2)
+				.join(" · ")
+		: "";
 
 	return (
 		<main className="mx-auto w-full max-w-4xl flex-1 px-6 py-10">
@@ -454,7 +465,7 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 								className="min-h-36 resize-y bg-background/70 text-base"
 								onKeyDown={(event) => {
 									if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && prompt.trim().length >= 10) {
-										setStep("questions");
+										loadQuestions();
 									}
 								}}
 							/>
@@ -462,10 +473,10 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 								<span className="text-[11px] text-muted-foreground">{t("build.examples")}</span>
 								<Button
 									type="button"
-									disabled={prompt.trim().length < 10}
-									onClick={() => setStep("questions")}
+									disabled={prompt.trim().length < 10 || loadingQuestions}
+									onClick={loadQuestions}
 								>
-									{t("build.continue")} →
+									{loadingQuestions ? t("build.analysing") : t("build.continue")} →
 								</Button>
 							</div>
 							<div className="mt-4 flex flex-wrap gap-2">
@@ -481,6 +492,21 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 								))}
 							</div>
 						</div>
+					</div>
+				</section>
+			) : null}
+
+			{step === "questions" && !currentQuestion ? (
+				<section className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+					<h2 className="text-lg font-semibold">{t("build.noQuestionsTitle")}</h2>
+					<p className="mt-1 text-sm text-muted-foreground">{t("build.noQuestionsBody")}</p>
+					<div className="mt-5 flex justify-end gap-2">
+						<Button type="button" variant="ghost" size="sm" onClick={() => setStep("prompt")}>
+							← {t("build.back")}
+						</Button>
+						<Button type="button" onClick={() => setStep("design")}>
+							{t("build.continue")} →
+						</Button>
 					</div>
 				</section>
 			) : null}
@@ -516,20 +542,35 @@ export function BuildWithAi({ onClose }: { onClose(): void }) {
 						{currentQuestion.options ? (
 							<div className="mt-4 grid gap-2">
 								{currentQuestion.options.map((option) => {
-									const active = selected.includes(option.value);
+									const active = selected.includes(option.label);
 									return (
 										<button
-											key={option.value}
+											key={option.label}
 											type="button"
-											onClick={() => chooseOption(option.value)}
-											className={`flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+											onClick={() => chooseOption(option.label)}
+											aria-pressed={active}
+											className={`flex min-h-11 items-start justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
 												active
 													? "border-primary bg-primary/10 text-foreground"
 													: "border-border bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"
 											}`}
 										>
-											<span>{option.label}</span>
-											<span className={`grid size-4 place-items-center rounded-full border ${active ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
+											<span className="min-w-0">
+												<span className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+													{option.label}
+													{option.recommended ? (
+														<span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+															{t("build.recommended")}
+														</span>
+													) : null}
+												</span>
+												{option.description ? (
+													<span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+														{option.description}
+													</span>
+												) : null}
+											</span>
+											<span className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border ${active ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
 												{active ? "✓" : ""}
 											</span>
 										</button>

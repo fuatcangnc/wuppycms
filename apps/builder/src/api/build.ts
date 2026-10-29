@@ -12,10 +12,18 @@ import {
 } from "../lib/deploy/cloudflare-pages";
 import { listInstallations } from "../lib/git/github/installations";
 import { listSiteTemplates, resolveSiteTemplate } from "../lib/build/templates";
+import {
+	formatAnswers,
+	generateQuestions,
+	generateSiteContent,
+	type QuestionAnswer,
+	type SiteContent,
+} from "../lib/build/interview";
+import { resolveAiConfig } from "./agent";
 import { createRepoFromTemplate, getViewer } from "../lib/git/github/repo";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveOAuthToken, unauthorized } from "./helpers";
-import { body, buildSiteSchema } from "./schemas";
+import { body, buildQuestionsSchema, buildSiteSchema } from "./schemas";
 
 const build = new Hono<{ Bindings: AppEnv }>();
 
@@ -24,6 +32,31 @@ build.get("/templates", async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
 	return c.json({ templates: listSiteTemplates(c.env) });
+});
+
+// POST /api/build/questions — brief'e göre İŞE ÖZEL netleştirici sorular
+// (EmDash Build'in `ask_questions` deseni). Model çalışmazsa boş liste döner
+// ve istemci doğrudan tasarım adımına geçebilir.
+build.post("/questions", body(buildQuestionsSchema), async (c) => {
+	const user = await requireUser(c);
+	if (!user) return c.json({ error: "unauthenticated" }, 401);
+	const payload = c.req.valid("json");
+	const config = await resolveAiConfig(c, user.id);
+	if (!config) {
+		return c.json({ questions: [], reason: "ai_not_configured" });
+	}
+	const template = resolveSiteTemplate(c.env, payload.template);
+	try {
+		const questions = await generateQuestions(config, {
+			brief: payload.prompt,
+			siteName: payload.siteName,
+			templateName: template.name,
+		});
+		return c.json({ questions });
+	} catch (error) {
+		console.warn("[build] sorular üretilemedi:", error);
+		return c.json({ questions: [], reason: "provider_failed" });
+	}
 });
 
 async function readTemplateFile(
@@ -183,6 +216,31 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	const previewOrigin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
 	const previewUrl = pagesTarget ? `${previewOrigin}/preview/${pagesTarget.projectName}/` : null;
 
+	// İçerik: brief + dinamik cevaplardan işe özel metinler üretilir. Model
+	// yoksa/başarısızsa şablonun kendi içeriği kalır (site yine kurulur).
+	const answers: QuestionAnswer[] = Array.isArray(payload.answers)
+		? payload.answers
+		: Object.entries(payload.answers ?? {}).map(([question, value]) => ({
+				question,
+				selected: [],
+				custom: value,
+			}));
+	let siteContent: SiteContent | null = null;
+	const aiConfig = await resolveAiConfig(c, user.id);
+	if (aiConfig) {
+		try {
+			siteContent = await generateSiteContent(aiConfig, {
+				brief: payload.prompt,
+				siteName: payload.siteName,
+				tagline: payload.tagline,
+				templateName: template.name,
+				answers,
+			});
+		} catch (error) {
+			console.warn("[build] içerik üretilemedi:", error);
+		}
+	}
+
 	const files: { path: string; content: string }[] = [];
 
 	// Marka bilgisi — iki şablon ailesi de desteklenir:
@@ -210,13 +268,91 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		const settings = JSON.parse(settingsFile.content) as Record<string, unknown>;
 		settings.brandName = payload.siteName;
 		settings.email = "hello@example.com";
-		settings.heroDescription = payload.tagline;
+		settings.heroDescription = siteContent?.heroDescription || payload.tagline;
+		if (siteContent) {
+			settings.heroEyebrow = siteContent.heroEyebrow || settings.heroEyebrow;
+			settings.heroTitle = siteContent.heroTitle || settings.heroTitle;
+		}
 		files.push({
 			path: "src/data/site-settings.json",
 			content: `${JSON.stringify(settings, null, 2)}\n`,
 		});
 	} catch {
 		// JSON ayar dosyası yoksa atla
+	}
+
+	if (siteContent) {
+		try {
+			// Şablonun kendi içerik dosyaları varsa üzerine yaz; yoksa ekle.
+			const contentFile = await getFile(
+				token,
+				repo.fullName,
+				"src/data/content.json",
+				branch,
+			).catch(() => null);
+			const nextContent = {
+				...(contentFile ? (JSON.parse(contentFile.content) as Record<string, unknown>) : {}),
+				industry: siteContent.industry,
+				automotive: siteContent.automotive,
+				heroEyebrow: siteContent.heroEyebrow,
+				heroTitle: siteContent.heroTitle,
+				heroDescription: siteContent.heroDescription,
+				highlights: siteContent.highlights,
+				metrics: siteContent.metrics,
+				aboutTitle: siteContent.aboutTitle,
+				aboutText: siteContent.aboutText,
+				categories: siteContent.categories,
+				services: siteContent.services,
+				faq: siteContent.faq,
+				ctaLabel: siteContent.ctaLabel,
+			};
+			files.push({
+				path: "src/data/content.json",
+				content: `${JSON.stringify(nextContent, null, 2)}\n`,
+			});
+
+			// Kartlar ve detay sayfaları `services.json` üzerinden çalışır.
+			let icons = ["wrench", "settings", "thermometer", "shield-check", "truck", "clock"];
+			try {
+				const prevServices = await getFile(
+					token,
+					repo.fullName,
+					"src/data/services.json",
+					branch,
+				);
+				const parsed = JSON.parse(prevServices.content) as {
+					services?: Array<{ icon?: string }>;
+				};
+				const used = (parsed.services ?? [])
+					.map((entry) => entry.icon)
+					.filter((icon): icon is string => Boolean(icon));
+				if (used.length) icons = [...used, ...icons];
+			} catch {
+				// ilk kurulum: varsayılan ikonlar
+			}
+			files.push({
+				path: "src/data/services.json",
+				content: `${JSON.stringify(
+					{
+						services: siteContent.services.map((service, index) => ({
+							category: service.category,
+							featured: index < 3,
+							icon: icons[index % icons.length],
+							order: index + 1,
+							shortTitle: service.shortTitle,
+							slug: service.slug,
+							summary: service.summary,
+							title: service.title,
+							image: "",
+						})),
+					},
+					null,
+					2,
+				)}\n`,
+			});
+		} catch (error) {
+			console.warn("[build] içerik dosyaları yazılamadı:", error);
+		}
 	}
 
 	// Astro `site` — varsa mevcut değeri değiştir, yoksa ekle.
