@@ -74,6 +74,25 @@ function pathOf(url: string): string | null {
 	}
 }
 
+/**
+ * `*.pages.dev` bazı ağlarda engelli; admin önizlemesi aynı origin'deki
+ * `/preview/<proje>/` köprüsünü kullanır (ADR 0021). Kanonik URL değişmez.
+ */
+function previewUrl(url: string): string {
+	try {
+		const parsed = new URL(url);
+		if (parsed.hostname.endsWith(".pages.dev")) {
+			const project = parsed.hostname.slice(0, -".pages.dev".length);
+			if (/^wuppy-[a-z0-9-]+$/.test(project)) {
+				return `${window.location.origin}/preview/${project}${parsed.pathname === "/" ? "/" : parsed.pathname}${parsed.search}`;
+			}
+		}
+	} catch {
+		// göreli URL — olduğu gibi
+	}
+	return url;
+}
+
 export default function AgentWidget() {
 	const site = useStore($site);
 	const sites = useStore($sites);
@@ -133,8 +152,9 @@ export default function AgentWidget() {
 			setActiveUrl("");
 			return;
 		}
-		setTabs([{ url: siteUrl, title: t("widget.home") }]);
-		setActiveUrl(siteUrl);
+		const home = previewUrl(siteUrl);
+		setTabs([{ url: home, title: t("widget.home") }]);
+		setActiveUrl(home);
 	}, [siteUrl, site]);
 
 	useEffect(() => {
@@ -344,7 +364,9 @@ export default function AgentWidget() {
 	};
 
 	const selectPage = (url: string, title: string) => {
-		const absolute = url.startsWith("/") && siteUrl ? `${siteUrl}${url}` : url;
+		const absolute = previewUrl(
+			url.startsWith("/") && siteUrl ? `${siteUrl}${url}` : url,
+		);
 		const existing = tabs.find((tab) => tab.url === absolute);
 		if (existing) {
 			setActiveUrl(absolute);

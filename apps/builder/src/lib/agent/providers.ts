@@ -33,6 +33,28 @@ export const MODEL_CATALOG: Record<
 	],
 };
 
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+/** Geçici sağlayıcı hatalarında (model dolu, rate limit) kısa backoff'lu deneme. */
+async function fetchWithRetry(
+	url: string,
+	init: RequestInit,
+	attempts = 4,
+): Promise<Response> {
+	let last: Response | null = null;
+	for (let attempt = 0; attempt < attempts; attempt += 1) {
+		const res = await fetch(url, init);
+		if (res.ok || !RETRYABLE_STATUS.has(res.status)) return res;
+		last = res;
+		if (attempt < attempts - 1) {
+			await new Promise((resolve) =>
+				setTimeout(resolve, 800 * 2 ** attempt + Math.random() * 400),
+			);
+		}
+	}
+	return last as Response;
+}
+
 async function fail(res: Response, label: string): Promise<never> {
 	let detail = "";
 	try {
@@ -116,7 +138,7 @@ function openAiCompatible(baseUrl: string, apiKey: string, model: string): Provi
 					});
 				}
 			}
-			const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+			const res = await fetchWithRetry(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
 				method: "POST",
 				headers: {
 					"content-type": "application/json",
@@ -203,7 +225,7 @@ function anthropicProvider(apiKey: string, model: string): Provider {
 					});
 				}
 			}
-			const res = await fetch("https://api.anthropic.com/v1/messages", {
+			const res = await fetchWithRetry("https://api.anthropic.com/v1/messages", {
 				method: "POST",
 				headers: {
 					"content-type": "application/json",
@@ -301,7 +323,7 @@ function geminiProvider(baseUrl: string, apiKey: string, model: string): Provide
 				}
 			}
 			const url = `${root}/v1beta/models/${encodeURIComponent(model)}:generateContent${apiKey ? `?key=${encodeURIComponent(apiKey)}` : ""}`;
-			const res = await fetch(url, {
+			const res = await fetchWithRetry(url, {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({
