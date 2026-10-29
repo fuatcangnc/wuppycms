@@ -71,13 +71,18 @@ export function DropdownMenuContent({
 			setOpen(false);
 		};
 		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === "Escape") setOpen(false);
+			if (event.key !== "Escape") return;
+			// Menü açıkken Escape yalnız menüyü kapatır; widget'ın kendi
+			// Escape dinleyicisine kabarcıklanmaz.
+			event.preventDefault();
+			event.stopPropagation();
+			setOpen(false);
 		};
 		document.addEventListener("pointerdown", onPointerDown);
-		document.addEventListener("keydown", onKeyDown);
+		document.addEventListener("keydown", onKeyDown, true);
 		return () => {
 			document.removeEventListener("pointerdown", onPointerDown);
-			document.removeEventListener("keydown", onKeyDown);
+			document.removeEventListener("keydown", onKeyDown, true);
 		};
 	}, [open, setOpen, triggerRef]);
 
