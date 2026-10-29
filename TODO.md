@@ -18,7 +18,8 @@
 - AI sağlayıcısı (BYO anahtar) canlı admin → Ajan → Sağlayıcı ekranından girilecek
 - `cigce.com.tr` / `aracprojem.com.tr` A kayıtları hâlâ eski sunucuyu (`13.51.118.124`) gösteriyor — yeni sunucuya taşı ya da kaldır
 - `732401078829` hesabı organizasyonda değil; kapatma ayrı root/hesap erişimi gerektiriyor
-+ Üretilen public siteler için otomatik yayın: `deploy.yml` + Pages URL (ADR 0020); private repolar bilinçli olarak URLsiz
++ Üretilen public siteler için otomatik yayın hazır: şablon `build.yml` + Pages URL (ADR 0020); private repolar bilinçli olarak URLsiz
+- **GitHub Actions billing kilidi:** üretilen sitelerin Pages deploy'u job başlatamıyor; ödeme açılmalı ya da Cloudflare Pages'e geçilmeli
 
 ---
 

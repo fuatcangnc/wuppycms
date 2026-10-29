@@ -28,6 +28,13 @@ istemek istemedik.
 4. **Proje sayfası / kullanıcı sayfası ayrımı** korunur: `<owner>.github.io`
    reposunda `base: "/"`, diğerlerinde `base: "/<repo>/"`.
 
+## Bilinen engel (2026-10-29)
+
+GitHub Actions, hesapta ödeme/billing kilidi olduğu için **job başlatmıyor**
+(“The job was not started because your account is locked due to a billing
+issue”). Workflow ve Pages yolu hazır; billing açılınca ilk push’ta çalışır.
+Alternatif (Cloudflare Pages) ayrı bir ADR gerektirir.
+
 ## Sonuçlar
 
 - Public repo ile üretilen site, ilk Actions koşusunda canlıya çıkar; müşteri
