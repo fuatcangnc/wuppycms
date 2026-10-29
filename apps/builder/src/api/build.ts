@@ -79,8 +79,12 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 					(entry) => entry.accountLogin.toLowerCase() === oauthViewer.login.toLowerCase(),
 				) ?? installations[0])
 			: installations[0];
+	// Yeni oluşturulan template repoları eski cache'lenmiş token'da görünmez;
+	// repo üretiminden önce taze installation token'ı al.
 	const appToken = appInstallation
-		? await getInstallationToken(c.env, appInstallation.installationId).catch(() => null)
+		? await getInstallationToken(c.env, appInstallation.installationId, { refresh: true }).catch(
+				() => null,
+			)
 		: null;
 
 	type Candidate = { token: string; owner: string };

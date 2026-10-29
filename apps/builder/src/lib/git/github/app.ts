@@ -63,9 +63,13 @@ async function appJwt(env: AppEnv): Promise<string> {
 }
 
 /** Bir installation için kısa ömürlü token döndürür. */
-export async function getInstallationToken(env: AppEnv, installationId: string): Promise<string> {
+export async function getInstallationToken(
+	env: AppEnv,
+	installationId: string,
+	options: { refresh?: boolean } = {},
+): Promise<string> {
 	const cached = cache.get(installationId);
-	if (cached && cached.expiresAt - 60_000 > Date.now()) return cached.token;
+	if (!options.refresh && cached && cached.expiresAt - 60_000 > Date.now()) return cached.token;
 
 	const jwt = await appJwt(env);
 	const data = await gh<{ token: string; expires_at: string }>(
