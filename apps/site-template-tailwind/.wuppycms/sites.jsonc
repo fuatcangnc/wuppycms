@@ -1,10 +1,11 @@
 {
+	"version": 1,
 	"sites": [
 		{
-			"key": "default",
-			"title": "WuppyCMS Starter",
-			"root": ".",
-			"contentConfig": "src/content.config.ts",
+			"key": "root",
+			"name": "WuppyCMS Starter",
+			"media": "public",
+			"publishing": "review",
 			"collections": ["blog", "authors"]
 		}
 	]

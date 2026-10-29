@@ -112,10 +112,17 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	// Site başlığı — admin boot bu dosyadan okur.
 	try {
 		const sitesFile = await readTemplateFile(token, repo.fullName, ".wuppycms/sites.jsonc", branch);
-		let sites = sitesFile.content.replace(/"title":\s*"[^"]*"/, `"title": ${JSON.stringify(payload.siteName)}`);
+		let sites = sitesFile.content.replace(/"name":\s*"[^"]*"/, `"name": ${JSON.stringify(payload.siteName)}`);
+		// Eski/özel şablonlarda `name` yoksa `title` alanını kanonik şemaya taşı.
+		if (!/"name"\s*:/.test(sites)) {
+			sites = sites.replace(/"title":\s*"[^"]*"/, `"name": ${JSON.stringify(payload.siteName)}`);
+		}
+		if (!/"version"\s*:/.test(sites)) {
+			sites = sites.replace(/^\s*\{/, `{\n\t"version": 1,`);
+		}
 		if (pagesEnabled) {
 			sites = sites.replace(
-				/("title":\s*"[^"]*",)/,
+				/("name":\s*"[^"]*",)/,
 				`$1\n\t\t\t"url": ${JSON.stringify(pagesUrl)},`,
 			);
 		}
