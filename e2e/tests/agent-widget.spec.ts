@@ -36,6 +36,26 @@ test.describe("AI widget", () => {
 		await expect(page.getByTestId("agent-launcher")).toBeVisible();
 	});
 
+	test("Pages menüsü sayfaları gösterir; sayfa sekmesi açılıp kapanır", async ({ admin, page }) => {
+		await admin.goToSite();
+		await page.getByTestId("agent-launcher").click();
+		await expect(page.getByTestId("agent-widget")).toBeVisible();
+
+		await page.getByRole("button", { name: /^Pages/ }).first().click();
+		const menu = page.getByRole("menu");
+		await expect(menu).toBeVisible();
+		const aboutItem = menu.getByRole("menuitem", { name: /^about/i });
+		await expect(aboutItem).toBeVisible();
+
+		await aboutItem.click();
+		const aboutTab = page.locator("button[draggable]").filter({ hasText: "about" });
+		await expect(aboutTab).toBeVisible();
+
+		await page.locator('[aria-label="Close tab"]').last().click();
+		await expect(aboutTab).toHaveCount(0);
+		await expect(page.locator("button[draggable]")).toHaveCount(1);
+	});
+
 	test("sohbet geçmişi rayı varsayılan açık; düğmeyle kapanıp açılır", async ({ admin, page }) => {
 		await admin.goToSite();
 		await page.getByTestId("agent-launcher").click();
