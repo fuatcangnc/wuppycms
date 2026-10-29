@@ -25,11 +25,27 @@ export function createAuth(env: AppEnv) {
 				}
 			: undefined;
 
+	const baseURL = env.BETTER_AUTH_URL ?? "http://localhost:4321";
+	// Ters proxy (Caddy → wrangler) arkasında istek URL'i http şemasıyla
+	// görünebilir; better-auth Origin'i bu şemayla karşılaştırınca 403 verir.
+	// Aynı ana bilgisayarın iki şemasını da güvenilir say.
+	const trustedOrigins = [baseURL];
+	try {
+		const host = new URL(baseURL).host;
+		trustedOrigins.push(`http://${host}`, `https://${host}`);
+	} catch {
+		// geçersiz baseURL → yalnız kendisi
+	}
+	if (!trustedOrigins.includes("http://localhost:8787")) {
+		trustedOrigins.push("http://localhost:8787");
+	}
+
 	return betterAuth({
 		database: env.DB,
 		secret: env.BETTER_AUTH_SECRET,
-		baseURL: env.BETTER_AUTH_URL ?? "http://localhost:4321",
+		baseURL,
 		basePath: "/api/auth",
+		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,
 		},
