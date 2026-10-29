@@ -15,7 +15,7 @@ export const preview = new Hono<{ Bindings: AppEnv }>();
 
 const PROJECT_RE = /^wuppy-[a-z0-9][a-z0-9-]{2,57}$/;
 
-function rewriteHtml(html: string, prefix: string): string {
+export function rewriteHtml(html: string, prefix: string): string {
 	let out = html.replace(
 		/\b(href|src|action|poster)=(["'])\/(?!\/)/gi,
 		(_match, attr: string, quote: string) => `${attr}=${quote}${prefix}/`,
@@ -31,7 +31,7 @@ function rewriteHtml(html: string, prefix: string): string {
 	return out;
 }
 
-function rewriteCss(css: string, prefix: string): string {
+export function rewriteCss(css: string, prefix: string): string {
 	return css
 		.replace(/url\((\s*)\/(?!\/)/gi, (_m, ws: string) => `url(${ws}${prefix}/`)
 		.replace(/@import\s+(["'])\/(?!\/)/gi, (_m, quote: string) => `@import ${quote}${prefix}/`);
