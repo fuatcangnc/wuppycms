@@ -39,10 +39,10 @@ export const prerender = false;
 					for (let i = 0; i < 24; i++) {
 						await new Promise((r) => setTimeout(r, 5000));
 						try {
-							const res = await pod.request("http://localhost:4321/");
-							const body = await res.text();
-							log(`REQ ${res.status} ${body.slice(0, 140).replace(/\s+/g, " ")}`);
-							if (res.status === 200) break;
+							const res = await pod.request(4321, { path: "/" });
+							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
+							log(`REQ ${res.statusCode} ${body.slice(0, 140).replace(/\s+/g, " ")}`);
+							if (res.statusCode === 200) break;
 						} catch (e) {
 							if (i % 3 === 0) log("req err " + (e && e.message));
 						}
