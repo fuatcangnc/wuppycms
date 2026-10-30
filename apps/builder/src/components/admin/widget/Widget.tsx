@@ -235,13 +235,19 @@ export default function AgentWidget() {
 		if (picker.bridgeReady) picker.command("reload");
 		else setReloadNonce((value) => value + 1);
 	}, [picker]);
+	const reloadRef = useRef(reloadCanvas);
+	reloadRef.current = reloadCanvas;
+	// Site başına yalnızca bir kez ısıt: aksi halde efekt her render'da
+	// yeniden çalışıp iframe'i sonsuz döngüde yeniler (kendi kendine F5).
+	const warmedPreview = useRef<string | null>(null);
 
 	// Canlı önizlemeyi ısıt: dev sunucusu hazır olunca iframe'i bir kez yenile.
 	// İlk açılışta üretim (build'li) site gösterilir; dev hazır olunca geçilir.
 	useEffect(() => {
 		if (!open || !siteUrl) return;
 		const slug = previewSlug(siteUrl);
-		if (!slug) return;
+		if (!slug || warmedPreview.current === slug) return;
+		warmedPreview.current = slug;
 		let cancelled = false;
 		let timer: number | undefined;
 		const poll = async (attempt: number) => {
@@ -250,7 +256,7 @@ export default function AgentWidget() {
 				const res = await fetch(`/api/preview/status?slug=${encodeURIComponent(slug)}`);
 				const data = (await res.json()) as { ready?: boolean };
 				if (data.ready) {
-					if (!cancelled) reloadCanvas();
+					if (!cancelled) reloadRef.current();
 					return;
 				}
 			} catch {
@@ -274,7 +280,7 @@ export default function AgentWidget() {
 			cancelled = true;
 			if (timer) clearTimeout(timer);
 		};
-	}, [open, site, branch, siteUrl, reloadCanvas]);
+	}, [open, site, branch, siteUrl]);
 
 	const onContentChanged = useCallback(() => {
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her
