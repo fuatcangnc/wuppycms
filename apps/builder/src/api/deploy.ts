@@ -28,6 +28,7 @@ import {
 import {
 	ensurePagesProject,
 } from "../lib/deploy/cloudflare-pages";
+import { writeSiteUrls } from "../lib/deploy/site-url";
 import { createInstallState, verifyInstallState } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveGitToken } from "./helpers";
@@ -254,6 +255,14 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 				});
 				const access = await cloudflareAccessToken(c.env, db, user.id);
 				const previewUrl = `${origin}/preview/${pages.projectName}/`;
+				// Kanonik adres ve önizleme adresi repoya işlenir; build bunları
+				// okur (astro.config.mjs `site`, .wuppycms/sites.jsonc `url`).
+				await writeSiteUrls(token, repo, branch, {
+					previewUrl,
+					siteUrl: pages.url,
+				}).catch((error) => {
+					console.warn("[deploy] site adresleri yazılamadı:", error);
+				});
 				const jobId = crypto.randomUUID();
 				const now = new Date().toISOString();
 				await db
@@ -306,6 +315,12 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 			const slug = siteSlug(repo);
 			const url = awsSiteUrl(c.env, repo);
 			const previewUrl = `${origin}/preview/${slug}/`;
+			await writeSiteUrls(token, repo, branch, {
+				previewUrl,
+				siteUrl: url,
+			}).catch((error) => {
+				console.warn("[deploy] site adresleri yazılamadı:", error);
+			});
 			const jobId = crypto.randomUUID();
 			const now = new Date().toISOString();
 			await db
