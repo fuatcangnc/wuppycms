@@ -85,7 +85,21 @@ async function buildSite(job) {
 		await cloneRepo({ repo: job.repo, branch: job.branch, token: job.token, dir });
 
 		log(`[${job.jobId}] install`);
-		await exec("pnpm", ["install", "--prefer-offline", "--ignore-scripts=false"], { cwd: dir });
+		// pnpm 10+ postinstall script'lerini varsayılan olarak engeller;
+		// Astro/Tailwind build'i için esbuild + sharp açıkça onaylanır.
+		await exec(
+			"pnpm",
+			[
+				"install",
+				"--prefer-offline",
+				"--allow-build=esbuild",
+				"--allow-build=sharp",
+				"--allow-build=@tailwindcss/oxide",
+				"--allow-build=workerd",
+				"--allow-build=msw",
+			],
+			{ cwd: dir },
+		);
 
 		log(`[${job.jobId}] build`);
 		await exec("pnpm", ["build"], { cwd: dir });
