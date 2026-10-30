@@ -12,7 +12,7 @@ MEDIA_BUCKET="${MEDIA_BUCKET:-wuppycms-media}"
 ROLE="${APP}-role"
 IMAGE="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${ECR_REPO}:latest"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-ENV_FILE="$ROOT/apps/builder/.dev.vars"
+ENV_FILE="${ENV_FILE:-$ROOT/apps/builder/.dev.vars}"
 
 echo "==> S3 (DB) $DB_BUCKET"
 if ! aws s3api head-bucket --bucket "$DB_BUCKET" 2>/dev/null; then

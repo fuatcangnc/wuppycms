@@ -42,6 +42,7 @@ import { review } from "./review";
 import { build } from "./build";
 import { githubApp } from "./github-app";
 import { deploy } from "./deploy";
+import { runScheduled } from "./schedule";
 import { previewControl } from "./preview-control";
 
 export const api = new Hono<{ Bindings: AppEnv }>();
@@ -404,6 +405,16 @@ api.route("/review", review);
 api.route("/build", build);
 api.route("/github/app", githubApp);
 api.route("/deploy", deploy);
+
+// Zamanlanmış yayın yürütücüsü — EventBridge (veya harici cron) çağırır.
+api.post("/cron", async (c) => {
+	const secret = c.req.header("x-cron-secret") ?? "";
+	if (!c.env.DEPLOY_WORKER_SECRET || secret !== c.env.DEPLOY_WORKER_SECRET) {
+		return c.json({ error: "unauthorized" }, 401);
+	}
+	const results = await runScheduled(c.env);
+	return c.json({ ok: true, results });
+});
 api.route("/preview", previewControl);
 
 /**
