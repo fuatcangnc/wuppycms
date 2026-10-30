@@ -10,6 +10,7 @@ import { awsDeployConfigured, siteSlug, siteUrl } from "./aws";
 import { accessToken as cloudflareAccessToken, getAccount } from "./cloudflare-oauth";
 import { ensurePagesProject } from "./cloudflare-pages";
 import { writeSiteUrls } from "./site-url";
+import { codeBuildConfigured, startSiteBuild } from "./codebuild";
 
 export type DeployTarget = "aws" | "cloudflare";
 
@@ -187,14 +188,27 @@ export async function enqueueDeploy(
 		url,
 		previewUrl,
 	});
-	const queued = await postBuild(env, {
-		jobId,
-		repo: input.repo,
-		branch: input.branch,
-		token: input.token,
-		slug,
-		target,
-	});
+	// AWS hedefi: CodeBuild yapılandırıldıysa VM worker yerine onu kullan.
+	const queued = codeBuildConfigured(env)
+		? await startSiteBuild(env, {
+				repo: input.repo,
+				branch: input.branch,
+				token: input.token,
+				slug,
+				jobId,
+				callbackUrl: `${input.origin}/api/deploy/callback`,
+			}).then(
+				() => ({ ok: true }),
+				(error: Error) => ({ ok: false, error: error.message }),
+			)
+		: await postBuild(env, {
+				jobId,
+				repo: input.repo,
+				branch: input.branch,
+				token: input.token,
+				slug,
+				target,
+			});
 	if (!queued.ok) {
 		await failJob(db, jobId, queued.error);
 		return { ok: false, target, error: queued.error };

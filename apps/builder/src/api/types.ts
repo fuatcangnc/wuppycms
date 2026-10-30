@@ -53,6 +53,8 @@ export interface AppEnv {
 	AWS_SITES_DOMAIN?: string;
 	/** VM'deki build worker adresi (varsayılan http://127.0.0.1:8790). */
 	DEPLOY_WORKER_URL?: string;
+	/** AWS CodeBuild projesi (varsa build VM yerine orada koşar). */
+	AWS_CODEBUILD_PROJECT?: string;
 	/** Uygulama ↔ worker paylaşılan sırrı. */
 	DEPLOY_WORKER_SECRET?: string;
 	/** VM'deki canlı önizleme (astro dev) servisi (varsayılan http://127.0.0.1:8791). */

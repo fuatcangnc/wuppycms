@@ -1,0 +1,39 @@
+version: 0.2
+# WuppyCMS site build — CodeBuild (on-demand, VM'siz).
+# Değişkenler StartBuild ile geçilir: REPO, BRANCH, GIT_TOKEN, SLUG, JOB_ID,
+# CALLBACK_URL, CALLBACK_SECRET, BUCKET, DISTRIBUTION_ID.
+
+env:
+  variables:
+    PNPM_VERSION: "10"
+    NODE_ENV: "production"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - corepack enable
+      - corepack prepare "pnpm@$PNPM_VERSION" --activate
+      - node -v && pnpm -v
+
+  pre_build:
+    commands:
+      - echo "Cloning $REPO@$BRANCH"
+      - git clone --depth 1 --branch "$BRANCH" "https://x-access-token:$GIT_TOKEN@github.com/$REPO.git" repo
+      - cd repo
+      - pnpm install --prefer-offline
+
+  build:
+    commands:
+      - pnpm build
+
+  post_build:
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/repo"
+      - aws s3 sync dist/ "s3://$BUCKET/sites/$SLUG/" --delete
+      - aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/sites/$SLUG/*"
+      - |
+        curl -sS -X POST "$CALLBACK_URL" \
+          -H "content-type: application/json" \
+          -d "{\"jobId\":\"$JOB_ID\",\"status\":\"deployed\",\"slug\":\"$SLUG\",\"target\":\"aws\",\"secret\":\"$CALLBACK_SECRET\"}"
