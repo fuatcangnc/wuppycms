@@ -19,6 +19,7 @@ import {
 	siteUrl as awsSiteUrl,
 } from "../lib/deploy/aws";
 import {
+	accessToken as cloudflareAccessToken,
 	cloudflareOAuthConfigured,
 	completeConnection,
 	disconnect,
@@ -26,7 +27,6 @@ import {
 } from "../lib/deploy/cloudflare-oauth";
 import {
 	ensurePagesProject,
-	triggerPagesDeployment,
 } from "../lib/deploy/cloudflare-pages";
 import { createInstallState, verifyInstallState } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
@@ -51,6 +51,7 @@ const callbackSchema = z.object({
 	status: z.enum(["deployed", "failed"]),
 	error: z.string().max(4000).optional(),
 	slug: z.string().max(120).optional(),
+	target: z.enum(["aws", "cloudflare"]).optional(),
 	secret: z.string().min(1),
 });
 
@@ -139,15 +140,20 @@ deploy.post("/cloudflare/disconnect", async (c) => {
 
 // --- Yayınlama ---------------------------------------------------------------
 
-async function enqueueAwsBuild(
+type EnqueueInput = {
+	jobId: string;
+	repo: string;
+	branch: string;
+	token: string;
+	slug: string;
+	target: "aws" | "cloudflare";
+	/** Cloudflare hedefinde: müşterinin hesabı ve geçici OAuth token'ı. */
+	cloudflare?: { accountId: string; projectName: string; accessToken: string };
+};
+
+async function enqueueBuild(
 	c: Parameters<typeof requireUser>[0],
-	input: {
-		jobId: string;
-		repo: string;
-		branch: string;
-		token: string;
-		slug: string;
-	},
+	input: EnqueueInput,
 ): Promise<{ ok: boolean; error?: string }> {
 	const base = c.env.DEPLOY_WORKER_URL || "http://127.0.0.1:8790";
 	try {
@@ -160,6 +166,8 @@ async function enqueueAwsBuild(
 				branch: input.branch,
 				token: input.token,
 				slug: input.slug,
+				target: input.target,
+				cloudflare: input.cloudflare,
 				secret: c.env.DEPLOY_WORKER_SECRET ?? "",
 			}),
 		});
@@ -244,8 +252,38 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 					repoFullName: repo,
 					branch,
 				});
-				await triggerPagesDeployment(c.env, db, user.id, pages.projectName, branch);
+				const access = await cloudflareAccessToken(c.env, db, user.id);
 				const previewUrl = `${origin}/preview/${pages.projectName}/`;
+				const jobId = crypto.randomUUID();
+				const now = new Date().toISOString();
+				await db
+					.prepare(
+						`INSERT INTO deploy_jobs
+							(id, project_id, repo_full_name, branch, target, status, url, preview_url, created_at, updated_at)
+						 VALUES (?, ?, ?, ?, 'cloudflare', 'queued', ?, ?, ?, ?)`,
+					)
+					.bind(jobId, row.id ?? repo, repo, branch, pages.url, previewUrl, now, now)
+					.run();
+
+				const queued = await enqueueBuild(c, {
+					jobId,
+					repo,
+					branch,
+					token,
+					slug: pages.projectName,
+					target: "cloudflare",
+					cloudflare: {
+						accountId: access.accountId,
+						projectName: pages.projectName,
+						accessToken: access.token,
+					},
+				});
+				if (!queued.ok) {
+					await markJob(db, jobId, "failed", queued.error);
+					results.push({ repo, ok: false, target, error: queued.error });
+					continue;
+				}
+
 				await upsertProjectDeploy(db, {
 					projectId: row.id,
 					repo,
@@ -259,7 +297,7 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 					target,
 					url: pages.url,
 					previewUrl,
-					status: "deployed",
+					status: "queued",
 				});
 				continue;
 			}
@@ -279,7 +317,14 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 				.bind(jobId, row.id ?? repo, repo, branch, url, previewUrl, now, now)
 				.run();
 
-			const queued = await enqueueAwsBuild(c, { jobId, repo, branch, token, slug });
+			const queued = await enqueueBuild(c, {
+				jobId,
+				repo,
+				branch,
+				token,
+				slug,
+				target: "aws",
+			});
 			if (!queued.ok) {
 				await markJob(db, jobId, "failed", queued.error);
 				results.push({ repo, ok: false, target, error: queued.error });
@@ -351,7 +396,7 @@ deploy.post("/callback", body(callbackSchema), async (c) => {
 
 	await markJob(db, payload.jobId, payload.status, payload.error);
 
-	if (payload.status === "deployed" && payload.slug) {
+	if (payload.status === "deployed" && payload.slug && payload.target !== "cloudflare") {
 		try {
 			await invalidate(c.env, [`/sites/${payload.slug}/*`]);
 		} catch (error) {

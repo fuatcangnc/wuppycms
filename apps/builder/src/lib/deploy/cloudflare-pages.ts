@@ -96,6 +96,10 @@ type Project = { name: string; subdomain: string };
 /**
  * Müşterinin hesabında Pages projesini hazırlar (varsa yeniden kullanır) ve
  * sabit `https://<proje>.pages.dev` adresini döner.
+ *
+ * Proje **Git bağlantısı olmadan** (direct upload) açılır: build'i WuppyCMS
+ * worker'ı yapar ve dosyaları yükler. Böylece müşterinin ayrıca Cloudflare'ın
+ * GitHub uygulamasını kurması gerekmez.
  */
 export async function ensurePagesProject(
 	env: AppEnv,
@@ -118,61 +122,14 @@ export async function ensurePagesProject(
 		return { projectName: existing.name, url: `https://${existing.subdomain}`, created: false };
 	}
 
-	const [owner, repo] = input.repoFullName.split("/");
-	const payload = {
-		name,
-		production_branch: input.branch,
-		source: {
-			type: "github",
-			config: {
-				owner,
-				repo_name: repo,
-				production_branch: input.branch,
-				deployments_enabled: true,
-				production_deployments_enabled: true,
-				pr_comments_enabled: false,
-			},
-		},
-		build_config: {
-			build_command: "pnpm build",
-			destination_dir: "dist",
-			root_dir: "",
-		},
-		deployment_configs: {
-			production: { env_vars: { NODE_VERSION: { value: "22" } } },
-			preview: { env_vars: { NODE_VERSION: { value: "22" } } },
-		},
-	};
-
 	const created = await cf<Project>(env, db, userId, `/accounts/{account}/pages/projects`, {
 		method: "POST",
-		body: JSON.stringify(payload),
+		body: JSON.stringify({
+			name,
+			production_branch: input.branch,
+		}),
 	});
 	return { projectName: created.name, url: `https://${created.subdomain}`, created: true };
-}
-
-/** Bağlı Git projesinde yeni bir build başlatır. */
-export async function triggerPagesDeployment(
-	env: AppEnv,
-	db: SqlDatabase,
-	userId: string,
-	projectName: string,
-	branch: string,
-): Promise<boolean> {
-	try {
-		await cf(
-			env,
-			db,
-			userId,
-			`/accounts/{account}/pages/projects/${projectName}/deployments`,
-			{ method: "POST", body: JSON.stringify({ branch }) },
-		);
-		return true;
-	} catch (error) {
-		// Aynı commit kuyrukta olabilir (409); deploy yine sürmekte.
-		console.warn("[pages] deploy tetiklenemedi:", error);
-		return false;
-	}
 }
 
 export type PagesDeployment = {

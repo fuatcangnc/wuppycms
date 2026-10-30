@@ -31,6 +31,8 @@ const REGION = process.env.AWS_REGION ?? "us-east-1";
 const APP_URL = (process.env.APP_URL ?? "http://127.0.0.1:8787").replace(/\/+$/, "");
 const MAX_JOBS = Number(process.env.DEPLOY_MAX_CONCURRENT ?? 2);
 const BUILD_TIMEOUT = Number(process.env.DEPLOY_BUILD_TIMEOUT_MS ?? 10 * 60_000);
+/** Cloudflare Pages direct upload için wrangler ikilisi. */
+const WRANGLER_BIN = process.env.WRANGLER_BIN ?? "wrangler";
 
 let running = 0;
 const queue = [];
@@ -104,6 +106,39 @@ async function buildSite(job) {
 		log(`[${job.jobId}] build`);
 		await exec("pnpm", ["build"], { cwd: dir });
 
+		if (job.target === "cloudflare") {
+			// Direct upload: site müşterinin Cloudflare hesabındaki Pages
+			// projesine yüklenir. Git entegrasyonu gerekmez.
+			const cf = job.cloudflare ?? {};
+			if (!cf.projectName || !cf.accountId || !cf.accessToken) {
+				throw new Error("Cloudflare hedefi için hesap/token eksik.");
+			}
+			log(`[${job.jobId}] pages deploy → ${cf.projectName}`);
+			await exec(
+				WRANGLER_BIN,
+				[
+					"pages",
+					"deploy",
+					join(dir, "dist"),
+					"--project-name",
+					cf.projectName,
+					"--branch",
+					job.branch,
+					"--commit-dirty=true",
+				],
+				{
+					cwd: dir,
+					env: {
+						CLOUDFLARE_API_TOKEN: cf.accessToken,
+						CLOUDFLARE_ACCOUNT_ID: cf.accountId,
+						WRANGLER_SEND_METRICS: "false",
+					},
+				},
+			);
+			log(`[${job.jobId}] tamam (cloudflare)`);
+			return { ok: true };
+		}
+
 		log(`[${job.jobId}] s3 sync`);
 		await exec(
 			"aws",
@@ -167,13 +202,20 @@ async function processJob(job) {
 			jobId: job.jobId,
 			status: "deployed",
 			secret: SECRET,
+			target: job.target ?? "aws",
 			// CloudFront önbelleğini uygulama tarafı temizler.
-			slug: job.slug,
+			slug: job.target === "cloudflare" ? undefined : job.slug,
 		});
 	} catch (error) {
 		const message = String(error?.stderr ?? error?.message ?? error).slice(-1500);
 		log(`[${job.jobId}] HATA`, message);
-		await callback({ jobId: job.jobId, status: "failed", error: message, secret: SECRET });
+		await callback({
+			jobId: job.jobId,
+			status: "failed",
+			error: message,
+			secret: SECRET,
+			target: job.target ?? "aws",
+		});
 	} finally {
 		running -= 1;
 		drain();
