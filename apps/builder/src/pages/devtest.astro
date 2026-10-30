@@ -33,29 +33,21 @@ export const prerender = false;
 					await install.completion.catch((e) => log("install err " + (e && e.message)));
 					log("install done");
 
-					const ver = await pod.spawn("node", ["node_modules/astro/astro.js", "--version"]);
-					ver.on("output", (t) => log("V:" + clean(t)));
-					log("version exit " + (await ver.completion.catch((e) => "err " + e.message)));
-
-					const dev = await pod.spawn("node", ["node_modules/astro/astro.js", "dev", "--host", "0.0.0.0", "--port", "4321"]);
-					dev.on("output", (t) => log("D:" + clean(t)));
-					const exited = await Promise.race([
-						dev.completion.then((c) => "exited " + c).catch((e) => "err " + e.message),
-						new Promise((r) => setTimeout(() => r("running"), 45000)),
-					]);
-					log("dev: " + exited);
-					for (let i = 0; i < 6; i++) {
-						await new Promise((r) => setTimeout(r, 5000));
-						try {
-							const res = await pod.request(4321, { path: "/" });
-							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
-							log(`REQ ${res.statusCode} ${body.slice(0, 120).replace(/\s+/g, " ")}`);
-							if (res.statusCode === 200) break;
-						} catch (e) {
-							log("req err " + (e && e.message));
-						}
-					}
-					try { dev.kill && dev.kill(); } catch {}
+					const run = async (label, cmd, args) => {
+						const p = await pod.spawn(cmd, args);
+						let out = "";
+						p.on("output", (t) => { out += clean(t); });
+						const res = await Promise.race([
+							p.completion.then((c) => c).catch((e) => ({ error: e.message })),
+							new Promise((r) => setTimeout(() => r("timeout"), 20000)),
+						]);
+						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 220)}`);
+						try { p.kill && p.kill(); } catch {}
+					};
+					await run("node-hello", "node", ["-e", "console.log('hello node')"]);
+					await run("astro-version", "node", ["node_modules/astro/astro.js", "--version"]);
+					await run("astro-import", "node", ["-e", "import('astro').then(m=>console.log('astro loaded',Object.keys(m).length)).catch(e=>{console.error('IMPORT_ERR',e&&e.message);process.exit(2)})"]);
+					await run("astro-dev", "node", ["node_modules/astro/astro.js", "dev", "--host", "0.0.0.0", "--port", "4321"]);
 					window.__state = "done";
 				} catch (error) {
 					log("ERR " + ((error && error.message) || String(error)));
