@@ -26,9 +26,9 @@ export const prerender = false;
 							"/home/project/src/pages/index.astro":
 								`---\nconst msg = "Astro in Nodepod"\n---\n<html><body><h1>{msg}</h1></body></html>`,
 							"/home/project/start.mjs":
-								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/astro.js");\n`,
 							"/home/project/ver.mjs":
-								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "--version"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "--version"];\nawait import("./node_modules/astro/astro.js");\n`,
 						},
 					});
 					log("booted");
