@@ -44,6 +44,16 @@ async function ensureDir(path) {
 	await mkdir(path, { recursive: true });
 }
 
+/** Port boş mu? (önceki oturumdan kalan süreçler çakışmasın) */
+async function portFree(port) {
+	return new Promise((resolve) => {
+		const probe = createServer();
+		probe.once("error", () => resolve(false));
+		probe.once("listening", () => probe.close(() => resolve(true)));
+		probe.listen(port, "127.0.0.1");
+	});
+}
+
 function remoteUrl(repo, token) {
 	// Token yalnız süreç belleğinde; URL geçici.
 	return `https://x-access-token:${token}@github.com/${repo}.git`;
@@ -136,6 +146,8 @@ async function startDev(session) {
 			cwd: session.dir,
 			env: { ...process.env, NODE_ENV: "development", ASTRO_TELEMETRY_DISABLED: "1" },
 			stdio: ["ignore", out.fd, out.fd],
+			// Alt süreçler (pnpm → astro → node) tek grup: durdururken hepsi ölür.
+			detached: true,
 		},
 	);
 	session.proc.on("exit", (code) => {
@@ -147,10 +159,27 @@ async function startDev(session) {
 }
 
 async function stopSession(session) {
+	const proc = session.proc;
 	try {
-		session.proc?.kill("SIGTERM");
+		if (proc?.pid) {
+			// Negatif PID = süreç grubu (pnpm + astro + node).
+			process.kill(-proc.pid, "SIGTERM");
+		}
 	} catch {
-		// yok say
+		try {
+			proc?.kill("SIGTERM");
+		} catch {
+			// yok say
+		}
+	}
+	// 2 sn içinde kapanmazsa zorla.
+	if (proc?.pid) {
+		await new Promise((resolve) => setTimeout(resolve, 1500));
+		try {
+			if (proc.exitCode === null) process.kill(-proc.pid, "SIGKILL");
+		} catch {
+			// zaten kapandı
+		}
 	}
 	session.ready = false;
 	sessions.delete(session.slug);
@@ -172,6 +201,7 @@ async function openSession({ slug, repo, branch, token }) {
 
 	const dir = join(ROOT, slug);
 	await ensureDir(ROOT);
+	while (!(await portFree(nextPort))) nextPort += 1;
 	const session = {
 		slug,
 		repo,
@@ -309,4 +339,6 @@ setInterval(() => {
 
 server.listen(PORT, "127.0.0.1", () => {
 	log(`preview worker :${PORT} root=${ROOT} max=${MAX}`);
+	// Önceki çalıştırmadan kalan dev sunucuları temizle (port çakışması).
+	void run("pkill", ["-f", "astro dev --host 127.0.0.1 --port 88"]).catch(() => undefined);
 });
