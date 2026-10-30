@@ -1,10 +1,10 @@
 import { c as Ht, n as Ne, o as Un, r as be, s as te, t as Vn } from "./event-loop-CGuYUIBq.js";
-import { Ft as Jn, Qt as Zn, S as Yn, Vt as _t, Wt as Kn, Yt as on, _ as b, b as gt, g as q, h as _e, m as Je, p as Lt, qt as L, u as Qn, v as C, wt as jt, x as re, y as an, yt as Xn } from "./nodepod-Y98NXDvC.js";
+import { Ft as Jn, Qt as Zn, S as Yn, Vt as _t, Wt as Kn, Yt as on, _ as b, b as gt, g as q, h as _e, m as Je, p as Lt, qt as L, u as Qn, v as C, wt as jt, x as re, y as an, yt as Xn } from "./nodepod-x22a8Pmu.js";
 import { L as Me, R as we } from "./tarball-cache-__C0n2zb.js";
-import { b as es, g as me, n as dt, w as J } from "./config-BBz1Tu7H.js";
-import { _ as ts, a as kt, b as ln, c as ns, d as ss, f as is, g as rs, h as os, i as as, l as ls, m as cs, n as us, o as Oe, p as ds, r as hs, s as fs, t as ps, u as ms, v as cn, y as gs } from "./pm-cli-DuCx87WQ.js";
-import { _ as Mt, g as ws, i as vs, o as ys, r as bs, s as $s, t as xs } from "./script-engine-CtRdZ7fx.js";
-import { s as Cs } from "./registry-client-BV27YIBO.js";
+import { b as es, g as me, n as dt, w as J } from "./config-CDCaUbLv.js";
+import { _ as ts, a as kt, b as ln, c as ns, d as ss, f as is, g as rs, h as os, i as as, l as ls, m as cs, n as us, o as Oe, p as ds, r as hs, s as fs, t as ps, u as ms, v as cn, y as gs } from "./pm-cli-xsLSTxvv.js";
+import { _ as Mt, g as ws, i as vs, o as ys, r as bs, s as $s, t as xs } from "./script-engine-CqbllEIG.js";
+import { s as Cs } from "./registry-client-BDeaTBMb.js";
 import { o as ks } from "./esbuild-engine-BdHL_6AU.js";
 var Ft = {
   maxOutputBytes: 4194304,
@@ -6676,7 +6676,7 @@ function Rn(t) {
 }
 async function Bt(t, e, n = "npm", s) {
   if (Oe(t)) return hr(ln(t), e, n, s);
-  const { DependencyInstaller: i } = await import("./nodepod-Y98NXDvC.js").then((u) => u.M), r = await Tn(), o = new i(k, {
+  const { DependencyInstaller: i } = await import("./nodepod-x22a8Pmu.js").then((u) => u.M), r = await Tn(), o = new i(k, {
     cwd: e.cwd,
     snapshotCache: r,
     deferPackSave: Pn()
@@ -6803,7 +6803,7 @@ async function Nn(t, e, n = "npm") {
 }
 async function pr(t, e = "npm", n = []) {
   Oe(n) && (t = kt(k, t));
-  const { DependencyInstaller: s } = await import("./nodepod-Y98NXDvC.js").then((d) => d.M), i = new s(k, { cwd: t.cwd }).listInstalled(), r = Object.entries(i);
+  const { DependencyInstaller: s } = await import("./nodepod-x22a8Pmu.js").then((d) => d.M), i = new s(k, { cwd: t.cwd }).listInstalled(), r = Object.entries(i);
   if (r.length === 0) return {
     stdout: `${H}(empty)${E}
 `,
@@ -6930,7 +6930,7 @@ dependencies:
   } catch {
   }
   try {
-    const { RegistryClient: i } = await import("./registry-client-BV27YIBO.js").then((a) => a.i), r = await new i().fetchManifest(n), o = r["dist-tags"]?.latest;
+    const { RegistryClient: i } = await import("./registry-client-BDeaTBMb.js").then((a) => a.i), r = await new i().fetchManifest(n), o = r["dist-tags"]?.latest;
     let l = `${n}@${o ?? "unknown"}
 `;
     if (o && r.versions[o]) {
@@ -6971,7 +6971,7 @@ async function wr(t, e = "npm") {
     k.existsSync(u) && At(k, u);
   } catch {
   }
-  const { DependencyInstaller: i } = await import("./nodepod-Y98NXDvC.js").then((u) => u.M), r = await Tn(), o = new i(k, {
+  const { DependencyInstaller: i } = await import("./nodepod-x22a8Pmu.js").then((u) => u.M), r = await Tn(), o = new i(k, {
     cwd: t.cwd,
     snapshotCache: r,
     deferPackSave: Pn()
@@ -8103,4 +8103,4 @@ export {
   qn as spawnSync
 };
 
-//# sourceMappingURL=child_process-Bqy_wS0P.js.map
+//# sourceMappingURL=child_process-C18i9xSb.js.map

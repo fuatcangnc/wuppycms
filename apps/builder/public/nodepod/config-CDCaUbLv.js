@@ -1,6 +1,6 @@
 var E = {
-  NODE: "v22.12.0",
-  NODE_BARE: "22.12.0",
+  NODE: "v22.22.0",
+  NODE_BARE: "22.22.0",
   NPM: "10.0.0",
   PNPM: "9.15.4",
   YARN: "4.6.0",
@@ -166,4 +166,4 @@ export {
   O as y
 };
 
-//# sourceMappingURL=config-BBz1Tu7H.js.map
+//# sourceMappingURL=config-CDCaUbLv.js.map

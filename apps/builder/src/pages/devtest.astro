@@ -9,7 +9,7 @@ export const prerender = false;
 		<script is:inline>
 			const el = document.getElementById("log");
 			const log = (m) => { el.textContent += m + "\n"; };
-			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 220);
+			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 260);
 			window.__state = "running";
 			(async () => {
 				try {
@@ -25,6 +25,10 @@ export const prerender = false;
 							}),
 							"/home/project/src/pages/index.astro":
 								`---\nconst msg = "Astro in Nodepod"\n---\n<html><body><h1>{msg}</h1></body></html>`,
+							"/home/project/start.mjs":
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+							"/home/project/ver.mjs":
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "--version"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
 						},
 					});
 					log("booted");
@@ -33,20 +37,31 @@ export const prerender = false;
 					await install.completion.catch((e) => log("install err " + (e && e.message)));
 					log("install done");
 
-					const run = async (label, cmd, args) => {
-						const p = await pod.spawn(cmd, args);
+					const run = async (label, args, waitMs) => {
+						const p = await pod.spawn("node", args);
 						let out = "";
 						p.on("output", (t) => { out += clean(t); });
 						const res = await Promise.race([
 							p.completion.then((c) => c).catch((e) => ({ error: e.message })),
-							new Promise((r) => setTimeout(() => r("timeout"), 20000)),
+							new Promise((r) => setTimeout(() => r("running"), waitMs)),
 						]);
-						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 220)}`);
-						try { p.kill && p.kill(); } catch {}
+						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 400)}`);
+						return p;
 					};
-					await run("wasi-import", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; import('astro').then(m=>console.log('ok',Object.keys(m).length)).catch(e=>{console.error('ERR',e&&e.message);process.exit(2)})"]);
-					await run("cli-version", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; process.argv=['node','astro','--version']; import('./node_modules/astro/bin/astro.mjs')"]);
-					await run("cli-dev", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; process.argv=['node','astro','dev','--host','0.0.0.0','--port','4321']; import('./node_modules/astro/bin/astro.mjs')"]);
+					await run("version", ["ver.mjs"], 25000);
+					const dev = await run("dev", ["start.mjs"], 45000);
+					for (let i = 0; i < 8; i++) {
+						await new Promise((r) => setTimeout(r, 5000));
+						try {
+							const res = await pod.request(4321, { path: "/" });
+							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
+							log(`REQ ${res.statusCode} ${body.slice(0, 160).replace(/\s+/g, " ")}`);
+							if (res.statusCode === 200) break;
+						} catch (e) {
+							log("req err " + (e && e.message));
+						}
+					}
+					try { dev.kill && dev.kill(); } catch {}
 					window.__state = "done";
 				} catch (error) {
 					log("ERR " + ((error && error.message) || String(error)));

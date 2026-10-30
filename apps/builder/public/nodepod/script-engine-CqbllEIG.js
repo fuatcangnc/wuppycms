@@ -1,10 +1,10 @@
 import { a as Kr, d as ne, f as eo, l as Le, n as Se, p as Nu, r as fn, s as Fo, t as Qu } from "./event-loop-CGuYUIBq.js";
 import { t as be } from "./fast-pako-BwXotfTx.js";
-import { $ as No, $t as Uu, At as Qo, Bt as Wr, Ct as hs, Dt as Wu, Et as Uo, Ft as ju, G as Vu, Gt as qu, Ht as Gu, It as Ku, J as zu, Jt as Wo, K as Yu, Lt as Xu, Mt as Ju, Nt as Mn, Ot as Zu, Q as ps, Rt as $u, St as eh, Tt as jo, U as th, Ut as ds, Vt as rh, W as nh, Wt as sh, X as ih, Y as Vo, Yt as K, Z as oh, Zt as ah, _t as to, an as mt, at as ro, bt as qo, ct as Go, dt as Ko, en as it, et as ch, ft as zo, gt as Yo, ht as Xo, in as fh, it as Jo, jt as lh, kt as Zo, lt as $o, mt as ea, nn as uh, nt as qn, on as xn, ot as zr, pt as ta, q as hh, qt as Q, rn as Bs, rt as ra, st as ms, tn as ph, tt as Gn, ut as na, vt as sa, wt as ia, xt as dh, zt as Bh } from "./nodepod-Y98NXDvC.js";
+import { $ as No, $t as Uu, At as Qo, Bt as Wr, Ct as hs, Dt as Wu, Et as Uo, Ft as ju, G as Vu, Gt as qu, Ht as Gu, It as Ku, J as zu, Jt as Wo, K as Yu, Lt as Xu, Mt as Ju, Nt as Mn, Ot as Zu, Q as ps, Rt as $u, St as eh, Tt as jo, U as th, Ut as ds, Vt as rh, W as nh, Wt as sh, X as ih, Y as Vo, Yt as K, Z as oh, Zt as ah, _t as to, an as mt, at as ro, bt as qo, ct as Go, dt as Ko, en as it, et as ch, ft as zo, gt as Yo, ht as Xo, in as fh, it as Jo, jt as lh, kt as Zo, lt as $o, mt as ea, nn as uh, nt as qn, on as xn, ot as zr, pt as ta, q as hh, qt as Q, rn as Bs, rt as ra, st as ms, tn as ph, tt as Gn, ut as na, vt as sa, wt as ia, xt as dh, zt as Bh } from "./nodepod-x22a8Pmu.js";
 import { H as mh, I as no, L as yh, M as De, P as Pe, R as gh, V as so, W as Rh, f as io, h as oo, l as ao, p as co, u as wh, z as vh } from "./tarball-cache-__C0n2zb.js";
-import { _ as kr, f as Et, h as _e, i as Pr, l as oa, m as yt, n as tt, o as Sh, p as bh, s as Eh, u as jr, v as Th, w as Ch } from "./config-BBz1Tu7H.js";
-import { E as Ah, T as Dh } from "./pm-cli-DuCx87WQ.js";
-import { c as Mh } from "./registry-client-BV27YIBO.js";
+import { _ as kr, f as Et, h as _e, i as Pr, l as oa, m as yt, n as tt, o as Sh, p as bh, s as Eh, u as jr, v as Th, w as Ch } from "./config-CDCaUbLv.js";
+import { E as Ah, T as Dh } from "./pm-cli-xsLSTxvv.js";
+import { c as Mh } from "./registry-client-BDeaTBMb.js";
 import { d as xh, f as ys, o as Oh, s as _h, t as Ih } from "./cdn-urls-BV1eSMdl.js";
 var Hh = /* @__PURE__ */ ne({
   decode: () => la,
@@ -10087,7 +10087,7 @@ function KB(e, t, r) {
 }
 var Un = null;
 function zB() {
-  return Un === null && (Un = "1.11.2-wuppy.0+mvv8zvmr." + Ah([
+  return Un === null && (Un = "1.11.2-wuppy.0+mvvamzf9." + Ah([
     nn,
     Au,
     ra,
@@ -11596,7 +11596,7 @@ var r0 = class {
       env: t.env,
       onStdout: t.onStdout,
       onStderr: t.onStderr
-    }), this.fsBridge = $u(e, () => this.proc.cwd()), ku.set(this.fsBridge, this.fsBridge.readFileSync), this.opts = t, import("./child_process-Bqy_wS0P.js").then((r) => {
+    }), this.fsBridge = $u(e, () => this.proc.cwd()), ku.set(this.fsBridge, this.fsBridge.readFileSync), this.opts = t, import("./child_process-C18i9xSb.js").then((r) => {
       Ae = r, r.initShellExec;
     }).catch(() => {
     }), Gs(e), rf(e), Yu(e), Vu(t.cwd ?? "/"), oh(e), Rf((r, n) => e.mkdirSync(r, n), (r, n) => e.writeFileSync(r, n)), globalThis.__nodepodVolume = e;
@@ -12092,4 +12092,4 @@ export {
   Sa as y
 };
 
-//# sourceMappingURL=script-engine-CtRdZ7fx.js.map
+//# sourceMappingURL=script-engine-CqbllEIG.js.map

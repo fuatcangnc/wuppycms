@@ -1,13 +1,13 @@
-import { r as U } from "./fast-pako-BwXotfTx.js";
-import { A as ue, D as ge, E as Be, N as ce, O as Fe, P as he, T as Ae, cn as Ce, d as Xe, dn as ye, f as pe, fn as k, j as Pe, k as Le, ln as le, mn as T, n as xe, pn as V, r as Ee, t as Ge, un as me, w as Ze } from "./nodepod-Y98NXDvC.js";
-import { d as ve, m as N, p as Oe } from "./offload-BQq4ymyv.js";
-import { createHash as b } from "node:crypto";
-import { existsSync as y, readFileSync as x } from "node:fs";
-import { dirname as R, join as u } from "node:path";
-import { fileURLToPath as E } from "node:url";
+import { r as h } from "./fast-pako-BwXotfTx.js";
+import { A as oe, D as Be, E as we, N as Le, O as ge, P as Ce, T as ie, cn as xe, d as je, dn as Fe, f as be, fn as R, j as Qe, k as He, ln as Xe, mn as N, n as ye, pn as T, r as ve, t as Ee, un as le, w as Pe } from "./nodepod-x22a8Pmu.js";
+import { d as Ie, m as k, p as De } from "./offload-DgyAYqvz.js";
+import { createHash as m } from "node:crypto";
+import { existsSync as F, readFileSync as y } from "node:fs";
+import { dirname as q, join as o } from "node:path";
+import { fileURLToPath as v } from "node:url";
 import { Worker as S } from "node:worker_threads";
-import q from "node:http";
-import { mkdir as D, open as G, readFile as X, readdir as m, rename as K, rm as _, unlink as B, writeFile as v } from "node:fs/promises";
+import J from "node:http";
+import { mkdir as z, open as E, readFile as j, readdir as l, rename as V, rm as _, unlink as w, writeFile as I } from "node:fs/promises";
 import { tmpdir as $ } from "node:os";
 function ee() {
   return `"use strict";
@@ -64,361 +64,361 @@ if (typeof source !== "string" || !source) {
 (0, eval)(source);
 `;
 }
-function re(r) {
-  const d = /* @__PURE__ */ new Set(), i = /* @__PURE__ */ new Set();
-  let f = null, s = null;
-  return r.on("message", (t) => {
-    const e = { data: t };
-    for (const o of d) try {
-      o(e);
+function te(t) {
+  const f = /* @__PURE__ */ new Set(), a = /* @__PURE__ */ new Set();
+  let d = null, n = null;
+  return t.on("message", (s) => {
+    const e = { data: s };
+    for (const r of f) try {
+      r(e);
     } catch {
     }
-    if (f) try {
-      f(e);
+    if (d) try {
+      d(e);
     } catch {
     }
-  }), r.on("error", (t) => {
+  }), t.on("error", (s) => {
     const e = {
-      message: t.message,
-      error: t
+      message: s.message,
+      error: s
     };
-    for (const o of i) try {
-      o(e);
+    for (const r of a) try {
+      r(e);
     } catch {
     }
-    if (s) try {
-      s(e);
+    if (n) try {
+      n(e);
     } catch {
     }
   }), {
-    postMessage(t, e) {
-      e && e.length ? r.postMessage(t, e) : r.postMessage(t);
+    postMessage(s, e) {
+      e && e.length ? t.postMessage(s, e) : t.postMessage(s);
     },
     terminate() {
-      r.terminate();
+      t.terminate();
     },
-    addEventListener(t, e) {
-      t === "message" ? d.add(e) : t === "error" && i.add(e);
+    addEventListener(s, e) {
+      s === "message" ? f.add(e) : s === "error" && a.add(e);
     },
-    removeEventListener(t, e) {
-      t === "message" ? d.delete(e) : t === "error" && i.delete(e);
+    removeEventListener(s, e) {
+      s === "message" ? f.delete(e) : s === "error" && a.delete(e);
     },
     get onmessage() {
-      return f;
+      return d;
     },
-    set onmessage(t) {
-      f = t;
+    set onmessage(s) {
+      d = s;
     },
     get onerror() {
-      return s;
+      return n;
     },
-    set onerror(t) {
-      s = t;
+    set onerror(s) {
+      n = s;
     }
   };
 }
-function P(r, d) {
-  return re(new S(ee(), {
+function Q(t, f) {
+  return te(new S(ee(), {
     eval: !0,
-    workerData: { __nodepodSource: r },
-    ...d ? { name: d } : {}
+    workerData: { __nodepodSource: t },
+    ...f ? { name: f } : {}
   }));
 }
-function te(r) {
-  const d = r.host ?? "127.0.0.1", i = r.port ?? 0;
-  let f = null, s = null;
-  async function t(a) {
-    const n = [];
-    for await (const w of a) n.push(Buffer.isBuffer(w) ? w : Buffer.from(w));
-    return Buffer.concat(n);
+function se(t) {
+  const f = t.host ?? "127.0.0.1", a = t.port ?? 0;
+  let d = null, n = null;
+  async function s(c) {
+    const u = [];
+    for await (const A of c) u.push(Buffer.isBuffer(A) ? A : Buffer.from(A));
+    return Buffer.concat(u);
   }
-  function e(a) {
-    const n = {};
-    for (const [w, g] of Object.entries(a))
-      g != null && (n[w] = Array.isArray(g) ? g.join(", ") : g);
-    return n;
+  function e(c) {
+    const u = {};
+    for (const [A, B] of Object.entries(c))
+      B != null && (u[A] = Array.isArray(B) ? B.join(", ") : B);
+    return u;
   }
-  async function o(a, n) {
+  async function r(c, u) {
     try {
-      const w = new URL(a.url || "/", `http://${d}`), g = w.pathname.split("/").filter(Boolean);
-      if (g[0] !== "__virtual__" || g.length < 3) {
-        n.statusCode = 404, n.setHeader("Content-Type", "text/plain"), n.end("Not Found");
+      const A = new URL(c.url || "/", `http://${f}`), B = A.pathname.split("/").filter(Boolean);
+      if (B[0] !== "__virtual__" || B.length < 3) {
+        u.statusCode = 404, u.setHeader("Content-Type", "text/plain"), u.end("Not Found");
         return;
       }
-      const c = g[1], h = Number(g[2]);
-      if (!Number.isFinite(h)) {
-        n.statusCode = 400, n.setHeader("Content-Type", "text/plain"), n.end("Invalid port");
+      const L = B[1], C = Number(B[2]);
+      if (!Number.isFinite(C)) {
+        u.statusCode = 400, u.setHeader("Content-Type", "text/plain"), u.end("Invalid port");
         return;
       }
-      const A = await t(a), M = A.byteLength > 0 ? A.buffer.slice(A.byteOffset, A.byteOffset + A.byteLength) : void 0, Z = g.slice(3), Q = (Z.length ? `/${Z.join("/")}` : "/") + w.search, F = await r.proxy.handleRequest(c, h, (a.method || "GET").toUpperCase(), Q, e(a.headers), M);
-      n.statusCode = F.statusCode;
-      for (const [j, p] of Object.entries(F.headers))
-        p != null && (Array.isArray(p), n.setHeader(j, p));
-      const J = F.body ? Buffer.isBuffer(F.body) ? F.body : Buffer.from(F.body) : Buffer.alloc(0);
-      n.end(J);
-    } catch (w) {
-      n.statusCode = 500, n.setHeader("Content-Type", "text/plain"), n.end(w instanceof Error ? w.message : String(w));
+      const i = await s(c), K = i.byteLength > 0 ? i.buffer.slice(i.byteOffset, i.byteOffset + i.byteLength) : void 0, P = B.slice(3), p = (P.length ? `/${P.join("/")}` : "/") + A.search, g = await t.proxy.handleRequest(L, C, (c.method || "GET").toUpperCase(), p, e(c.headers), K);
+      u.statusCode = g.statusCode;
+      for (const [O, b] of Object.entries(g.headers))
+        b != null && (Array.isArray(b), u.setHeader(O, b));
+      const Z = g.body ? Buffer.isBuffer(g.body) ? g.body : Buffer.from(g.body) : Buffer.alloc(0);
+      u.end(Z);
+    } catch (A) {
+      u.statusCode = 500, u.setHeader("Content-Type", "text/plain"), u.end(A instanceof Error ? A.message : String(A));
     }
   }
   return {
     kind: "local-http",
     get baseUrl() {
-      return s;
+      return n;
     },
     async start() {
-      if (f) return;
-      f = q.createServer((n, w) => {
-        o(n, w);
-      }), await new Promise((n, w) => {
-        f.once("error", w), f.listen(i, d, () => {
-          f.off("error", w), n();
+      if (d) return;
+      d = J.createServer((u, A) => {
+        r(u, A);
+      }), await new Promise((u, A) => {
+        d.once("error", A), d.listen(a, f, () => {
+          d.off("error", A), u();
         });
       });
-      const a = f.address();
-      a && typeof a == "object" ? s = `http://${d}:${a.port}` : s = `http://${d}`, r.proxy.setBaseUrl(s);
+      const c = d.address();
+      c && typeof c == "object" ? n = `http://${f}:${c.port}` : n = `http://${f}`, t.proxy.setBaseUrl(n);
     },
     async stop() {
-      const a = f;
-      f = null, s = null, a && await new Promise((n) => {
-        a.close(() => n()), a.closeIdleConnections?.(), a.closeAllConnections?.();
+      const c = d;
+      d = null, n = null, c && await new Promise((u) => {
+        c.close(() => u()), c.closeIdleConnections?.(), c.closeAllConnections?.();
       });
     }
   };
 }
-var L = 2, O = 6048e5;
-function W() {
-  return process.env.NODEPOD_CACHE || u($(), "nodepod-snapshots");
+var H = 2, D = 6048e5;
+function G() {
+  return process.env.NODEPOD_CACHE || o($(), "nodepod-snapshots");
 }
-function se(r, d) {
-  const i = b("sha256").update(d).digest("hex");
-  return u(r, `${i}.bin`);
+function ne(t, f) {
+  const a = m("sha256").update(f).digest("hex");
+  return o(t, `${a}.bin`);
 }
-async function oe(r = W()) {
+async function re(t = G()) {
   try {
-    await D(r, { recursive: !0 });
+    await z(t, { recursive: !0 });
   } catch {
     return null;
   }
-  const d = (t) => se(r, t).replace(/\.bin$/, ""), i = (t, e) => e.dataFile ?? `${d(t).slice(r.length + 1)}.bin`, f = async (t) => {
+  const f = (s) => ne(t, s).replace(/\.bin$/, ""), a = (s, e) => e.dataFile ?? `${f(s).slice(t.length + 1)}.bin`, d = async (s) => {
     try {
-      const e = JSON.parse(await X(`${d(t)}.meta.json`, "utf8"));
-      return e.schema !== L || e.createdAt != null && Date.now() - e.createdAt > O ? null : e;
+      const e = JSON.parse(await j(`${f(s)}.meta.json`, "utf8"));
+      return e.schema !== H || e.createdAt != null && Date.now() - e.createdAt > D ? null : e;
     } catch {
       return null;
     }
   };
   (async () => {
     try {
-      const t = await m(r), e = Date.now(), o = /* @__PURE__ */ new Set();
-      for (const a of t) {
-        if (!a.endsWith(".meta.json")) continue;
-        const n = a.slice(0, -10);
+      const s = await l(t), e = Date.now(), r = /* @__PURE__ */ new Set();
+      for (const c of s) {
+        if (!c.endsWith(".meta.json")) continue;
+        const u = c.slice(0, -10);
         try {
-          const w = JSON.parse(await X(u(r, a), "utf8")), g = w.dataFile ?? `${n}.bin`;
-          w.schema !== L || w.createdAt != null && e - w.createdAt > O ? (await B(u(r, a)).catch(() => {
-          }), await B(u(r, g)).catch(() => {
-          })) : o.add(g);
+          const A = JSON.parse(await j(o(t, c), "utf8")), B = A.dataFile ?? `${u}.bin`;
+          A.schema !== H || A.createdAt != null && e - A.createdAt > D ? (await w(o(t, c)).catch(() => {
+          }), await w(o(t, B)).catch(() => {
+          })) : r.add(B);
         } catch {
         }
       }
-      for (const a of t) a.endsWith(".bin") && !o.has(a) && await B(u(r, a)).catch(() => {
+      for (const c of s) c.endsWith(".bin") && !r.has(c) && await w(o(t, c)).catch(() => {
       });
     } catch {
     }
   })();
-  const s = /* @__PURE__ */ new Map();
+  const n = /* @__PURE__ */ new Map();
   return {
-    async getManifest(t) {
-      const e = await f(t);
+    async getManifest(s) {
+      const e = await d(s);
       if (!e) return null;
-      const o = i(t, e);
-      let a;
+      const r = a(s, e);
+      let c;
       try {
-        a = await G(u(r, o), "r");
-        const n = Buffer.alloc(4);
-        if ((await a.read(n, 0, 4, 0)).bytesRead < 4) return null;
-        const w = n.readUInt32LE(0), g = Buffer.alloc(w);
-        return (await a.read(g, 0, w, 4)).bytesRead < w ? null : (s.set(o, 4 + w), {
-          manifest: JSON.parse(g.toString("utf8")),
-          version: o
+        c = await E(o(t, r), "r");
+        const u = Buffer.alloc(4);
+        if ((await c.read(u, 0, 4, 0)).bytesRead < 4) return null;
+        const A = u.readUInt32LE(0), B = Buffer.alloc(A);
+        return (await c.read(B, 0, A, 4)).bytesRead < A ? null : (n.set(r, 4 + A), {
+          manifest: JSON.parse(B.toString("utf8")),
+          version: r
         });
       } catch {
         return null;
       } finally {
-        await a?.close();
+        await c?.close();
       }
     },
-    async readRange(t, e, o, a) {
-      let n;
+    async readRange(s, e, r, c) {
+      let u;
       try {
-        n = await G(u(r, e), "r");
-        let w = s.get(e);
-        if (w === void 0) {
-          const h = Buffer.alloc(4);
-          await n.read(h, 0, 4, 0), w = 4 + h.readUInt32LE(0), s.set(e, w);
+        u = await E(o(t, e), "r");
+        let A = n.get(e);
+        if (A === void 0) {
+          const C = Buffer.alloc(4);
+          await u.read(C, 0, 4, 0), A = 4 + C.readUInt32LE(0), n.set(e, A);
         }
-        const g = new Uint8Array(a), { bytesRead: c } = await n.read(g, 0, a, w + o);
-        return c === a ? g : null;
+        const B = new Uint8Array(c), { bytesRead: L } = await u.read(B, 0, c, A + r);
+        return L === c ? B : null;
       } catch {
         return null;
       } finally {
-        await n?.close();
+        await u?.close();
       }
     },
-    async get(t) {
+    async get(s) {
       try {
-        const e = await f(t);
+        const e = await d(s);
         if (!e) return null;
-        const o = await X(u(r, i(t, e)));
-        if (o.byteLength < 4) return null;
-        const a = o.readUInt32LE(0), n = o.subarray(4, 4 + a), w = o.buffer.slice(o.byteOffset + 4 + a, o.byteOffset + o.byteLength);
+        const r = await j(o(t, a(s, e)));
+        if (r.byteLength < 4) return null;
+        const c = r.readUInt32LE(0), u = r.subarray(4, 4 + c), A = r.buffer.slice(r.byteOffset + 4 + c, r.byteOffset + r.byteLength);
         return {
-          manifest: JSON.parse(n.toString("utf8")),
-          data: w
+          manifest: JSON.parse(u.toString("utf8")),
+          data: A
         };
       } catch {
         return null;
       }
     },
-    async set(t, e) {
-      const o = d(t), a = await f(t), n = `${o.slice(r.length + 1)}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.bin`, w = Buffer.from(JSON.stringify(e.manifest), "utf8"), g = Buffer.from(e.data), c = Buffer.alloc(4);
-      c.writeUInt32LE(w.byteLength, 0), await v(u(r, n), Buffer.concat([
-        c,
-        w,
-        g
-      ])), await v(`${o}.meta.json`, JSON.stringify({
-        schema: L,
+    async set(s, e) {
+      const r = f(s), c = await d(s), u = `${r.slice(t.length + 1)}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.bin`, A = Buffer.from(JSON.stringify(e.manifest), "utf8"), B = Buffer.from(e.data), L = Buffer.alloc(4);
+      L.writeUInt32LE(A.byteLength, 0), await I(o(t, u), Buffer.concat([
+        L,
+        A,
+        B
+      ])), await I(`${r}.meta.json`, JSON.stringify({
+        schema: H,
         createdAt: Date.now(),
-        dataFile: n
-      })), a && await B(u(r, i(t, a))).catch(() => {
+        dataFile: u
+      })), c && await w(o(t, a(s, c))).catch(() => {
       });
     },
     close() {
     }
   };
 }
-var I = "manifest.json", C = "blobs";
-function l(r, d) {
-  return u(r, C, encodeURIComponent(d));
+var Y = "manifest.json", x = "blobs";
+function X(t, f) {
+  return o(t, x, encodeURIComponent(f));
 }
-async function H(r, d) {
-  const i = `${r}.${process.pid}.${Date.now()}.tmp`, f = await G(i, "w");
+async function M(t, f) {
+  const a = `${t}.${process.pid}.${Date.now()}.tmp`, d = await E(a, "w");
   try {
-    await f.writeFile(d), await f.sync();
+    await d.writeFile(f), await d.sync();
   } finally {
-    await f.close();
+    await d.close();
   }
-  await K(i, r);
+  await V(a, t);
 }
-async function Y(r) {
+async function U(t) {
   try {
-    for (const d of await m(r)) d.endsWith(".tmp") && await B(u(r, d)).catch(() => {
+    for (const f of await l(t)) f.endsWith(".tmp") && await w(o(t, f)).catch(() => {
     });
   } catch {
   }
 }
-function ae(r) {
-  let d = null, i = !1;
-  const f = async () => {
-    if (d) return d;
-    let s;
+function ce(t) {
+  let f = null, a = !1;
+  const d = async () => {
+    if (f) return f;
+    let n;
     try {
-      s = await X(u(r, I), "utf8");
+      n = await j(o(t, Y), "utf8");
     } catch (e) {
       if (e.code !== "ENOENT") throw e;
-      return d = /* @__PURE__ */ new Map(), i = !1, d;
+      return f = /* @__PURE__ */ new Map(), a = !1, f;
     }
-    let t;
+    let s;
     try {
-      t = JSON.parse(s);
+      s = JSON.parse(n);
     } catch {
-      const e = /* @__PURE__ */ new Error(`[Nodepod] saved workspace at ${r} is corrupt (manifest.json is not valid JSON); delete the directory to start over`);
+      const e = /* @__PURE__ */ new Error(`[Nodepod] saved workspace at ${t} is corrupt (manifest.json is not valid JSON); delete the directory to start over`);
       throw e.code = "EWORKSPACECORRUPT", e;
     }
-    return d = new Map(t.entries.map((e) => [e.path, e])), i = !0, d;
+    return f = new Map(s.entries.map((e) => [e.path, e])), a = !0, f;
   };
   return {
     async load() {
-      d = null;
-      const s = await f();
-      return await Y(r), await Y(u(r, C)), i ? {
+      f = null;
+      const n = await d();
+      return await U(t), await U(o(t, x)), a ? {
         version: 1,
-        entries: Array.from(s.values(), (t) => ({ ...t }))
+        entries: Array.from(n.values(), (s) => ({ ...s }))
       } : null;
     },
-    async readBlobs(s) {
-      const t = /* @__PURE__ */ new Map();
-      return await Promise.all(s.map(async (e) => {
+    async readBlobs(n) {
+      const s = /* @__PURE__ */ new Map();
+      return await Promise.all(n.map(async (e) => {
         try {
-          const o = await X(l(r, e));
-          t.set(e, new Uint8Array(o.buffer, o.byteOffset, o.byteLength));
+          const r = await j(X(t, e));
+          s.set(e, new Uint8Array(r.buffer, r.byteOffset, r.byteLength));
         } catch {
         }
-      })), t;
+      })), s;
     },
-    async commit(s) {
-      const t = await f();
-      await D(u(r, C), { recursive: !0 });
-      for (const { id: o, data: a } of s.putBlobs) await H(l(r, o), a);
-      const e = new Map(t);
-      for (const o of s.deletePrefixes) for (const a of Array.from(e.keys())) V(a, o) && e.delete(a);
-      for (const o of s.deletePaths) e.delete(o);
-      for (const o of s.putEntries) e.set(o.path, { ...o });
-      if (k(s)) {
-        const o = {
+    async commit(n) {
+      const s = await d();
+      await z(o(t, x), { recursive: !0 });
+      for (const { id: r, data: c } of n.putBlobs) await M(X(t, r), c);
+      const e = new Map(s);
+      for (const r of n.deletePrefixes) for (const c of Array.from(e.keys())) T(c, r) && e.delete(c);
+      for (const r of n.deletePaths) e.delete(r);
+      for (const r of n.putEntries) e.set(r.path, { ...r });
+      if (R(n)) {
+        const r = {
           version: 1,
           entries: Array.from(e.values())
         };
-        await H(u(r, I), JSON.stringify(o)), d = e, i = !0;
+        await M(o(t, Y), JSON.stringify(r)), f = e, a = !0;
       }
-      for (const o of s.deleteBlobs) await B(l(r, o)).catch(() => {
+      for (const r of n.deleteBlobs) await w(X(t, r)).catch(() => {
       });
     },
     async sweep() {
-      const s = await f(), t = /* @__PURE__ */ new Set();
-      for (const o of s.values()) o.blob && t.add(encodeURIComponent(o.blob));
+      const n = await d(), s = /* @__PURE__ */ new Set();
+      for (const r of n.values()) r.blob && s.add(encodeURIComponent(r.blob));
       let e;
       try {
-        e = await m(u(r, C));
+        e = await l(o(t, x));
       } catch {
         return;
       }
-      for (const o of e) !o.endsWith(".tmp") && !t.has(o) && await B(u(r, C, o)).catch(() => {
+      for (const r of e) !r.endsWith(".tmp") && !s.has(r) && await w(o(t, x, r)).catch(() => {
       });
     },
     async clear() {
-      await _(r, {
+      await _(t, {
         recursive: !0,
         force: !0
-      }), d = /* @__PURE__ */ new Map(), i = !1;
+      }), f = /* @__PURE__ */ new Map(), a = !1;
     }
   };
 }
-function z() {
+function W() {
   try {
-    const r = R(E(import.meta.url)), d = [
-      u(r, "..", "..", "__worker__.js"),
-      u(r, "..", "..", "..", "dist", "__worker__.js"),
-      u(process.cwd(), "dist", "__worker__.js")
+    const t = q(v(import.meta.url)), f = [
+      o(t, "..", "..", "__worker__.js"),
+      o(t, "..", "..", "..", "dist", "__worker__.js"),
+      o(process.cwd(), "dist", "__worker__.js")
     ];
-    for (const i of d) if (y(i)) return i;
+    for (const a of f) if (F(a)) return a;
   } catch {
   }
   return null;
 }
-function de() {
-  const r = Buffer.from(T, "base64");
-  return U(r, { to: "string" });
+function fe() {
+  const t = Buffer.from(N, "base64");
+  return h(t, { to: "string" });
 }
-function ne(r, d) {
-  return !d && r && y(r) ? x(r, "utf8") : r && y(r) ? x(r, "utf8") : de();
+function ue(t, f) {
+  return !f && t && F(t) ? y(t, "utf8") : t && F(t) ? y(t, "utf8") : fe();
 }
-function we(r = {}) {
-  let d = r.workerPath ?? z(), i = null;
-  function f(s) {
-    if (!s && i) return i;
-    const t = ne(d, !!s);
-    return s || (i = t), t;
+function Ae(t = {}) {
+  let f = t.workerPath ?? W(), a = null;
+  function d(n) {
+    if (!n && a) return a;
+    const s = ue(f, !!n);
+    return n || (a = s), s;
   }
   return {
     kind: "node",
@@ -426,40 +426,40 @@ function we(r = {}) {
     canCreateWorkers() {
       return !0;
     },
-    createWorker(s) {
-      if (s.type === "url") {
-        let o = s.url;
-        if (o.startsWith("file:") && (o = E(o)), !y(o)) throw new Error(`[Nodepod] Node host cannot load worker URL: ${s.url}`);
-        const a = x(o, "utf8"), n = P(a, s.name);
-        return n.__nodepodDirect = !0, n;
+    createWorker(n) {
+      if (n.type === "url") {
+        let r = n.url;
+        if (r.startsWith("file:") && (r = v(r)), !F(r)) throw new Error(`[Nodepod] Node host cannot load worker URL: ${n.url}`);
+        const c = y(r, "utf8"), u = Q(c, n.name);
+        return u.__nodepodDirect = !0, u;
       }
-      if (s.type === "source") return P(s.source, s.name);
-      const t = f(s.embedded), e = P(t, s.name);
-      return d && !s.embedded && (e.__nodepodDirect = !0), e;
+      if (n.type === "source") return Q(n.source, n.name);
+      const s = d(n.embedded), e = Q(s, n.name);
+      return f && !n.embedded && (e.__nodepodDirect = !0), e;
     },
-    async probeProcessWorkerUrl(s) {
-      if (s) {
-        let e = s;
-        return e.startsWith("file:") && (e = E(e)), y(e) ? (d = e, i = null, e) : null;
+    async probeProcessWorkerUrl(n) {
+      if (n) {
+        let e = n;
+        return e.startsWith("file:") && (e = v(e)), F(e) ? (f = e, a = null, e) : null;
       }
-      const t = r.workerPath ?? z();
-      return t ? (d = t, i = null, t) : null;
+      const s = t.workerPath ?? W();
+      return s ? (f = s, a = null, s) : null;
     },
     disposeGlobalResources() {
-      i = null;
+      a = null;
     },
-    async openSnapshotCache(s) {
-      return s.enableSnapshotCache === !1 || s.packageStore === "memory" ? null : oe(r.cacheDir);
+    async openSnapshotCache(n) {
+      return n.enableSnapshotCache === !1 || n.packageStore === "memory" ? null : re(t.cacheDir);
     },
-    async openWorkspaceStore(s) {
-      const t = b("sha256").update(s).digest("hex").slice(0, 32);
-      return ae(u(r.cacheDir ?? W(), "workspaces", t));
+    async openWorkspaceStore(n) {
+      const s = m("sha256").update(n).digest("hex").slice(0, 32);
+      return ce(o(t.cacheDir ?? G(), "workspaces", s));
     },
-    createHttpIngress({ proxy: s, headless: t }) {
-      return t ? te({
-        proxy: s,
-        host: r.httpHost,
-        port: r.httpPort
+    createHttpIngress({ proxy: n, headless: s }) {
+      return s ? se({
+        proxy: n,
+        host: t.httpHost,
+        port: t.httpPort
       }) : {
         kind: "programmatic",
         baseUrl: null
@@ -467,34 +467,34 @@ function we(r = {}) {
     }
   };
 }
-N(we());
+k(Ae());
 export {
-  ue as DependencyInstaller,
-  Ce as MemoryVolume,
-  Ge as Nodepod,
-  Ae as NodepodFS,
-  Xe as NodepodFSClient,
-  pe as NodepodFSClientError,
-  Ze as NodepodProcess,
-  Le as NodepodSWSetupError,
-  Be as RequestProxy,
-  Ee as WorkspacePersistence,
-  ae as createFsWorkspaceStore,
-  le as createIndexedDBWorkspaceStore,
-  te as createLocalHttpIngress,
-  xe as createMemoryWorkspaceStore,
-  we as createNodeHost,
-  me as deleteIndexedDBWorkspace,
-  ce as discoverWorkspaces,
-  ge as getProxyInstance,
-  ve as getRuntimeHost,
-  Pe as install,
-  ye as listIndexedDBWorkspaces,
-  oe as openFsSnapshotCache,
-  he as readWorkspacePatterns,
-  Fe as resetProxy,
-  Oe as resetRuntimeHost,
-  N as setRuntimeHost
+  oe as DependencyInstaller,
+  xe as MemoryVolume,
+  Ee as Nodepod,
+  ie as NodepodFS,
+  je as NodepodFSClient,
+  be as NodepodFSClientError,
+  Pe as NodepodProcess,
+  He as NodepodSWSetupError,
+  we as RequestProxy,
+  ve as WorkspacePersistence,
+  ce as createFsWorkspaceStore,
+  Xe as createIndexedDBWorkspaceStore,
+  se as createLocalHttpIngress,
+  ye as createMemoryWorkspaceStore,
+  Ae as createNodeHost,
+  le as deleteIndexedDBWorkspace,
+  Le as discoverWorkspaces,
+  Be as getProxyInstance,
+  Ie as getRuntimeHost,
+  Qe as install,
+  Fe as listIndexedDBWorkspaces,
+  re as openFsSnapshotCache,
+  Ce as readWorkspacePatterns,
+  ge as resetProxy,
+  De as resetRuntimeHost,
+  k as setRuntimeHost
 };
 
 //# sourceMappingURL=headless.mjs.map

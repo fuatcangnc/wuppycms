@@ -1,5 +1,5 @@
 import { d as D } from "./event-loop-CGuYUIBq.js";
-import { y as I } from "./config-BBz1Tu7H.js";
+import { y as I } from "./config-CDCaUbLv.js";
 var M = null, m = null, _ = !1, U = [
   "registry.npmjs.org",
   "github.com",
@@ -334,4 +334,4 @@ export {
   tt as u
 };
 
-//# sourceMappingURL=registry-client-BV27YIBO.js.map
+//# sourceMappingURL=registry-client-BDeaTBMb.js.map

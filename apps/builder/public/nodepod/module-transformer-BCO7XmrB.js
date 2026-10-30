@@ -1,5 +1,5 @@
 import { d as x } from "./event-loop-CGuYUIBq.js";
-import { a as j, i as w, n as T, o as S } from "./offload-BQq4ymyv.js";
+import { a as j, i as w, n as T, o as S } from "./offload-DgyAYqvz.js";
 import { i as b, n as E } from "./esbuild-engine-BdHL_6AU.js";
 var R = 1048576;
 function v(t, e = 64, n = R) {
@@ -218,4 +218,4 @@ export {
   L as t
 };
 
-//# sourceMappingURL=module-transformer-DNLjMKmR.js.map
+//# sourceMappingURL=module-transformer-BCO7XmrB.js.map

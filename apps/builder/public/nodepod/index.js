@@ -1,162 +1,162 @@
-import { c as de, d as b, o as ce, s as we } from "./event-loop-CGuYUIBq.js";
-import { r as D } from "./fast-pako-BwXotfTx.js";
-import { A as I, B as le, C as he, D as O, Dt as ge, E as ye, F as Z, H as Be, I as j, Kt as Fe, L as pe, Lt as Ae, M as Ce, Mt as xe, N as Xe, O as Pe, P as Ee, Pt as me, R as Le, Rt as ve, T as Ge, V as be, X as De, Xt as Ie, a as Oe, c as Ze, cn as H, d as je, dn as He, f as We, i as Ye, j as ze, jt as Me, k as Ue, l as ke, ln as W, mn as Y, n as Qe, o as Je, on as Se, r as Ne, s as Te, sn as Ve, t as Re, un as qe, w as Ke, z as _e } from "./nodepod-Y98NXDvC.js";
-import { c as z, d as et, f as P, l as M, m as tt, p as rt, u as nt } from "./offload-BQq4ymyv.js";
+import { c as ae, d as D, o as de, s as fe } from "./event-loop-CGuYUIBq.js";
+import { r as P } from "./fast-pako-BwXotfTx.js";
+import { A as O, B as Ae, C as ge, D as I, Dt as we, E as Be, F as p, H as xe, I as m, Kt as Ce, L as ye, Lt as Le, M as be, Mt as Fe, N as he, O as je, P as ve, Pt as Qe, R as Ee, Rt as He, T as Xe, V as De, X as Pe, Xt as Oe, a as Ie, c as pe, cn as U, d as me, dn as Ue, f as We, i as Me, j as Ye, jt as ze, k as Ge, l as Re, ln as W, mn as M, n as ke, o as Ke, on as Ne, r as Se, s as Ze, sn as Te, t as qe, un as Je, w as Ve, z as _e } from "./nodepod-x22a8Pmu.js";
+import { c as Y, d as et, f as j, l as z, m as tt, p as nt, u as st } from "./offload-DgyAYqvz.js";
 import { I as it } from "./tarball-cache-__C0n2zb.js";
-import "./config-BBz1Tu7H.js";
-import { a as ct, b as wt, c as ut, d as ft, f as lt, h as ht, l as gt, m as yt, n as Bt, p as Ft, t as E, u as pt, v as At, x as Ct, y as xt } from "./script-engine-CtRdZ7fx.js";
-import { d as Pt, o as Et, u as mt } from "./registry-client-BV27YIBO.js";
-var Lt = /* @__PURE__ */ b({ openSnapshotCache: () => L }), U = "nodepod-snapshots", w = "snapshots", k = 2, Q = 6048e5, m = 3, u = "\0data\0";
-function J() {
+import "./config-CDCaUbLv.js";
+import { a as dt, b as ft, c as ut, d as lt, f as At, h as gt, l as wt, m as Bt, n as xt, p as Ct, t as v, u as yt, v as Lt, x as bt, y as Ft } from "./script-engine-CqbllEIG.js";
+import { d as jt, o as vt, u as Qt } from "./registry-client-BDeaTBMb.js";
+var Et = /* @__PURE__ */ D({ openSnapshotCache: () => E }), G = "nodepod-snapshots", f = "snapshots", R = 2, k = 6048e5, Q = 3, u = "\0data\0";
+function K() {
   const e = globalThis.crypto;
   return e && typeof e.randomUUID == "function" ? e.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
-function S() {
+function N() {
   return typeof indexedDB > "u" ? Promise.resolve(null) : new Promise((e) => {
     try {
-      const t = indexedDB.open(U, k);
+      const t = indexedDB.open(G, R);
       t.onupgradeneeded = () => {
-        const r = t.result;
-        r.objectStoreNames.contains(w) || r.createObjectStore(w);
+        const n = t.result;
+        n.objectStoreNames.contains(f) || n.createObjectStore(f);
       }, t.onsuccess = () => e(t.result), t.onerror = () => e(null);
     } catch {
       e(null);
     }
   });
 }
-function l(e, t) {
-  return new Promise((r, i) => {
-    const s = e.transaction(w, "readonly").objectStore(w).get(t);
-    s.onsuccess = () => r(s.result ?? null), s.onerror = () => i(s.error);
+function A(e, t) {
+  return new Promise((n, i) => {
+    const r = e.transaction(f, "readonly").objectStore(f).get(t);
+    r.onsuccess = () => n(r.result ?? null), r.onerror = () => i(r.error);
   });
 }
-function N(e, t, r = []) {
-  return new Promise((i, s) => {
-    const n = e.transaction(w, "readwrite"), o = n.objectStore(w);
-    for (const a of r) o.delete(a);
-    for (const [a, d] of t) o.put(d, a);
-    n.oncomplete = () => i(), n.onerror = () => s(n.error), n.onabort = () => s(n.error);
+function S(e, t, n = []) {
+  return new Promise((i, r) => {
+    const s = e.transaction(f, "readwrite"), c = s.objectStore(f);
+    for (const o of n) c.delete(o);
+    for (const [o, a] of t) c.put(a, o);
+    s.oncomplete = () => i(), s.onerror = () => r(s.error), s.onabort = () => r(s.error);
   });
 }
-function p(e) {
-  return !!e && e.schema === m && Array.isArray(e.manifest) && typeof e.version == "string" && !(e.createdAt && Date.now() - e.createdAt > Q);
+function y(e) {
+  return !!e && e.schema === Q && Array.isArray(e.manifest) && typeof e.version == "string" && !(e.createdAt && Date.now() - e.createdAt > k);
 }
-function T(e) {
+function Z(e) {
   try {
-    const t = e.transaction(w, "readwrite").objectStore(w), r = t.openCursor(), i = /* @__PURE__ */ new Set(), s = [];
-    r.onsuccess = () => {
-      const n = r.result;
-      if (!n) {
-        for (const a of s) i.has(a) || t.delete(a);
+    const t = e.transaction(f, "readwrite").objectStore(f), n = t.openCursor(), i = /* @__PURE__ */ new Set(), r = [];
+    n.onsuccess = () => {
+      const s = n.result;
+      if (!s) {
+        for (const o of r) i.has(o) || t.delete(o);
         return;
       }
-      const o = String(n.key);
-      o.includes(u) ? s.push(o) : p(n.value) ? i.add(o + u + n.value.version) : n.delete(), n.continue();
+      const c = String(s.key);
+      c.includes(u) ? r.push(c) : y(s.value) ? i.add(c + u + s.value.version) : s.delete(), s.continue();
     };
   } catch {
   }
 }
-var A = null;
-function V() {
-  return typeof Blob > "u" || typeof indexedDB > "u" ? Promise.resolve(!1) : (A ??= new Promise((e) => {
+var L = null;
+function T() {
+  return typeof Blob > "u" || typeof indexedDB > "u" ? Promise.resolve(!1) : (L ??= new Promise((e) => {
     let t = !1;
-    const r = (i) => {
+    const n = (i) => {
       t || (t = !0, e(i));
     };
-    setTimeout(() => r(!1), 2e3);
+    setTimeout(() => n(!1), 2e3);
     try {
       const i = indexedDB.open("nodepod-blob-probe", 1);
-      i.onupgradeneeded = () => i.result.createObjectStore("probe"), i.onerror = () => r(!1), i.onsuccess = () => {
-        const s = i.result, n = (o) => {
-          s.close(), r(o);
+      i.onupgradeneeded = () => i.result.createObjectStore("probe"), i.onerror = () => n(!1), i.onsuccess = () => {
+        const r = i.result, s = (c) => {
+          r.close(), n(c);
           try {
             indexedDB.deleteDatabase("nodepod-blob-probe");
           } catch {
           }
         };
         try {
-          const o = s.transaction("probe", "readwrite");
-          o.objectStore("probe").put(new Blob([new Uint8Array([1])]), "probe"), o.oncomplete = () => n(!0), o.onerror = () => n(!1), o.onabort = () => n(!1);
+          const c = r.transaction("probe", "readwrite");
+          c.objectStore("probe").put(new Blob([new Uint8Array([1])]), "probe"), c.oncomplete = () => s(!0), c.onerror = () => s(!1), c.onabort = () => s(!1);
         } catch {
-          n(!1);
+          s(!1);
         }
       };
     } catch {
-      r(!1);
+      n(!1);
     }
-  }), A);
+  }), L);
 }
-function R(e, t) {
-  const r = e.length === 1 ? e[0] : null;
-  if (r && r.byteOffset === 0 && r.byteLength === r.buffer.byteLength && r.buffer instanceof ArrayBuffer) return r.buffer;
+function q(e, t) {
+  const n = e.length === 1 ? e[0] : null;
+  if (n && n.byteOffset === 0 && n.byteLength === n.buffer.byteLength && n.buffer instanceof ArrayBuffer) return n.buffer;
   const i = new Uint8Array(t);
-  let s = 0;
-  for (const n of e)
-    i.set(n, s), s += n.byteLength;
+  let r = 0;
+  for (const s of e)
+    i.set(s, r), r += s.byteLength;
   return i.buffer;
 }
-async function q(e) {
+async function J(e) {
   return e instanceof ArrayBuffer ? new Uint8Array(e) : typeof Blob < "u" && e instanceof Blob ? new Uint8Array(await e.arrayBuffer()) : null;
 }
-async function L() {
-  const e = await S();
+async function E() {
+  const e = await N();
   if (!e) return null;
-  T(e);
-  const t = /* @__PURE__ */ new Map(), r = async (s, n) => {
-    const o = s + u + n, a = t.get(o);
-    if (a) return a;
-    const d = await l(e, o);
-    return !(d instanceof ArrayBuffer) && !(typeof Blob < "u" && d instanceof Blob) ? null : (typeof Blob < "u" && d instanceof Blob && t.set(o, d), d);
-  }, i = async (s, n, o, a) => {
+  Z(e);
+  const t = /* @__PURE__ */ new Map(), n = async (r, s) => {
+    const c = r + u + s, o = t.get(c);
+    if (o) return o;
+    const a = await A(e, c);
+    return !(a instanceof ArrayBuffer) && !(typeof Blob < "u" && a instanceof Blob) ? null : (typeof Blob < "u" && a instanceof Blob && t.set(c, a), a);
+  }, i = async (r, s, c, o) => {
     try {
-      const d = await l(e, s), c = {
-        schema: m,
-        manifest: n,
-        byteLength: a,
+      const a = await A(e, r), d = {
+        schema: Q,
+        manifest: s,
+        byteLength: o,
         createdAt: Date.now(),
-        version: J()
-      }, f = await V() ? new Blob(o) : R(o, a);
-      await N(e, [[s, c], [s + u + c.version, f]], d?.version ? [s + u + d.version] : []);
+        version: K()
+      }, l = await T() ? new Blob(c) : q(c, o);
+      await S(e, [[r, d], [r + u + d.version, l]], a?.version ? [r + u + a.version] : []);
     } catch {
     }
   };
   return {
-    async get(s) {
+    async get(r) {
       try {
-        const n = await l(e, s);
-        if (!p(n)) return null;
-        const o = await q(await r(s, n.version));
-        if (!o || o.byteLength !== n.byteLength) return null;
-        const a = o.byteOffset === 0 && o.byteLength === o.buffer.byteLength ? o.buffer : o.slice().buffer;
+        const s = await A(e, r);
+        if (!y(s)) return null;
+        const c = await J(await n(r, s.version));
+        if (!c || c.byteLength !== s.byteLength) return null;
+        const o = c.byteOffset === 0 && c.byteLength === c.buffer.byteLength ? c.buffer : c.slice().buffer;
         return {
-          manifest: n.manifest,
-          data: a
+          manifest: s.manifest,
+          data: o
         };
       } catch {
         return null;
       }
     },
-    set(s, n) {
-      return i(s, n.manifest, [new Uint8Array(n.data)], n.data.byteLength);
+    set(r, s) {
+      return i(r, s.manifest, [new Uint8Array(s.data)], s.data.byteLength);
     },
     setParts: i,
-    async getManifest(s) {
+    async getManifest(r) {
       try {
-        const n = await l(e, s);
-        return p(n) ? {
-          manifest: n.manifest,
-          version: n.version
+        const s = await A(e, r);
+        return y(s) ? {
+          manifest: s.manifest,
+          version: s.version
         } : null;
       } catch {
         return null;
       }
     },
-    async readRange(s, n, o, a) {
+    async readRange(r, s, c, o) {
       try {
-        const d = await r(s, n);
-        return d ? d instanceof ArrayBuffer ? new Uint8Array(d.slice(o, o + a)) : new Uint8Array(await d.slice(o, o + a).arrayBuffer()) : null;
+        const a = await n(r, s);
+        return a ? a instanceof ArrayBuffer ? new Uint8Array(a.slice(c, c + o)) : new Uint8Array(await a.slice(c, c + o).arrayBuffer()) : null;
       } catch {
-        return t.delete(s + u + n), null;
+        return t.delete(r + u + s), null;
       }
     },
     close() {
@@ -168,76 +168,76 @@ async function L() {
     }
   };
 }
-var K = "nodepod-package-packs-v1", C = 1;
-async function x(e, t, r) {
+var V = "nodepod-package-packs-v1", b = 1;
+async function F(e, t, n) {
   const i = await (await e.getFileHandle(t, { create: !0 })).createWritable();
   try {
-    await i.write(r);
+    await i.write(n);
   } finally {
     await i.close();
   }
 }
-function y(e, t) {
+function B(e, t) {
   return t.dataFile ?? `${encodeURIComponent(e)}.bin`;
 }
 async function _() {
   const e = typeof navigator < "u" ? navigator.storage : null;
   if (!e?.getDirectory) return null;
   try {
-    const t = await (await e.getDirectory()).getDirectoryHandle(K, { create: !0 }), r = async (n) => {
+    const t = await (await e.getDirectory()).getDirectoryHandle(V, { create: !0 }), n = async (s) => {
       try {
-        const o = await t.getFileHandle(`${encodeURIComponent(n)}.json`), a = JSON.parse(await (await o.getFile()).text());
-        return a?.schema !== C || !Array.isArray(a.manifest) ? null : a;
+        const c = await t.getFileHandle(`${encodeURIComponent(s)}.json`), o = JSON.parse(await (await c.getFile()).text());
+        return o?.schema !== b || !Array.isArray(o.manifest) ? null : o;
       } catch {
         return null;
       }
-    }, i = /* @__PURE__ */ new Map(), s = async (n) => {
-      const o = i.get(n);
-      if (o) return o;
-      const a = await (await t.getFileHandle(n)).getFile();
-      return i.set(n, a), a;
+    }, i = /* @__PURE__ */ new Map(), r = async (s) => {
+      const c = i.get(s);
+      if (c) return c;
+      const o = await (await t.getFileHandle(s)).getFile();
+      return i.set(s, o), o;
     };
     return {
-      async get(n) {
-        const o = await r(n);
-        if (!o) return null;
+      async get(s) {
+        const c = await n(s);
+        if (!c) return null;
         try {
-          const a = await (await (await t.getFileHandle(y(n, o))).getFile()).arrayBuffer();
-          return a.byteLength !== o.byteLength ? null : {
-            manifest: o.manifest,
-            data: a
+          const o = await (await (await t.getFileHandle(B(s, c))).getFile()).arrayBuffer();
+          return o.byteLength !== c.byteLength ? null : {
+            manifest: c.manifest,
+            data: o
           };
         } catch {
           return null;
         }
       },
-      async set(n, o) {
-        const a = encodeURIComponent(n), d = await r(n), c = `${a}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.bin`;
+      async set(s, c) {
+        const o = encodeURIComponent(s), a = await n(s), d = `${o}.${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.bin`;
         try {
-          await x(t, c, o.data), await x(t, `${a}.json`, JSON.stringify({
-            schema: C,
+          await F(t, d, c.data), await F(t, `${o}.json`, JSON.stringify({
+            schema: b,
             createdAt: Date.now(),
-            byteLength: o.data.byteLength,
-            manifest: o.manifest,
-            dataFile: c
-          })), d && await t.removeEntry(y(n, d)).catch(() => {
+            byteLength: c.data.byteLength,
+            manifest: c.manifest,
+            dataFile: d
+          })), a && await t.removeEntry(B(s, a)).catch(() => {
           });
         } catch {
         }
       },
-      async getManifest(n) {
-        const o = await r(n);
-        return o ? {
-          manifest: o.manifest,
-          version: y(n, o)
+      async getManifest(s) {
+        const c = await n(s);
+        return c ? {
+          manifest: c.manifest,
+          version: B(s, c)
         } : null;
       },
-      async readRange(n, o, a, d) {
+      async readRange(s, c, o, a) {
         try {
-          const c = await s(o);
-          return a + d > c.size ? null : new Uint8Array(await c.slice(a, a + d).arrayBuffer());
+          const d = await r(c);
+          return o + a > d.size ? null : new Uint8Array(await d.slice(o, o + a).arrayBuffer());
         } catch {
-          return i.delete(o), null;
+          return i.delete(c), null;
         }
       },
       close() {
@@ -248,96 +248,96 @@ async function _() {
     return null;
   }
 }
-function h(e, t) {
-  const r = e;
-  return t && (r.__nodepodRevokeUrl = t), r;
+function g(e, t) {
+  const n = e;
+  return t && (n.__nodepodRevokeUrl = t), n;
 }
-function g() {
-  let e = null, t = null, r = null;
+function w() {
+  let e = null, t = null, n = null;
   function i() {
-    if (r) return r;
-    const s = atob(Y), n = new Uint8Array(s.length);
-    for (let d = 0; d < s.length; d++) n[d] = s.charCodeAt(d);
-    const o = D(n, { to: "string" }), a = new Blob([o], { type: "application/javascript" });
-    return r = URL.createObjectURL(a), r;
+    if (n) return n;
+    const r = atob(M), s = new Uint8Array(r.length);
+    for (let a = 0; a < r.length; a++) s[a] = r.charCodeAt(a);
+    const c = P(s, { to: "string" }), o = new Blob([c], { type: "application/javascript" });
+    return n = URL.createObjectURL(o), n;
   }
   return {
     kind: "browser",
     canCreateWorkers() {
       return typeof Worker < "u" && typeof Blob < "u" && typeof URL < "u" && typeof URL.createObjectURL == "function";
     },
-    createWorker(s) {
+    createWorker(r) {
       if (typeof Worker > "u") throw new Error("[Nodepod] Web Workers are required.");
-      if (s.type === "url") {
-        const o = h(new Worker(s.url, { name: s.name }));
-        return o.__nodepodDirect = !0, o;
+      if (r.type === "url") {
+        const c = g(new Worker(r.url, { name: r.name }));
+        return c.__nodepodDirect = !0, c;
       }
-      if (s.type === "source") {
-        const o = URL.createObjectURL(new Blob([s.source], { type: "application/javascript" }));
-        return h(new Worker(o, { name: s.name }), o);
+      if (r.type === "source") {
+        const c = URL.createObjectURL(new Blob([r.source], { type: "application/javascript" }));
+        return g(new Worker(c, { name: r.name }), c);
       }
-      if (!s.embedded && e) try {
-        const o = h(new Worker(e, { name: s.name }));
-        return o.__nodepodDirect = !0, o;
+      if (!r.embedded && e) try {
+        const c = g(new Worker(e, { name: r.name }));
+        return c.__nodepodDirect = !0, c;
       } catch {
         e = null;
       }
-      const n = i();
-      return h(new Worker(n, { name: s.name }));
+      const s = i();
+      return g(new Worker(s, { name: r.name }));
     },
-    async probeProcessWorkerUrl(s) {
+    async probeProcessWorkerUrl(r) {
       return t || (t = (async () => {
         if (typeof fetch > "u") return null;
-        let n = s ?? null;
-        if (!n) {
+        let s = r ?? null;
+        if (!s) {
           try {
-            n = new URL("./__worker__.js", "" + import.meta.url).href;
+            s = new URL("./__worker__.js", "" + import.meta.url).href;
           } catch {
             return null;
           }
-          if (!/^https?:/.test(n)) return null;
+          if (!/^https?:/.test(s)) return null;
         }
         try {
-          const o = await fetch(n, { method: "HEAD" });
-          if (!o.ok) return null;
-          const a = o.headers.get("content-type") || "";
-          return a && !/javascript|ecmascript/i.test(a) ? null : (e = n, n);
+          const c = await fetch(s, { method: "HEAD" });
+          if (!c.ok) return null;
+          const o = c.headers.get("content-type") || "";
+          return o && !/javascript|ecmascript/i.test(o) ? null : (e = s, s);
         } catch {
           return null;
         }
       })(), t);
     },
-    revokeObjectUrl(s) {
+    revokeObjectUrl(r) {
       try {
-        URL.revokeObjectURL(s);
+        URL.revokeObjectURL(r);
       } catch {
       }
-      s === r && (r = null);
+      r === n && (n = null);
     },
     disposeGlobalResources() {
-      if (r) {
+      if (n) {
         try {
-          URL.revokeObjectURL(r);
+          URL.revokeObjectURL(n);
         } catch {
         }
-        r = null;
+        n = null;
       }
       e = null, t = null;
     },
-    async openSnapshotCache(s) {
-      if (s.enableSnapshotCache === !1 || s.packageStore === "memory") return null;
+    async openSnapshotCache(r) {
+      if (r.enableSnapshotCache === !1 || r.packageStore === "memory") return null;
       try {
-        if (s.packageStore === "opfs") {
-          const n = await _();
-          if (n) return n;
+        if (r.packageStore === "opfs") {
+          const s = await _();
+          if (s) return s;
         }
-        return await L();
+        return await E();
       } catch {
         return null;
       }
     },
-    async openWorkspaceStore(s) {
-      return W(s);
+    async openWorkspaceStore(r) {
+      return W(r);
     },
     createHttpIngress() {
       return {
@@ -347,8 +347,8 @@ function g() {
     }
   };
 }
-globalThis.__NODEPOD_CREATE_BROWSER_HOST__ = g;
-P(g);
+globalThis.__NODEPOD_CREATE_BROWSER_HOST__ = w;
+j(w);
 function $() {
   const e = import.meta.url, t = new globalThis.URL("./threading/engine-worker.ts", e);
   return new globalThis.Worker(t, { type: "module" });
@@ -362,14 +362,14 @@ var ee = class {
   onFileChange = null;
   onFileDelete = null;
   constructor(e, t = {}) {
-    this.vol = e, this.cfg = t, this.thread = $(), this.endpoint = M(this.thread), this.ready = this.bootstrap(), this.attachVolumeSync();
+    this.vol = e, this.cfg = t, this.thread = $(), this.endpoint = z(this.thread), this.ready = this.bootstrap(), this.attachVolumeSync();
   }
   async bootstrap() {
     const e = this.vol.toSnapshot(), t = {
       cwd: this.cfg.cwd,
       env: this.cfg.env
     };
-    await this.endpoint.init(e, t), this.cfg.onConsole && await this.endpoint.setConsoleForwarder(z(this.cfg.onConsole));
+    await this.endpoint.init(e, t), this.cfg.onConsole && await this.endpoint.setConsoleForwarder(Y(this.cfg.onConsole));
   }
   attachVolumeSync() {
     this.onFileChange = (e, t) => {
@@ -404,26 +404,26 @@ var ee = class {
   onFileChange = null;
   onFileDelete = null;
   onMessage = null;
-  constructor(e, t, r = {}) {
-    this.targetOrigin = new URL(e).origin, this.vol = t, this.cfg = r, this.frame = document.createElement("iframe"), this.frame.src = e, this.frame.style.display = "none", this.frame.credentialless = !0, this.frame.setAttribute("credentialless", ""), this.frame.setAttribute("sandbox", "allow-scripts"), document.body.appendChild(this.frame), this.bindMessageHandler(), this.ready = this.awaitReady().then(() => this.sendInit()), this.attachVolumeSync();
+  constructor(e, t, n = {}) {
+    this.targetOrigin = new URL(e).origin, this.vol = t, this.cfg = n, this.frame = document.createElement("iframe"), this.frame.src = e, this.frame.style.display = "none", this.frame.credentialless = !0, this.frame.setAttribute("credentialless", ""), this.frame.setAttribute("sandbox", "allow-scripts"), document.body.appendChild(this.frame), this.bindMessageHandler(), this.ready = this.awaitReady().then(() => this.sendInit()), this.attachVolumeSync();
   }
   bindMessageHandler() {
     this.onMessage = (e) => {
       if (e.origin !== "null" && e.origin !== this.targetOrigin) return;
       const t = e.data;
       if (t.type === "result" && t.id) {
-        const r = this.pendingCalls.get(t.id);
-        r && t.result && (r.resolve(t.result), this.pendingCalls.delete(t.id));
+        const n = this.pendingCalls.get(t.id);
+        n && t.result && (n.resolve(t.result), this.pendingCalls.delete(t.id));
       } else if (t.type === "error" && t.id) {
-        const r = this.pendingCalls.get(t.id);
-        r && (r.reject(new Error(t.error || "Sandbox error")), this.pendingCalls.delete(t.id));
+        const n = this.pendingCalls.get(t.id);
+        n && (n.reject(new Error(t.error || "Sandbox error")), this.pendingCalls.delete(t.id));
       } else t.type === "console" && this.cfg.onConsole && this.cfg.onConsole(t.consoleMethod || "log", t.consoleArgs || []);
     }, window.addEventListener("message", this.onMessage);
   }
   awaitReady() {
     return new Promise((e) => {
-      const t = (r) => {
-        r.origin !== "null" && r.origin !== this.targetOrigin || r.data.type === "ready" && (window.removeEventListener("message", t), e());
+      const t = (n) => {
+        n.origin !== "null" && n.origin !== this.targetOrigin || n.data.type === "ready" && (window.removeEventListener("message", t), e());
       };
       window.addEventListener("message", t);
     });
@@ -441,11 +441,11 @@ var ee = class {
   }
   attachVolumeSync() {
     this.onFileChange = (e, t) => {
-      const r = typeof SharedArrayBuffer < "u" && t.buffer instanceof SharedArrayBuffer ? new Uint8Array(t) : t;
+      const n = typeof SharedArrayBuffer < "u" && t.buffer instanceof SharedArrayBuffer ? new Uint8Array(t) : t;
       this.frame.contentWindow?.postMessage({
         type: "syncFile",
         path: e,
-        content: r
+        content: n
       }, "*");
     }, this.vol.on("write", this.onFileChange), this.onFileDelete = (e) => {
       this.frame.contentWindow?.postMessage({
@@ -456,16 +456,16 @@ var ee = class {
     }, this.vol.on("delete", this.onFileDelete);
   }
   dispatch(e) {
-    return new Promise((t, r) => {
+    return new Promise((t, n) => {
       const i = String(this.nextId++);
       this.pendingCalls.set(i, {
         resolve: t,
-        reject: r
+        reject: n
       }), this.frame.contentWindow?.postMessage({
         ...e,
         id: i
       }, "*"), setTimeout(() => {
-        this.pendingCalls.has(i) && (this.pendingCalls.delete(i), r(/* @__PURE__ */ new Error("Sandbox execution timeout")));
+        this.pendingCalls.has(i) && (this.pendingCalls.delete(i), n(/* @__PURE__ */ new Error("Sandbox execution timeout")));
       }, 6e4);
     });
   }
@@ -494,13 +494,13 @@ var ee = class {
     this.pendingCalls.clear();
   }
 };
-function X() {
+function h() {
   return typeof Worker < "u";
 }
-var re = class {
+var ne = class {
   engine;
   constructor(e, t = {}) {
-    this.engine = new E(e, t);
+    this.engine = new v(e, t);
   }
   async execute(e, t) {
     return Promise.resolve(this.engine.execute(e, t));
@@ -518,11 +518,11 @@ var re = class {
     return this.engine;
   }
 };
-async function vt(e, t = {}) {
-  const { sandboxUrl: r, allowUnsafeEval: i, useWorker: s = !1, ...n } = t;
-  if (r) {
-    const a = new te(r, e, n);
-    return await a.execute("/* sandbox ready check */", "/__sandbox_init__.js"), a;
+async function Ht(e, t = {}) {
+  const { sandboxUrl: n, allowUnsafeEval: i, useWorker: r = !1, ...s } = t;
+  if (n) {
+    const o = new te(n, e, s);
+    return await o.execute("/* sandbox ready check */", "/__sandbox_init__.js"), o;
   }
   if (!i) throw new Error(`nodepod: For security, you must either:
   1. Use sandbox mode: { sandboxUrl: "https://your-sandbox.example.com" }
@@ -530,52 +530,52 @@ async function vt(e, t = {}) {
 
 Same-origin execution allows code to access cookies, localStorage, and IndexedDB.
 Only use allowUnsafeEval for trusted code or demos.`);
-  let o = !1;
-  if ((s === !0 || s === "auto") && (o = X()), o) {
-    const a = new ee(e, n);
-    return await a.execute("/* worker ready check */", "/__worker_init__.js"), a;
+  let c = !1;
+  if ((r === !0 || r === "auto") && (c = h()), c) {
+    const o = new ee(e, s);
+    return await o.execute("/* worker ready check */", "/__worker_init__.js"), o;
   }
-  return new re(e, n);
+  return new ne(e, s);
 }
-var ne = class {
+var se = class {
   _vol;
   _processManager;
   _vfsBridge;
   _cfg;
   constructor(e, t = {}) {
-    this._vol = e, this._cfg = t, this._processManager = new j(e), this._vfsBridge = new Z(e), this._processManager.setVFSBridge(this._vfsBridge), this._vfsBridge.setBroadcaster((r, i, s, n) => {
-      this._processManager.broadcastVFSChange(r, i, s, n);
+    this._vol = e, this._cfg = t, this._processManager = new m(e), this._vfsBridge = new p(e), this._processManager.setVFSBridge(this._vfsBridge), this._vfsBridge.setBroadcaster((n, i, r, s) => {
+      this._processManager.broadcastVFSChange(n, i, r, s);
     });
   }
   async execute(e, t) {
-    const r = t ?? "/__exec_tmp__.js";
-    return this._vol.writeFileSync(r, e), await this._runInWorker(r);
+    const n = t ?? "/__exec_tmp__.js";
+    return this._vol.writeFileSync(n, e), await this._runInWorker(n);
   }
   async runFile(e) {
     return this._runInWorker(e);
   }
   async _runInWorker(e) {
     return new Promise((t) => {
-      const r = this._processManager.spawn({
+      const n = this._processManager.spawn({
         command: "node",
         args: [e],
         cwd: this._cfg.cwd ?? "/",
         env: this._cfg.env ?? {}
       });
-      let i = "", s = "";
-      r.on("stdout", (n) => {
-        i += n;
-      }), r.on("stderr", (n) => {
-        s += n;
-      }), r.on("ready", () => {
-        r.exec({
+      let i = "", r = "";
+      n.on("stdout", (s) => {
+        i += s;
+      }), n.on("stderr", (s) => {
+        r += s;
+      }), n.on("ready", () => {
+        n.exec({
           type: "exec",
           filePath: e,
           args: [],
           cwd: this._cfg.cwd,
           env: this._cfg.env
         });
-      }), r.on("exit", (n) => {
+      }), n.on("exit", (s) => {
         t({
           exports: {},
           module: {
@@ -602,35 +602,35 @@ var ne = class {
     this._processManager.teardown();
   }
 };
-async function Gt(e, t = {}) {
-  return new ne(e, t);
+async function Xt(e, t = {}) {
+  return new se(e, t);
 }
-function se() {
+function re() {
   try {
     const e = globalThis.require;
     if (typeof e != "function") return null;
-    const t = e("fs"), r = e("path");
+    const t = e("fs"), n = e("path");
     let i;
     try {
-      const n = e("url");
-      i = r.dirname(n.fileURLToPath(import.meta.url));
+      const s = e("url");
+      i = n.dirname(s.fileURLToPath(import.meta.url));
     } catch {
       i = typeof __dirname < "u" ? __dirname : ".";
     }
-    let s = r.join(i, "__sw__.js");
-    return t.existsSync(s) || (s = r.join(i, "../dist/__sw__.js"), t.existsSync(s)) ? t.readFileSync(s, "utf-8") : null;
+    let r = n.join(i, "__sw__.js");
+    return t.existsSync(r) || (r = n.join(i, "../dist/__sw__.js"), t.existsSync(r)) ? t.readFileSync(r, "utf-8") : null;
   } catch {
     return null;
   }
 }
 function ie(e = {}) {
-  const t = typeof e == "string" ? { nodepodUrl: e } : e, r = t.nodepodUrl ?? "https://unpkg.com/@r1ck404/nodepod/dist/index.js", i = t.enableServiceWorker ?? !0, s = t.parentOrigin ? JSON.stringify(t.parentOrigin) : "'*'";
+  const t = typeof e == "string" ? { nodepodUrl: e } : e, n = t.nodepodUrl ?? "https://unpkg.com/@r1ck404/nodepod/dist/index.js", i = t.enableServiceWorker ?? !0, r = t.parentOrigin ? JSON.stringify(t.parentOrigin) : "'*'";
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>Nodepod Sandbox</title></head>
 <body>
 <script type="module">
-  import { MemoryVolume, ScriptEngine } from '${r}';
+  import { MemoryVolume, ScriptEngine } from '${n}';
 ${i ? `
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/__sw__.js', { scope: '/' })
@@ -638,7 +638,7 @@ ${i ? `
       .catch(e => console.warn('[Sandbox] SW failed:', e));
   }
 ` : ""}
-  const PARENT_ORIGIN = ${s};
+  const PARENT_ORIGIN = ${r};
   let volume = null;
   let engine = null;
 
@@ -685,7 +685,7 @@ ${i ? `
 </body>
 </html>`;
 }
-function oe() {
+function ce() {
   return { headers: [{
     source: "/(.*)",
     headers: [{
@@ -697,14 +697,14 @@ function oe() {
     }]
   }] };
 }
-function bt(e = {}) {
-  const t = typeof e == "string" ? { nodepodUrl: e } : e, r = t.enableServiceWorker ?? !0 ? se() : null, i = {
+function Dt(e = {}) {
+  const t = typeof e == "string" ? { nodepodUrl: e } : e, n = t.enableServiceWorker ?? !0 ? re() : null, i = {
     "index.html": ie(t),
-    "vercel.json": JSON.stringify(oe(), null, 2)
+    "vercel.json": JSON.stringify(ce(), null, 2)
   };
-  return r && (i["__sw__.js"] = r), i;
+  return n && (i["__sw__.js"] = n), i;
 }
-var Dt = `
+var Pt = `
 # Deploying a Nodepod Sandbox
 
 ## 1. Generate sandbox files
@@ -717,7 +717,7 @@ var Dt = `
    const engine = await spawnEngine(volume, {
      sandboxUrl: 'https://your-sandbox.example.com'
    });
-`.trim(), It = class {
+`.trim(), Ot = class {
   _files = /* @__PURE__ */ new Map();
   _dirs = /* @__PURE__ */ new Set();
   _onWrite = null;
@@ -729,7 +729,7 @@ var Dt = `
   }
   initFromSnapshot(e) {
     const t = new Uint8Array(e.data);
-    for (const r of e.manifest) r.isDirectory ? this._dirs.add(r.path) : (this._files.set(r.path, t.slice(r.offset, r.offset + r.length)), this._ensureParentDirs(r.path));
+    for (const n of e.manifest) n.isDirectory ? this._dirs.add(n.path) : (this._files.set(n.path, t.slice(n.offset, n.offset + n.length)), this._ensureParentDirs(n.path));
   }
   setWriteCallback(e) {
     this._onWrite = e;
@@ -738,19 +738,19 @@ var Dt = `
     this._onDelete = e;
   }
   readFileSync(e, t) {
-    const r = this._files.get(e);
-    if (!r) {
+    const n = this._files.get(e);
+    if (!n) {
       const i = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, open '${e}'`);
       throw i.code = "ENOENT", i.errno = -2, i;
     }
     if (t === "utf8" || t === "utf-8") {
-      if (typeof SharedArrayBuffer < "u" && r.buffer instanceof SharedArrayBuffer) {
-        const i = new Uint8Array(r.byteLength);
-        return i.set(r), this._decoder.decode(i);
+      if (typeof SharedArrayBuffer < "u" && n.buffer instanceof SharedArrayBuffer) {
+        const i = new Uint8Array(n.byteLength);
+        return i.set(n), this._decoder.decode(i);
       }
-      return this._decoder.decode(r);
+      return this._decoder.decode(n);
     }
-    return new Uint8Array(r);
+    return new Uint8Array(n);
   }
   existsSync(e) {
     return this._files.has(e) || this._dirs.has(e);
@@ -767,36 +767,36 @@ var Dt = `
       isDirectory: () => !1,
       size: t.byteLength
     };
-    const r = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, stat '${e}'`);
-    throw r.code = "ENOENT", r.errno = -2, r;
+    const n = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, stat '${e}'`);
+    throw n.code = "ENOENT", n.errno = -2, n;
   }
   readdirSync(e) {
     if (!this._dirs.has(e)) {
       const i = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, scandir '${e}'`);
       throw i.code = "ENOENT", i.errno = -2, i;
     }
-    const t = e === "/" ? "/" : e + "/", r = /* @__PURE__ */ new Set();
+    const t = e === "/" ? "/" : e + "/", n = /* @__PURE__ */ new Set();
     for (const i of this._files.keys()) if (i.startsWith(t)) {
-      const s = i.slice(t.length), n = s.indexOf("/");
-      r.add(n === -1 ? s : s.slice(0, n));
+      const r = i.slice(t.length), s = r.indexOf("/");
+      n.add(s === -1 ? r : r.slice(0, s));
     }
     for (const i of this._dirs) if (i.startsWith(t) && i !== e) {
-      const s = i.slice(t.length), n = s.indexOf("/");
-      r.add(n === -1 ? s : s.slice(0, n));
+      const r = i.slice(t.length), s = r.indexOf("/");
+      n.add(s === -1 ? r : r.slice(0, s));
     }
-    return Array.from(r).filter(Boolean).sort();
+    return Array.from(n).filter(Boolean).sort();
   }
   writeFileSync(e, t) {
-    const r = typeof t == "string" ? this._encoder.encode(t) : new Uint8Array(t);
-    this._files.set(e, r), this._ensureParentDirs(e), this._onWrite && this._onWrite(e, r, !1);
+    const n = typeof t == "string" ? this._encoder.encode(t) : new Uint8Array(t);
+    this._files.set(e, n), this._ensureParentDirs(e), this._onWrite && this._onWrite(e, n, !1);
   }
   mkdirSync(e, t) {
     if (!this._dirs.has(e))
       if (t?.recursive) {
-        const r = e.split("/").filter(Boolean);
+        const n = e.split("/").filter(Boolean);
         let i = "";
-        for (const s of r)
-          i += "/" + s, this._dirs.has(i) || (this._dirs.add(i), this._onWrite && this._onWrite(i, /* @__PURE__ */ new Uint8Array(0), !0));
+        for (const r of n)
+          i += "/" + r, this._dirs.has(i) || (this._dirs.add(i), this._onWrite && this._onWrite(i, /* @__PURE__ */ new Uint8Array(0), !0));
       } else
         this._dirs.add(e), this._onWrite && this._onWrite(e, /* @__PURE__ */ new Uint8Array(0), !0);
   }
@@ -811,30 +811,30 @@ var Dt = `
     this._dirs.delete(e), this._onDelete && this._onDelete(e);
   }
   renameSync(e, t) {
-    const r = this._files.get(e);
-    r ? (this._files.delete(e), this._files.set(t, r), this._onDelete && this._onDelete(e), this._onWrite && this._onWrite(t, r, !1)) : this._dirs.has(e) && (this._dirs.delete(e), this._dirs.add(t), this._onDelete && this._onDelete(e), this._onWrite && this._onWrite(t, /* @__PURE__ */ new Uint8Array(0), !0));
+    const n = this._files.get(e);
+    n ? (this._files.delete(e), this._files.set(t, n), this._onDelete && this._onDelete(e), this._onWrite && this._onWrite(t, n, !1)) : this._dirs.has(e) && (this._dirs.delete(e), this._dirs.add(t), this._onDelete && this._onDelete(e), this._onWrite && this._onWrite(t, /* @__PURE__ */ new Uint8Array(0), !0));
   }
   appendFileSync(e, t) {
-    const r = this._files.get(e) ?? /* @__PURE__ */ new Uint8Array(0), i = typeof t == "string" ? this._encoder.encode(t) : new Uint8Array(t), s = new Uint8Array(r.byteLength + i.byteLength);
-    s.set(r, 0), s.set(i, r.byteLength), this._files.set(e, s), this._ensureParentDirs(e), this._onWrite && this._onWrite(e, s, !1);
+    const n = this._files.get(e) ?? /* @__PURE__ */ new Uint8Array(0), i = typeof t == "string" ? this._encoder.encode(t) : new Uint8Array(t), r = new Uint8Array(n.byteLength + i.byteLength);
+    r.set(n, 0), r.set(i, n.byteLength), this._files.set(e, r), this._ensureParentDirs(e), this._onWrite && this._onWrite(e, r, !1);
   }
   copyFileSync(e, t) {
-    const r = this._files.get(e);
-    if (!r) {
-      const s = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, copyfile '${e}'`);
-      throw s.code = "ENOENT", s.errno = -2, s;
+    const n = this._files.get(e);
+    if (!n) {
+      const r = /* @__PURE__ */ new Error(`ENOENT: no such file or directory, copyfile '${e}'`);
+      throw r.code = "ENOENT", r.errno = -2, r;
     }
-    const i = new Uint8Array(r);
+    const i = new Uint8Array(n);
     this._files.set(t, i), this._ensureParentDirs(t), this._onWrite && this._onWrite(t, i, !1);
   }
-  applySync(e, t, r) {
-    t === null ? (this._files.delete(e), this._dirs.delete(e)) : r ? this._dirs.add(e) : (this._files.set(e, new Uint8Array(t)), this._ensureParentDirs(e));
+  applySync(e, t, n) {
+    t === null ? (this._files.delete(e), this._dirs.delete(e)) : n ? this._dirs.add(e) : (this._files.set(e, new Uint8Array(t)), this._ensureParentDirs(e));
   }
   _ensureParentDirs(e) {
     const t = e.split("/").filter(Boolean);
-    let r = "";
+    let n = "";
     for (let i = 0; i < t.length - 1; i++)
-      r += "/" + t[i], this._dirs.add(r);
+      n += "/" + t[i], this._dirs.add(n);
   }
   get fileCount() {
     return this._files.size;
@@ -843,141 +843,141 @@ var Dt = `
     return this._dirs.size;
   }
 };
-P(g);
-globalThis.__NODEPOD_CREATE_BROWSER_HOST__ = g;
-var B = null;
-async function F() {
-  return B || (B = await import("./child_process-Bqy_wS0P.js")), B;
+j(w);
+globalThis.__NODEPOD_CREATE_BROWSER_HOST__ = w;
+var x = null;
+async function C() {
+  return x || (x = await import("./child_process-C18i9xSb.js")), x;
 }
-function Ot(e) {
-  const t = new H(), r = new E(t, e), i = new I(t, { cwd: e?.cwd }), s = O({
+function It(e) {
+  const t = new U(), n = new v(t, e), i = new O(t, { cwd: e?.cwd }), r = I({
     baseUrl: e?.baseUrl,
     onServerReady: e?.onServerReady
   });
-  return F().then((n) => n.initShellExec(t, { cwd: e?.cwd })), {
+  return C().then((s) => s.initShellExec(t, { cwd: e?.cwd })), {
     volume: t,
-    engine: r,
+    engine: n,
     packages: i,
-    proxy: s,
-    execute: (n, o) => r.execute(n, o),
-    runFile: (n) => r.runFile(n),
-    run: async (n, o) => {
-      if (o?.signal?.aborted) return {
+    proxy: r,
+    execute: (s, c) => n.execute(s, c),
+    runFile: (s) => n.runFile(s),
+    run: async (s, c) => {
+      if (c?.signal?.aborted) return {
         stdout: "",
         stderr: "",
         exitCode: 130
       };
-      const a = await F(), d = o?.onStdout || o?.onStderr || o?.signal;
-      return d && a.setStreamingCallbacks({
-        onStdout: o?.onStdout,
-        onStderr: o?.onStderr,
-        signal: o?.signal
-      }), new Promise((c) => {
-        a.exec(n, { cwd: o?.cwd }, (f, v, G) => {
-          d && a.clearStreamingCallbacks(), c({
-            stdout: String(v),
-            stderr: String(G),
-            exitCode: f ? f.code ?? 1 : 0
+      const o = await C(), a = c?.onStdout || c?.onStderr || c?.signal;
+      return a && o.setStreamingCallbacks({
+        onStdout: c?.onStdout,
+        onStderr: c?.onStderr,
+        signal: c?.signal
+      }), new Promise((d) => {
+        o.exec(s, { cwd: c?.cwd }, (l, H, X) => {
+          a && o.clearStreamingCallbacks(), d({
+            stdout: String(H),
+            stderr: String(X),
+            exitCode: l ? l.code ?? 1 : 0
           });
         });
       });
     },
-    sendInput: async (n) => {
-      (await F()).sendStdin(n);
+    sendInput: async (s) => {
+      (await C()).sendStdin(s);
     },
-    createREPL: () => r.createREPL(),
-    on: (n, o) => {
-      s.on(n, o);
+    createREPL: () => n.createREPL(),
+    on: (s, c) => {
+      r.on(s, c);
     }
   };
 }
 export {
-  I as DependencyInstaller,
+  O as DependencyInstaller,
   te as IframeSandbox,
-  Se as LRUCache,
-  Ve as MemoryHandler,
-  H as MemoryVolume,
-  Re as Nodepod,
-  Ge as NodepodFS,
-  je as NodepodFSClient,
+  Ne as LRUCache,
+  Te as MemoryHandler,
+  U as MemoryVolume,
+  qe as Nodepod,
+  Xe as NodepodFS,
+  me as NodepodFSClient,
   We as NodepodFSClientError,
-  Ke as NodepodProcess,
-  Ue as NodepodSWSetupError,
-  he as NodepodTerminal,
-  Ye as PreviewAgentUnavailableError,
-  Oe as PreviewInspectionTimeoutError,
-  Je as PreviewInspector,
-  Te as PreviewInspectorError,
-  Ze as PreviewNotAttachedError,
-  ke as PreviewScreenshotUnavailableError,
-  Be as ProcessHandle,
-  j as ProcessManager,
-  ne as ProcessWorkerAdapter,
-  ye as RequestProxy,
-  Dt as SANDBOX_DEPLOYMENT_GUIDE,
-  E as ScriptEngine,
+  Ve as NodepodProcess,
+  Ge as NodepodSWSetupError,
+  ge as NodepodTerminal,
+  Me as PreviewAgentUnavailableError,
+  Ie as PreviewInspectionTimeoutError,
+  Ke as PreviewInspector,
+  Ze as PreviewInspectorError,
+  pe as PreviewNotAttachedError,
+  Re as PreviewScreenshotUnavailableError,
+  xe as ProcessHandle,
+  m as ProcessManager,
+  se as ProcessWorkerAdapter,
+  Be as RequestProxy,
+  Pt as SANDBOX_DEPLOYMENT_GUIDE,
+  v as ScriptEngine,
   _e as SharedVFSController,
-  le as SharedVFSReader,
-  pe as SyncChannelController,
-  Le as SyncChannelWorker,
-  Z as VFSBridge,
+  Ae as SharedVFSReader,
+  ye as SyncChannelController,
+  Ee as SyncChannelWorker,
+  p as VFSBridge,
   ee as WorkerSandbox,
-  It as WorkerVFS,
-  Ne as WorkspacePersistence,
-  ct as assert,
-  ve as buildFileSystemBridge,
-  xt as buildProcessEnv,
-  ht as chokidar,
-  g as createBrowserHost,
+  Ot as WorkerVFS,
+  Se as WorkspacePersistence,
+  dt as assert,
+  He as buildFileSystemBridge,
+  Ft as buildProcessEnv,
+  gt as chokidar,
+  w as createBrowserHost,
   W as createIndexedDBWorkspaceStore,
-  Qe as createMemoryWorkspaceStore,
-  ce as createProcessContext,
-  Ot as createWorkspace,
-  Ot as default,
-  qe as deleteIndexedDBWorkspace,
-  Xe as discoverWorkspaces,
-  nt as ensureRuntimeHost,
-  De as esbuild,
-  Ie as events,
-  Bt as executeCode,
-  Ft as fsevents,
-  bt as generateSandboxDeployment,
-  we as getActiveContext,
-  Et as getCorsProxy,
-  O as getProxyInstance,
+  ke as createMemoryWorkspaceStore,
+  de as createProcessContext,
+  It as createWorkspace,
+  It as default,
+  Je as deleteIndexedDBWorkspace,
+  he as discoverWorkspaces,
+  st as ensureRuntimeHost,
+  Pe as esbuild,
+  Oe as events,
+  xt as executeCode,
+  Ct as fsevents,
+  Dt as generateSandboxDeployment,
+  fe as getActiveContext,
+  vt as getCorsProxy,
+  I as getProxyInstance,
   et as getRuntimeHost,
-  oe as getSandboxHostingConfig,
+  ce as getSandboxHostingConfig,
   ie as getSandboxPageHtml,
-  ge as http,
-  ze as install,
-  Me as installFetchHeadersSetCookieParity,
-  xe as installNodeFetchClassParity,
-  be as isSharedArrayBufferAvailable,
-  He as listIndexedDBWorkspaces,
-  ft as module,
-  Ae as net,
-  Ce as npm,
+  we as http,
+  Ye as install,
+  ze as installFetchHeadersSetCookieParity,
+  Fe as installNodeFetchClassParity,
+  De as isSharedArrayBufferAvailable,
+  Ue as listIndexedDBWorkspaces,
+  lt as module,
+  Le as net,
+  be as npm,
   it as path,
-  pt as perf_hooks,
-  Ct as querystring,
-  Ee as readWorkspacePatterns,
-  lt as readdirp,
-  Pe as resetProxy,
-  rt as resetRuntimeHost,
+  yt as perf_hooks,
+  bt as querystring,
+  ve as readWorkspacePatterns,
+  At as readdirp,
+  je as resetProxy,
+  nt as resetRuntimeHost,
   ut as rollup,
-  de as setActiveContext,
-  mt as setAllowedDomains,
-  Pt as setCorsProxy,
-  me as setFetchResponse,
+  ae as setActiveContext,
+  Qt as setAllowedDomains,
+  jt as setCorsProxy,
+  Qe as setFetchResponse,
   tt as setRuntimeHost,
-  vt as spawnEngine,
-  Gt as spawnProcessWorkerEngine,
-  Fe as stream,
-  Lt as t,
-  wt as url,
-  At as util,
-  gt as worker_threads,
-  yt as ws
+  Ht as spawnEngine,
+  Xt as spawnProcessWorkerEngine,
+  Ce as stream,
+  Et as t,
+  ft as url,
+  Lt as util,
+  wt as worker_threads,
+  Bt as ws
 };
 
 //# sourceMappingURL=index.mjs.map

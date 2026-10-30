@@ -1,7 +1,7 @@
 import { d as O } from "./event-loop-CGuYUIBq.js";
-import { a as K, i as U, n as D, o as N } from "./offload-BQq4ymyv.js";
+import { a as K, i as U, n as D, o as N } from "./offload-DgyAYqvz.js";
 import { B as z, F as B, M as P, P as L, a as R, n as H, p as W, t as v } from "./tarball-cache-__C0n2zb.js";
-import { n as E } from "./registry-client-BV27YIBO.js";
+import { n as E } from "./registry-client-BDeaTBMb.js";
 var X = 16, G = 512, y = /* @__PURE__ */ new Map(), M = [], g = 0;
 function J() {
   return g < X ? (g++, Promise.resolve()) : new Promise((e) => M.push(() => {
@@ -214,4 +214,4 @@ export {
   de as t
 };
 
-//# sourceMappingURL=archive-extractor-DbComeHc.js.map
+//# sourceMappingURL=archive-extractor-DntmdCI9.js.map

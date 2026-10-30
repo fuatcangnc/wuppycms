@@ -1,4 +1,4 @@
-import { C as L, c as Z, t as J } from "./config-BBz1Tu7H.js";
+import { C as L, c as Z, t as J } from "./config-CDCaUbLv.js";
 import { a as ee, n as te } from "./cdn-urls-BV1eSMdl.js";
 var _ = "__NODEPOD_CREATE_BROWSER_HOST__", m = null, P = null;
 function re() {
@@ -1479,7 +1479,7 @@ function Oe() {
   return y = new me(Pe), b = new Ie(y), b;
 }
 async function Ce(e) {
-  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-DNLjMKmR.js").then((n) => n.n);
+  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-BCO7XmrB.js").then((n) => n.n);
   await s();
   const a = r(await t(e.source, e.filePath));
   return {
@@ -1490,7 +1490,7 @@ async function Ce(e) {
   };
 }
 async function Be(e) {
-  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-DNLjMKmR.js").then((n) => n.n);
+  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-BCO7XmrB.js").then((n) => n.n);
   await s();
   const a = await Promise.all(e.files.map(async (n) => {
     try {
@@ -1523,7 +1523,7 @@ async function _e(e) {
   return (await import("./fast-pako-BwXotfTx.js").then((t) => t.n)).inflate(e);
 }
 async function Ue(e) {
-  const { parseTarArchive: t } = await import("./archive-extractor-DbComeHc.js").then((i) => i.t);
+  const { parseTarArchive: t } = await import("./archive-extractor-DntmdCI9.js").then((i) => i.t);
   let r;
   if (e.tarballBytes && e.tarballBytes.byteLength > 0) r = new Uint8Array(e.tarballBytes);
   else {
@@ -1558,7 +1558,7 @@ async function Ue(e) {
   return e.wantTarball && (n.tarballBytes = r.buffer instanceof ArrayBuffer && r.byteLength === r.buffer.byteLength ? r.buffer : r.slice().buffer), n;
 }
 async function Re(e) {
-  const t = await import("./nodepod-Y98NXDvC.js").then((r) => r.X);
+  const t = await import("./nodepod-x22a8Pmu.js").then((r) => r.X);
   try {
     const r = await t.build({
       entryPoints: e.entryPoints,
@@ -1681,4 +1681,4 @@ export {
   He as u
 };
 
-//# sourceMappingURL=offload-BQq4ymyv.js.map
+//# sourceMappingURL=offload-DgyAYqvz.js.map
