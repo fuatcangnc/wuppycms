@@ -10,6 +10,7 @@ import type { ProviderConfig } from "../lib/agent/protocol";
 import { MODEL_CATALOG, PROVIDER_DEFAULTS, resolveProvider } from "../lib/agent/providers";
 import { runAgent } from "../lib/agent/loop";
 import { enqueueDeploy } from "../lib/deploy/enqueue";
+import { siteSlug } from "../lib/deploy/aws";
 import {
 	appendMessage,
 	createRun,
@@ -232,6 +233,25 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 				pagePath: payload.context?.pagePath ?? null,
 				selections,
 				userText: payload.message,
+				// Commit biter bitmez canlı önizlemeyi tazele: dev sunucusu
+				// dosyaları izler, iframe yenilendiğinde değişiklik hazırdır.
+				onCommitted: async () => {
+					try {
+						await fetch(`${c.env.PREVIEW_MANAGER_URL || "http://127.0.0.1:8791"}/refresh`, {
+							method: "POST",
+							headers: {
+								"content-type": "application/json",
+								...(c.env.PREVIEW_SECRET
+									? { "x-preview-secret": c.env.PREVIEW_SECRET }
+									: {}),
+							},
+							body: JSON.stringify({ slug: siteSlug(fullName), token, branch }),
+							signal: AbortSignal.timeout(20_000),
+						});
+					} catch (error) {
+						console.warn("[agent] canlı önizleme tazelenemedi:", error);
+					}
+				},
 			});
 			// AI düzenlemesi commit'lendiyse siteyi otomatik yayınla: önizleme
 			// bir sonraki build'i beklemeden güncellensin.

@@ -87,10 +87,27 @@ function previewUrl(url: string): string {
 				return `${window.location.origin}/preview/${project}${parsed.pathname === "/" ? "/" : parsed.pathname}${parsed.search}`;
 			}
 		}
+		// AWS siteleri: canlı dev önizlemesi de aynı origin'deki köprüden geçer.
+		// Böylece AI düzenlemesi build beklemeden görünür (üretim adresi değişmez).
+		const slug = previewSlug(url);
+		if (slug) {
+			return `${window.location.origin}/preview/${slug}${parsed.pathname === "/" ? "/" : parsed.pathname}${parsed.search}`;
+		}
 	} catch {
 		// göreli URL — olduğu gibi
 	}
 	return url;
+}
+
+/** AWS site adresinden önizleme kimliğini (slug) çıkarır. */
+function previewSlug(url: string): string | null {
+	try {
+		const parsed = new URL(url);
+		const match = /^([a-z0-9][a-z0-9-]+)\.sites\.wuppycms\.com$/i.exec(parsed.hostname);
+		return match?.[1]?.toLowerCase() ?? null;
+	} catch {
+		return null;
+	}
 }
 
 export default function AgentWidget() {
@@ -218,6 +235,46 @@ export default function AgentWidget() {
 		if (picker.bridgeReady) picker.command("reload");
 		else setReloadNonce((value) => value + 1);
 	}, [picker]);
+
+	// Canlı önizlemeyi ısıt: dev sunucusu hazır olunca iframe'i bir kez yenile.
+	// İlk açılışta üretim (build'li) site gösterilir; dev hazır olunca geçilir.
+	useEffect(() => {
+		if (!open || !siteUrl) return;
+		const slug = previewSlug(siteUrl);
+		if (!slug) return;
+		let cancelled = false;
+		let timer: number | undefined;
+		const poll = async (attempt: number) => {
+			if (cancelled) return;
+			try {
+				const res = await fetch(`/api/preview/status?slug=${encodeURIComponent(slug)}`);
+				const data = (await res.json()) as { ready?: boolean };
+				if (data.ready) {
+					if (!cancelled) reloadCanvas();
+					return;
+				}
+			} catch {
+				// yok say
+			}
+			if (attempt < 40) timer = window.setTimeout(() => void poll(attempt + 1), 2000);
+		};
+		void (async () => {
+			try {
+				await fetch("/api/preview/open", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({ full_name: site, branch }),
+				});
+			} catch {
+				// yok say
+			}
+			void poll(0);
+		})();
+		return () => {
+			cancelled = true;
+			if (timer) clearTimeout(timer);
+		};
+	}, [open, site, branch, siteUrl, reloadCanvas]);
 
 	const onContentChanged = useCallback(() => {
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her

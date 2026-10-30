@@ -56,6 +56,11 @@ export interface RunAgentInput {
 	selections?: SelectionContext[];
 	/** İlk kullanıcı mesajı (başlık türetmek için). */
 	userText: string;
+	/**
+	 * Yazma commit'lendikten sonra, `run_finished` yayınlanmadan önce çağrılır.
+	 * Canlı önizlemeyi (dev sunucu) tazelemek için kullanılır.
+	 */
+	onCommitted?: () => Promise<void>;
 }
 
 function truncate(payload: unknown): string {
@@ -310,7 +315,18 @@ export async function runAgent(input: RunAgentInput): Promise<{ changes: number 
 		// Değişiklik kimlikleri, koşu "done" olmadan ÖNCE kullanıcı mesajına
 		// yazılmalı: UI done'ı görünce oturumu yeniden yükler ve Undo düğmesini
 		// ancak bu alan doluysa gösterir (yarış hatası).
-		if (changeIds.length) await attachChangeIds(db, sessionId, changeIds);
+		if (changeIds.length) {
+			// Canlı önizleme tazelenir; UI run_finished'ı gördüğünde iframe'i
+			// yenilediğinde değişiklik hazır olur (build beklemez).
+			if (input.onCommitted) {
+				try {
+					await input.onCommitted();
+				} catch (error) {
+					console.warn("[agent] önizleme tazelenemedi:", error);
+				}
+			}
+			await attachChangeIds(db, sessionId, changeIds);
+		}
 		await emit({ type: "run_finished", ts: now() });
 		await eventChain;
 		await finishRun(db, runId, stopped ? "stopped" : "done");

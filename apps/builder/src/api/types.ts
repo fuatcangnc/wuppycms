@@ -55,6 +55,10 @@ export interface AppEnv {
 	DEPLOY_WORKER_URL?: string;
 	/** Uygulama ↔ worker paylaşılan sırrı. */
 	DEPLOY_WORKER_SECRET?: string;
+	/** VM'deki canlı önizleme (astro dev) servisi (varsayılan http://127.0.0.1:8791). */
+	PREVIEW_MANAGER_URL?: string;
+	/** Uygulama ↔ önizleme servisi paylaşılan sırrı. */
+	PREVIEW_SECRET?: string;
 	/**
 	 * Müşterinin kendi Cloudflare hesabını bağlaması için WuppyCMS OAuth
 	 * uygulaması (self-managed OAuth client).
