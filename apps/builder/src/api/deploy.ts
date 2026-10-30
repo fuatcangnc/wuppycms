@@ -428,15 +428,19 @@ deploy.get("/status", async (c) => {
 	const db = platform(c).db;
 	if (!db) return c.json({ jobs: [] });
 	const repo = c.req.query("full_name");
+	const siteUrl = c.req.query("url");
 	const rows = await db
 		.prepare(
 			repo
 				? `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
 				   FROM deploy_jobs WHERE repo_full_name = ? ORDER BY created_at DESC LIMIT 1`
-				: `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
-				   FROM deploy_jobs ORDER BY created_at DESC LIMIT 20`,
+				: siteUrl
+					? `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
+					   FROM deploy_jobs WHERE url = ? ORDER BY created_at DESC LIMIT 1`
+					: `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
+					   FROM deploy_jobs ORDER BY created_at DESC LIMIT 20`,
 		)
-		.bind(...(repo ? [repo] : []))
+		.bind(...(repo ? [repo] : siteUrl ? [siteUrl] : []))
 		.all();
 	return c.json({ jobs: rows.results ?? [] });
 });

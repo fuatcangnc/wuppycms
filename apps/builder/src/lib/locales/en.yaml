@@ -651,6 +651,8 @@ widget:
   send: Send
   stop: Stop
   reload: Reload preview
+  deployQueued: Publishing… (usually 1–2 minutes)
+  deployFailed: "Publishing failed: {message}"
   commitNote: Changes are real Git commits. The deployed preview reflects them after the next build.
   live: Live
   activePreview: Active preview

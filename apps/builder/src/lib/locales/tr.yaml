@@ -654,6 +654,8 @@ widget:
   send: Gönder
   stop: Durdur
   reload: Önizlemeyi yenile
+  deployQueued: Yayınlanıyor… (genelde 1–2 dakika)
+  deployFailed: "Yayın başarısız: {message}"
   commitNote: Değişiklikler gerçek Git commit'leridir. Yayındaki önizleme bir sonraki build'de yansıtır.
   live: Canlı
   activePreview: Etkin önizleme
