@@ -9,19 +9,18 @@ export const prerender = false;
 		<script is:inline>
 			const el = document.getElementById("log");
 			const log = (m) => { el.textContent += m + "\n"; };
+			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 220);
 			window.__state = "running";
 			(async () => {
 				try {
 					const mod = await import("/nodepod/index.js");
 					mod.setRuntimeHost(mod.createBrowserHost());
-					log("host set");
 					const pod = await mod.Nodepod.boot({
 						serviceWorker: false,
 						workdir: "/home/project",
 						files: {
 							"/home/project/package.json": JSON.stringify({
 								name: "spike", private: true, type: "module",
-								scripts: { dev: "astro dev --host 0.0.0.0 --port 4321" },
 								dependencies: { astro: "^7.2.4" },
 							}),
 							"/home/project/src/pages/index.astro":
@@ -30,21 +29,30 @@ export const prerender = false;
 					});
 					log("booted");
 					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
-					install.on("output", (t) => log("I:" + String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 120)));
+					install.on("output", (t) => log("I:" + clean(t)));
 					await install.completion.catch((e) => log("install err " + (e && e.message)));
 					log("install done");
 
-					const dev = await pod.spawn("npm", ["run", "dev"]);
-					dev.on("output", (t) => log("D:" + String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 200)));
-					for (let i = 0; i < 24; i++) {
+					const ver = await pod.spawn("node", ["node_modules/astro/astro.js", "--version"]);
+					ver.on("output", (t) => log("V:" + clean(t)));
+					log("version exit " + (await ver.completion.catch((e) => "err " + e.message)));
+
+					const dev = await pod.spawn("node", ["node_modules/astro/astro.js", "dev", "--host", "0.0.0.0", "--port", "4321"]);
+					dev.on("output", (t) => log("D:" + clean(t)));
+					const exited = await Promise.race([
+						dev.completion.then((c) => "exited " + c).catch((e) => "err " + e.message),
+						new Promise((r) => setTimeout(() => r("running"), 45000)),
+					]);
+					log("dev: " + exited);
+					for (let i = 0; i < 6; i++) {
 						await new Promise((r) => setTimeout(r, 5000));
 						try {
 							const res = await pod.request(4321, { path: "/" });
 							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
-							log(`REQ ${res.statusCode} ${body.slice(0, 140).replace(/\s+/g, " ")}`);
+							log(`REQ ${res.statusCode} ${body.slice(0, 120).replace(/\s+/g, " ")}`);
 							if (res.statusCode === 200) break;
 						} catch (e) {
-							if (i % 3 === 0) log("req err " + (e && e.message));
+							log("req err " + (e && e.message));
 						}
 					}
 					try { dev.kill && dev.kill(); } catch {}
