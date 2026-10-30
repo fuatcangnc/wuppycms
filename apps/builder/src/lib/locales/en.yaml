@@ -653,7 +653,7 @@ widget:
   reload: Reload preview
   deployQueued: Publishing… (usually 1–2 minutes)
   deployFailed: "Publishing failed: {message}"
-  commitNote: Changes are real Git commits. The deployed preview reflects them after the next build.
+  commitNote: Changes are real Git commits. The preview updates instantly; the live site follows within a couple of minutes.
   live: Live
   activePreview: Active preview
   makeActive: Make this window active

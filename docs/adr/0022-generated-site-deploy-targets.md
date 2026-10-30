@@ -50,6 +50,16 @@ projelerine gönderiyordu; build'i Cloudflare'in GitHub entegrasyonu yapıyordu.
 - İstemci kimliği/sırrı `CLOUDFLARE_OAUTH_CLIENT_ID` /
   `CLOUDFLARE_OAUTH_CLIENT_SECRET` ortam değişkenlerinden okunur.
 
+### Canlı önizleme (dev)
+
+Üretim yayını ~2 dakika sürdüğü için editör önizlemesi beklemez: VM'deki
+`wuppycms-preview` servisi aktif site için `astro dev` açar (yalnız 127.0.0.1,
+`--base /preview/<slug>/`). `/preview/<slug>/` proxy'si dev sunucu hazırsa
+oraya, değilse üretim adresine gider. AI yazımı commit'lendikten sonra,
+`run_finished` yayınlanmadan önce dev checkout'ta `git pull` yapılır; iframe
+yenilendiğinde değişiklik ~1 saniyede görünür. Üretim build'i arka planda
+devam eder ve kanonik siteyi günceller.
+
 ## Sonuçlar
 
 - Müşteri hiçbir hesap/kurulum yapmadan siteyi `https://<slug>.sites.wuppycms.com`
