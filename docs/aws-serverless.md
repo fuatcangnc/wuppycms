@@ -67,6 +67,8 @@ build'i CodeBuild'e vermek. Toplam ~10–15 $/ay.
 ## Durum
 
 - [x] CodeBuild entegrasyonu + buildspec + IAM script
-- [ ] CodeBuild projesini oluştur (AWS oturumu gerekli: `aws login`)
+- [x] CodeBuild projesini oluştur (`wuppycms-build`)
+- [x] Canlı doğrulama: build `f1d8d309` SUCCEEDED, callback 200, iş `deployed`, site 200
+- Not: Cloudflare hedefi hâlâ VM worker'ında (`wrangler pages deploy`); AWS hedefi CodeBuild'de
 - [ ] B2a/B2b (Lambda/DynamoDB) — plan onayı bekliyor
 - [ ] Cloudflare hedefi: değişmedi (müşteri hesabı, direct upload)
