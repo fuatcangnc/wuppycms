@@ -1,0 +1,49 @@
+---
+export const prerender = false;
+---
+<html lang="tr">
+	<head><meta charset="utf-8" /><title>Nodepod test</title></head>
+	<body style="font-family:system-ui;padding:20px">
+		<h1>Nodepod + Astro testi</h1>
+		<pre id="log" style="background:#111;color:#0f0;padding:12px;min-height:240px;white-space:pre-wrap"></pre>
+		<script>
+			import { Nodepod, createBrowserHost, setRuntimeHost } from "@r1ck404/nodepod";
+
+			const el = document.getElementById("log") as HTMLPreElement;
+			const log = (m: string) => { el.textContent += m + "\n"; };
+			(window as any).__state = "running";
+
+			(async () => {
+				try {
+					setRuntimeHost(createBrowserHost());
+					log("host set");
+					const pod = await Nodepod.boot({
+						serviceWorker: false,
+						workdir: "/home/project",
+						files: {
+							"/home/project/package.json": JSON.stringify({
+								name: "spike", private: true, type: "module",
+								dependencies: { astro: "^7.2.4" },
+							}),
+							"/home/project/src/pages/index.astro":
+								`---\nconst msg = "Astro in Nodepod"\n---\n<html><body><h1>{msg}</h1></body></html>`,
+						},
+					});
+					log("booted");
+					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
+					install.on("output", (t: string) => log("I:" + String(t).slice(0, 140)));
+					await install.completion.catch((e: Error) => log("install err " + e?.message));
+					log("install done");
+					const dev = await pod.spawn("npx", ["astro", "dev", "--host", "0.0.0.0", "--port", "4321"]);
+					dev.on("output", (t: string) => log("D:" + String(t).slice(0, 160)));
+					await new Promise((r) => setTimeout(r, 35000));
+					try { (dev as any).kill?.(); } catch {}
+					(window as any).__state = "done";
+				} catch (error) {
+					log("ERR " + ((error as Error)?.message ?? String(error)));
+					(window as any).__state = "error";
+				}
+			})();
+		</script>
+	</body>
+</html>
