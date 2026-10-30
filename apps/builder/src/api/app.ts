@@ -41,6 +41,7 @@ import { pages } from "./pages";
 import { review } from "./review";
 import { build } from "./build";
 import { githubApp } from "./github-app";
+import { deploy } from "./deploy";
 
 export const api = new Hono<{ Bindings: AppEnv }>();
 
@@ -401,6 +402,7 @@ api.route("/team", team);
 api.route("/review", review);
 api.route("/build", build);
 api.route("/github/app", githubApp);
+api.route("/deploy", deploy);
 
 /**
  * Hono uygulamasının tipi — istemci sözleşmesi testleri `hc<AppType>` ile

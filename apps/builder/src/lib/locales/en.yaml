@@ -509,6 +509,10 @@ project:
   reposFailed: Could not load repos.
   createFailed: Could not create the project.
   requestStatus: "Request failed ({status})"
+  deploy: Redeploy
+  deploying: Deploying…
+  deployDone: "Deployed: {url}"
+  deployFailed: Could not start the deployment.
   app:
     title: Install the GitHub App
     body: Install the GitHub App to connect your repos to WuppyCMS. No token to copy — you can revoke access from GitHub at any time.

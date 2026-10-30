@@ -47,6 +47,7 @@ export default function ProjectsIsland({
 	const [notAstro, setNotAstro] = useState<RepoSummary | null>(null);
 	const [mode, setMode] = useState<"projects" | "build">("projects");
 	const [appStatus, setAppStatus] = useState<AppStatus | null>(null);
+	const [deploying, setDeploying] = useState<string | null>(null);
 	const [needsApp, setNeedsApp] = useState(false);
 	const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
 
@@ -150,8 +151,43 @@ export default function ProjectsIsland({
 		})();
 	};
 
-	const removeProject = (id: string) => {
+	/** Eksik/bozuk Cloudflare Pages yayınını onarır (adresleri de yazar). */
+	const redeploy = (fullName: string) => {
+		if (deploying) return;
+		setDeploying(fullName);
+		setNotice(null);
 		void (async () => {
+			try {
+				const res = await fetch("/api/deploy/sync", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					credentials: "same-origin",
+					body: JSON.stringify({ full_name: fullName }),
+				});
+				const data = (await res.json().catch(() => ({}))) as {
+					results?: Array<{ ok: boolean; previewUrl?: string; error?: string }>;
+					message?: string;
+				};
+				const result = data.results?.[0];
+				if (!res.ok || !result?.ok) {
+					throw new Error(result?.error ?? data.message ?? t("project.deployFailed"));
+				}
+				setNotice({
+					kind: "ok",
+					text: t("project.deployDone", { url: result.previewUrl ?? "" }),
+				});
+			} catch (err) {
+				setNotice({
+					kind: "error",
+					text: err instanceof Error ? err.message : t("project.deployFailed"),
+				});
+			} finally {
+				setDeploying(null);
+			}
+		})();
+	};
+
+	const removeProject = (id: string) => {		void (async () => {
 			await fetch(`/api/projects/${id}`, { method: "DELETE", credentials: "same-origin" });
 			window.location.reload();
 		})();
@@ -339,6 +375,16 @@ export default function ProjectsIsland({
 								</p>
 							</div>
 							<div className="flex shrink-0 items-center gap-1">
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={deploying === project.repo_full_name}
+									onClick={() => redeploy(project.repo_full_name)}
+								>
+									{deploying === project.repo_full_name
+										? t("project.deploying")
+										: t("project.deploy")}
+								</Button>
 								<Button
 									as="a"
 									href={`/admin?site=${encodeURIComponent(project.repo_full_name)}`}
