@@ -459,5 +459,21 @@ deploy.get("/status", async (c) => {
 		)
 		.bind(...(repo ? [repo] : siteUrl ? [siteUrl] : []))
 		.all();
-	return c.json({ jobs: rows.results ?? [] });
+
+	// Worker kuyruğu bellekte tutar; servis yeniden başlarsa iş "queued" kalır.
+	// 10 dakikadan eski kuyruk satırlarını başarısız göster ki UI sonsuza dek
+	// "yayınlanıyor" demesin ve kullanıcı yeniden yayınlayabilsin.
+	const staleMs = 10 * 60_000;
+	const jobs = (rows.results ?? []).map((job) => {
+		const row = job as { status?: string; updated_at?: string };
+		if (row.status !== "queued" || !row.updated_at) return job;
+		const age = Date.now() - Date.parse(row.updated_at);
+		if (!Number.isFinite(age) || age <= staleMs) return job;
+		return {
+			...job,
+			status: "failed",
+			error: "Yayın kuyruğu yeniden başladı; yeniden yayınlayın.",
+		};
+	});
+	return c.json({ jobs });
 });
