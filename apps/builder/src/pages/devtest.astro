@@ -5,7 +5,7 @@ export const prerender = false;
 	<head><meta charset="utf-8" /><title>Nodepod test</title></head>
 	<body style="font-family:system-ui;padding:20px">
 		<h1>Nodepod + Astro testi</h1>
-		<pre id="log" style="background:#111;color:#0f0;padding:12px;min-height:240px;white-space:pre-wrap"></pre>
+		<pre id="log" style="background:#111;color:#0f0;padding:12px;min-height:320px;white-space:pre-wrap"></pre>
 		<script is:inline>
 			const el = document.getElementById("log");
 			const log = (m) => { el.textContent += m + "\n"; };
@@ -13,7 +13,6 @@ export const prerender = false;
 			(async () => {
 				try {
 					const mod = await import("/nodepod/index.js");
-					log("module loaded");
 					mod.setRuntimeHost(mod.createBrowserHost());
 					log("host set");
 					const pod = await mod.Nodepod.boot({
@@ -22,6 +21,7 @@ export const prerender = false;
 						files: {
 							"/home/project/package.json": JSON.stringify({
 								name: "spike", private: true, type: "module",
+								scripts: { dev: "astro dev --host 0.0.0.0 --port 4321" },
 								dependencies: { astro: "^7.2.4" },
 							}),
 							"/home/project/src/pages/index.astro":
@@ -30,12 +30,23 @@ export const prerender = false;
 					});
 					log("booted");
 					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
-					install.on("output", (t) => log("I:" + String(t).slice(0, 140)));
+					install.on("output", (t) => log("I:" + String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 120)));
 					await install.completion.catch((e) => log("install err " + (e && e.message)));
 					log("install done");
-					const dev = await pod.spawn("npx", ["astro", "dev", "--host", "0.0.0.0", "--port", "4321"]);
-					dev.on("output", (t) => log("D:" + String(t).slice(0, 160)));
-					await new Promise((r) => setTimeout(r, 35000));
+
+					const dev = await pod.spawn("npm", ["run", "dev"]);
+					dev.on("output", (t) => log("D:" + String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 200)));
+					for (let i = 0; i < 24; i++) {
+						await new Promise((r) => setTimeout(r, 5000));
+						try {
+							const res = await pod.request("http://localhost:4321/");
+							const body = await res.text();
+							log(`REQ ${res.status} ${body.slice(0, 140).replace(/\s+/g, " ")}`);
+							if (res.status === 200) break;
+						} catch (e) {
+							if (i % 3 === 0) log("req err " + (e && e.message));
+						}
+					}
 					try { dev.kill && dev.kill(); } catch {}
 					window.__state = "done";
 				} catch (error) {
