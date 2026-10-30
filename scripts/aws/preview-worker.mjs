@@ -144,7 +144,12 @@ async function startDev(session) {
 		],
 		{
 			cwd: session.dir,
-			env: { ...process.env, NODE_ENV: "development", ASTRO_TELEMETRY_DISABLED: "1" },
+			env: {
+				...process.env,
+				NODE_ENV: "development",
+				ASTRO_TELEMETRY_DISABLED: "1",
+				NODE_OPTIONS: "--max-old-space-size=768",
+			},
 			stdio: ["ignore", out.fd, out.fd],
 			// Alt süreçler (pnpm → astro → node) tek grup: durdururken hepsi ölür.
 			detached: true,

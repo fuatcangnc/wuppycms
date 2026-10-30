@@ -104,7 +104,10 @@ async function buildSite(job) {
 		);
 
 		log(`[${job.jobId}] build`);
-		await exec("pnpm", ["build"], { cwd: dir });
+		await exec("pnpm", ["build"], {
+			cwd: dir,
+			env: { ...process.env, NODE_OPTIONS: "--max-old-space-size=1024" },
+		});
 
 		if (job.target === "cloudflare") {
 			// Direct upload: site müşterinin Cloudflare hesabındaki Pages
