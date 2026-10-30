@@ -1,6 +1,6 @@
 # 0021 — Üretilen sitelerin yayını: Cloudflare Pages
 
-Durum: Kabul edildi (2026-10-29) — 0020'yi geçersiz kılar
+Durum: Kabul edildi (2026-10-29) — 0020'yi geçersiz kılar; 0022 tarafından geçersiz kılındı
 
 ## Bağlam
 

@@ -26,7 +26,8 @@ Numara sırasıyla eklenir; bir karar değiştiğinde eski kayıt silinmez,
 |     | [0018](0018-wuppycms-technical-identifiers.md) Teknik kimlikler: WuppyCMS |
 |     | [0019](0019-github-app-repo-access.md) GitHub App ile repo erişimi |
 |     | [0020](0020-generated-site-github-pages.md) Üretilen sitelerin yayını: GitHub Pages (superseded) |
-|     | [0021](0021-generated-site-cloudflare-pages.md) Üretilen sitelerin yayını: Cloudflare Pages |
+|     | [0021](0021-generated-site-cloudflare-pages.md) Üretilen sitelerin yayını: Cloudflare Pages (superseded) |
+|     | [0022](0022-generated-site-deploy-targets.md) Üretilen sitelerin yayını: AWS + müşterinin Cloudflare hesabı |
 
 Not: 0001–0009 kayıtları marka değişikliğinden (0009) önce yazıldığı için
 metinlerinde eski marka adı geçebilir; kararlar tarihseldir.
