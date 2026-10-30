@@ -48,8 +48,10 @@ export const prerender = false;
 						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 400)}`);
 						return p;
 					};
-					await run("binding", ["-e", "process.env.NAPI_RS_FORCE_WASI='true'; import('@rolldown/binding-wasm32-wasi').then(m=>console.log('BINDING_OK',Object.keys(m).join(','))).catch(e=>console.error('BINDING_ERR',e&&e.stack))"], 25000);
-					await run("rolldown", ["-e", "process.env.NAPI_RS_FORCE_WASI='true'; import('rolldown').then(m=>console.log('ROLLDOWN_OK',Object.keys(m).length)).catch(e=>console.error('ROLLDOWN_ERR',e&&e.stack))"], 30000);
+					await run("ls1", ["-e", "const fs=require('fs');const p='/home/project/node_modules/@rolldown';console.log(fs.existsSync(p)?fs.readdirSync(p).join(','):'MISSING')"], 20000);
+					await run("install2", ["-e", "1"], 1);
+					await run("ls2", ["-e", "const fs=require('fs');const p='/home/project/node_modules/@rolldown';console.log(fs.existsSync(p)?fs.readdirSync(p).join(','):'MISSING')"], 20000);
+					await run("require", ["-e", "try{const b=require('@rolldown/binding-wasm32-wasi');console.log('OK',Object.keys(b).length)}catch(e){console.error('ERR',e&&e.stack)}"], 25000);
 					const dev = await run("dev", ["start.mjs"], 45000);
 					for (let i = 0; i < 8; i++) {
 						await new Promise((r) => setTimeout(r, 5000));
