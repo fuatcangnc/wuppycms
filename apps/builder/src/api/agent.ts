@@ -9,6 +9,7 @@ import { BackendError } from "../lib/git/backend";
 import type { ProviderConfig } from "../lib/agent/protocol";
 import { MODEL_CATALOG, PROVIDER_DEFAULTS, resolveProvider } from "../lib/agent/providers";
 import { runAgent } from "../lib/agent/loop";
+import { enqueueDeploy } from "../lib/deploy/enqueue";
 import {
 	appendMessage,
 	createRun,
@@ -213,23 +214,40 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 
 	const provider = resolveProvider(config);
 	const siteUrl = await readSiteUrl(token, fullName, branch);
+	const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
 	waitUntil(
 		c,
-		runAgent({
-			db,
-			provider,
-			runId,
-			sessionId,
-			userId: user.id,
-			token,
-			fullName,
-			branch,
-			siteUrl,
-			document: payload.context?.document ?? null,
-			pagePath: payload.context?.pagePath ?? null,
-			selections,
-			userText: payload.message,
-		}),
+		(async () => {
+			const result = await runAgent({
+				db,
+				provider,
+				runId,
+				sessionId: sessionId as string,
+				userId: user.id,
+				token,
+				fullName,
+				branch,
+				siteUrl,
+				document: payload.context?.document ?? null,
+				pagePath: payload.context?.pagePath ?? null,
+				selections,
+				userText: payload.message,
+			});
+			// AI düzenlemesi commit'lendiyse siteyi otomatik yayınla: önizleme
+			// bir sonraki build'i beklemeden güncellensin.
+			if (!result.changes) return;
+			try {
+				await enqueueDeploy(c.env, db, {
+					userId: user.id,
+					repo: fullName,
+					branch,
+					token,
+					origin,
+				});
+			} catch (error) {
+				console.warn("[agent] otomatik yayın kuyruğa alınamadı:", error);
+			}
+		})(),
 	);
 
 	return c.json({ sessionId, runId });
@@ -362,5 +380,16 @@ agent.post("/undo", body(agentUndoSchema), async (c) => {
 	}
 	await markChangeReverted(db, change.id);
 	await removeChangeIdFromMessages(db, change.id);
+	try {
+		await enqueueDeploy(c.env, db, {
+			userId: user.id,
+			repo: payload.full_name,
+			branch,
+			token,
+			origin: (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, ""),
+		});
+	} catch (error) {
+		console.warn("[agent] geri alma sonrası yayın kuyruğa alınamadı:", error);
+	}
 	return c.json({ ok: true, reverted: true, changeId: change.id, path: change.path });
 });

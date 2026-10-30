@@ -130,7 +130,7 @@ function systemPrompt(input: RunAgentInput): string {
 		"- Content updates: use content_update; source/layout edits: use edit_file or write_file.",
 		"- Publish only when the user asks for it; otherwise leave status as it is.",
 		"- After tool calls, reply briefly with what changed (file paths) and whether it is committed.",
-		"- The preview may be a built site (production) or a live dev server (local). Say the change is committed; do not promise an exact live timing.",
+		"- The preview may be a built site (production) or a live dev server (local). After a write the site is rebuilt automatically (usually 1–2 minutes) and the preview shows a \"Publishing…\" banner; say the change is committed and will appear in the preview shortly.",
 		"- If the user asks to remove or rename a brand/label (e.g. \"WuppyCMS sil\") and an element is selected, remove every visible occurrence on that page in the same turn: the selected element plus the layout shell (header brand, footer, default title/description). Do not stop to ask unless it would delete content entries.",
 		"- If the user asks to remove or hide a visible label/text (e.g. \"İLETİŞİM yazısını kaldır\"), use the selected element's exact text/html/path to locate the owning source and remove every visible occurrence on the page (nav/header, footer, section heading, button). Do not stop after only reading files; make the edit and commit in the same turn. If the selection is not the target, search the exact text and edit the owning component.",
 		"- The [SELECTED ELEMENTS] block is the primary target. If the user's words name a different region (header, footer, sidebar) or different text than the selection, follow the user's words and locate that region in the source; mention the mismatch briefly instead of editing the wrong target.",
@@ -158,7 +158,7 @@ function historyToMessages(history: StoredMessage[]): ChatMessage[] {
 	return messages;
 }
 
-export async function runAgent(input: RunAgentInput): Promise<void> {
+export async function runAgent(input: RunAgentInput): Promise<{ changes: number }> {
 	const { db, runId, sessionId } = input;
 
 	// Olaylar sıralı yazılır: streaming sırasında onText senkron çağrıldığı
@@ -324,4 +324,5 @@ export async function runAgent(input: RunAgentInput): Promise<void> {
 	} finally {
 		await touchSession(db, sessionId);
 	}
+	return { changes: changeIds.length };
 }
