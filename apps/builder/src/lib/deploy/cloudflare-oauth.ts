@@ -2,7 +2,7 @@
 // saklanır (ADR 0022).
 //
 // Cloudflare'ın self-managed OAuth client'ı kullanılır: kullanıcı yalnızca
-// `pages:write` + `account:read` izni verir; dilediği an Cloudflare panelinden
+// `page.write` + `account-settings.read` izni verir; dilediği an Cloudflare panelinden
 // yetkiyi kaldırır. Domain ayarları müşterinin zone'unda kalır.
 //
 // Refresh token her yenilemede değişir; yeni değer D1'e yazılır.
@@ -16,10 +16,9 @@ const TOKEN_URL = "https://dash.cloudflare.com/oauth2/token";
 
 /** Pages projesi açmak ve deploy tetiklemek için gereken en dar küme. */
 export const CLOUDFLARE_SCOPES = [
-	"account:read",
-	"user:read",
-	"pages:write",
-	"offline_access",
+	"account-settings.read",
+	"user-details.read",
+	"page.write",
 ] as const;
 
 export type CloudflareAccount = {
