@@ -1,20 +1,18 @@
-// Cloudflare Pages — üretilen sitelerin barındırma hattı.
+// Cloudflare Pages — **müşterinin kendi hesabı** için opsiyonel yayın hedefi
+// (ADR 0022).
 //
-// GitHub Actions'a bağımlı değildir: Pages projesi GitHub deposuna bağlanır,
-// Cloudflare kendi build runner'ında Astro sitesini derler. WuppyCMS yalnızca
-// projeyi oluşturur, deploy'u tetikler ve sabit `*.pages.dev` adresini döner.
+// Varsayılan hedef AWS'dir. Bu yol yalnızca müşteri "kendi Cloudflare
+// hesabıma yayınla" dediğinde, OAuth ile bağladığı hesabında çalışır. Böylece
+// site ve **domain ayarları müşterinin panelinde kalır**; WuppyCMS domain
+// yönetmez.
 //
-// Kimlik: `CLOUDFLARE_API_TOKEN` tercih edilir. Yoksa yerel `wrangler` OAuth
-// yenileme token'ı (`CLOUDFLARE_OAUTH_REFRESH_TOKEN`) ile access token alınır;
-// token isolate belleğinde süresi dolana kadar cache'lenir.
+// Token'lar `cloudflare-oauth.ts` üzerinden şifreli saklanır ve yenilenir.
 
 import type { AppEnv } from "../../api/types";
-import { decryptToken, encryptToken } from "../crypto";
 import type { SqlDatabase } from "../platform";
+import { accessToken, CloudflareAuthError } from "./cloudflare-oauth";
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
-const OAUTH_TOKEN_URL = "https://dash.cloudflare.com/oauth2/token";
-const DEFAULT_OAUTH_CLIENT_ID = "54d11594-84e4-41aa-b438-e81b8fa78ee7";
 
 export type PagesTarget = {
 	projectName: string;
@@ -34,97 +32,24 @@ export class PagesError extends Error {
 	}
 }
 
-let tokenCache: { token: string; expiresAt: number } | null = null;
-const REFRESH_SETTING = "cloudflare_refresh_token";
-
-/** Rotasyona uğrayan refresh token'ı şifreli olarak D1'de tutar. */
-async function readStoredRefreshToken(
-	env: AppEnv,
-	db?: SqlDatabase,
-): Promise<string | null> {
-	if (!db) return null;
-	const row = await db
-		.prepare("SELECT value_encrypted FROM app_settings WHERE key = ?")
-		.bind(REFRESH_SETTING)
-		.first<{ value_encrypted: string }>();
-	return row ? decryptToken(row.value_encrypted, env.TOKEN_ENCRYPTION_KEY) : null;
-}
-
-async function storeRefreshToken(
-	env: AppEnv,
-	db: SqlDatabase | undefined,
-	refreshToken: string | undefined,
-): Promise<void> {
-	if (!db || !refreshToken) return;
-	const encrypted = await encryptToken(refreshToken, env.TOKEN_ENCRYPTION_KEY);
-	await db
-		.prepare(
-			`INSERT INTO app_settings (key, value_encrypted, updated_at) VALUES (?, ?, ?)
-			 ON CONFLICT(key) DO UPDATE SET value_encrypted = excluded.value_encrypted, updated_at = excluded.updated_at`,
-		)
-		.bind(REFRESH_SETTING, encrypted, new Date().toISOString())
-		.run();
-}
-
-/** Pages için gereken env değerleri var mı? */
-export function pagesConfigured(env: AppEnv): boolean {
-	return Boolean(
-		env.CLOUDFLARE_ACCOUNT_ID &&
-			(env.CLOUDFLARE_API_TOKEN || env.CLOUDFLARE_OAUTH_REFRESH_TOKEN),
-	);
-}
-
-async function accessToken(env: AppEnv, db?: SqlDatabase): Promise<string | null> {
-	if (env.CLOUDFLARE_API_TOKEN) return env.CLOUDFLARE_API_TOKEN;
-	const refreshToken =
-		(await readStoredRefreshToken(env, db)) ?? env.CLOUDFLARE_OAUTH_REFRESH_TOKEN;
-	if (!refreshToken) return null;
-	if (tokenCache && tokenCache.expiresAt - 60_000 > Date.now()) return tokenCache.token;
-
-	const body = new URLSearchParams({
-		grant_type: "refresh_token",
-		refresh_token: refreshToken,
-		client_id: env.CLOUDFLARE_OAUTH_CLIENT_ID || DEFAULT_OAUTH_CLIENT_ID,
-	});
-	const res = await fetch(OAUTH_TOKEN_URL, {
-		method: "POST",
-		headers: { "content-type": "application/x-www-form-urlencoded" },
-		body,
-	});
-	const data = (await res.json().catch(() => ({}))) as {
-		access_token?: string;
-		expires_in?: number;
-		refresh_token?: string;
-		error?: string;
-		error_description?: string;
-	};
-	if (!res.ok || !data.access_token) {
-		// invalid_grant: refresh zinciri başka bir istemcide (ör. wrangler CLI)
-		// tüketilmiş demektir. Kalıcı çözüm API token'ıdır; burada yalnızca
-		// eyleme dönük bir mesaj üretiriz.
-		const detail = data.error === "invalid_grant"
-			? "Cloudflare yenileme anahtarı geçersiz (başka bir istemcide yenilenmiş olabilir). CLOUDFLARE_API_TOKEN ekleyin."
-			: data.error_description ?? "Cloudflare OAuth token yenilenemedi.";
-		throw new PagesError(res.status, detail);
-	}
-	// Cloudflare refresh token'ı her yenilemede değiştirir; yenisi D1'e yazılır.
-	await storeRefreshToken(env, db, data.refresh_token).catch(() => undefined);
-	tokenCache = {
-		token: data.access_token,
-		expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
-	};
-	return data.access_token;
-}
-
 async function cf<T>(
 	env: AppEnv,
-	db: SqlDatabase | undefined,
+	db: SqlDatabase,
+	userId: string,
 	path: string,
 	init?: RequestInit,
 ): Promise<T> {
-	const token = await accessToken(env, db);
-	if (!token) throw new PagesError(401, "Cloudflare Pages yapılandırılmadı.");
-	const res = await fetch(`${API_BASE}${path}`, {
+	let token: string;
+	let accountId: string;
+	try {
+		const auth = await accessToken(env, db, userId);
+		token = auth.token;
+		accountId = auth.accountId;
+	} catch (error) {
+		if (error instanceof CloudflareAuthError) throw new PagesError(error.status, error.message);
+		throw error;
+	}
+	const res = await fetch(`${API_BASE}${path.replace("{account}", accountId)}`, {
 		...init,
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -169,25 +94,22 @@ export function pagesProjectName(fullName: string): string {
 type Project = { name: string; subdomain: string };
 
 /**
- * Depo için Pages projesini hazırlar (varsa yeniden kullanır) ve sabit
- * `https://<proje>.pages.dev` adresini döner. Proje oluşturmak build
- * tetiklemez; içerik commit'lendikten sonra `triggerPagesDeployment` çağrılır.
+ * Müşterinin hesabında Pages projesini hazırlar (varsa yeniden kullanır) ve
+ * sabit `https://<proje>.pages.dev` adresini döner.
  */
 export async function ensurePagesProject(
 	env: AppEnv,
-	db: SqlDatabase | undefined,
+	db: SqlDatabase,
+	userId: string,
 	input: { repoFullName: string; branch: string },
 ): Promise<PagesTarget> {
-	if (!env.CLOUDFLARE_ACCOUNT_ID) {
-		throw new PagesError(400, "CLOUDFLARE_ACCOUNT_ID eksik.");
-	}
-	const account = env.CLOUDFLARE_ACCOUNT_ID;
 	const name = pagesProjectName(input.repoFullName);
 
-	const existing = await cf<Project | null>(
+	const existing = await cf<Project>(
 		env,
 		db,
-		`/accounts/${account}/pages/projects/${name}`,
+		userId,
+		`/accounts/{account}/pages/projects/${name}`,
 	).catch((error) => {
 		if (error instanceof PagesError && error.status === 404) return null;
 		throw error;
@@ -222,34 +144,32 @@ export async function ensurePagesProject(
 		},
 	};
 
-	const created = await cf<Project>(env, db, `/accounts/${account}/pages/projects`, {
+	const created = await cf<Project>(env, db, userId, `/accounts/{account}/pages/projects`, {
 		method: "POST",
 		body: JSON.stringify(payload),
 	});
 	return { projectName: created.name, url: `https://${created.subdomain}`, created: true };
 }
 
-/** Bağlı Git projesinde yeni bir build başlatır (commit sonrası). */
+/** Bağlı Git projesinde yeni bir build başlatır. */
 export async function triggerPagesDeployment(
 	env: AppEnv,
-	db: SqlDatabase | undefined,
+	db: SqlDatabase,
+	userId: string,
 	projectName: string,
 	branch: string,
 ): Promise<boolean> {
-	if (!env.CLOUDFLARE_ACCOUNT_ID) return false;
 	try {
 		await cf(
 			env,
 			db,
-			`/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments`,
-			{
-			method: "POST",
-					body: JSON.stringify({ branch }),
-			},
+			userId,
+			`/accounts/{account}/pages/projects/${projectName}/deployments`,
+			{ method: "POST", body: JSON.stringify({ branch }) },
 		);
 		return true;
 	} catch (error) {
-		// Aynı commit için zaten kuyrukta bir build varsa 409 dönebilir.
+		// Aynı commit kuyrukta olabilir (409); deploy yine sürmekte.
 		console.warn("[pages] deploy tetiklenemedi:", error);
 		return false;
 	}
@@ -262,13 +182,13 @@ export type PagesDeployment = {
 	stage: string;
 };
 
-/** Tanı/CLI için son deployment durumu. */
+/** Tanı için son deployment durumu. */
 export async function latestPagesDeployment(
 	env: AppEnv,
-	db: SqlDatabase | undefined,
+	db: SqlDatabase,
+	userId: string,
 	projectName: string,
 ): Promise<PagesDeployment | null> {
-	if (!env.CLOUDFLARE_ACCOUNT_ID) return null;
 	const rows = await cf<
 		Array<{
 			id: string;
@@ -278,7 +198,8 @@ export async function latestPagesDeployment(
 	>(
 		env,
 		db,
-		`/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments?per_page=1`,
+		userId,
+		`/accounts/{account}/pages/projects/${projectName}/deployments?per_page=1`,
 	);
 	const row = rows?.[0];
 	if (!row) return null;

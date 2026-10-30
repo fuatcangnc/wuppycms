@@ -118,9 +118,33 @@ app.wuppycms.com {
 }
 EOF
 
+echo "== deploy worker"
+sudo tee /etc/systemd/system/wuppycms-deploy.service >/dev/null <<EOF
+[Unit]
+Description=WuppyCMS deploy worker (astro build + s3 sync)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$APP_DIR
+Environment=HOME=/home/ubuntu
+Environment=PATH=/home/ubuntu/.local/share/pnpm:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-/opt/wuppycms/apps/builder/.deploy.vars
+ExecStart=/usr/bin/node $APP_DIR/scripts/aws/deploy-worker.mjs
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 sudo systemctl daemon-reload
 sudo systemctl enable --now 9router
 sudo systemctl enable --now wuppycms
+sudo systemctl enable --now wuppycms-deploy
 sudo systemctl reload caddy 2>/dev/null || sudo systemctl restart caddy
 
 cat <<MSG

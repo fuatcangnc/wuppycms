@@ -1,8 +1,7 @@
 // Cloudflare Pages yardımcıları — proje adı deterministik ve sınırlı olmalı.
 
 import { describe, expect, it } from "vitest";
-import type { AppEnv } from "../../api/types";
-import { pagesConfigured, pagesProjectName } from "./cloudflare-pages";
+import { pagesProjectName } from "./cloudflare-pages";
 
 describe("pagesProjectName", () => {
 	it("deterministik ve güvenli bir ad üretir", () => {
@@ -24,24 +23,3 @@ describe("pagesProjectName", () => {
 	});
 });
 
-describe("pagesConfigured", () => {
-	it("hesap + token/refresh varsa true", () => {
-		expect(
-			pagesConfigured({
-				CLOUDFLARE_ACCOUNT_ID: "acc",
-				CLOUDFLARE_OAUTH_REFRESH_TOKEN: "refresh",
-			} as AppEnv),
-		).toBe(true);
-		expect(
-			pagesConfigured({
-				CLOUDFLARE_ACCOUNT_ID: "acc",
-				CLOUDFLARE_API_TOKEN: "token",
-			} as AppEnv),
-		).toBe(true);
-	});
-
-	it("eksik yapılandırmada false", () => {
-		expect(pagesConfigured({ CLOUDFLARE_ACCOUNT_ID: "acc" } as AppEnv)).toBe(false);
-		expect(pagesConfigured({} as AppEnv)).toBe(false);
-	});
-});

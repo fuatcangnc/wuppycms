@@ -5,11 +5,7 @@
 import { Hono } from "hono";
 import { commitFiles, getFile, getRepo, listTree } from "../lib/git";
 import { getInstallationToken } from "../lib/git/github/app";
-import {
-	ensurePagesProject,
-	pagesConfigured,
-	triggerPagesDeployment,
-} from "../lib/deploy/cloudflare-pages";
+import { awsDeployConfigured, siteSlug, siteUrl as awsSiteUrl } from "../lib/deploy/aws";
 import { listInstallations } from "../lib/git/github/installations";
 import { listSiteTemplates, resolveSiteTemplate } from "../lib/build/templates";
 import {
@@ -131,6 +127,56 @@ async function rebrandTemplate(
 	return changed.length;
 }
 
+/**
+ * AWS build worker'ına iş verir. Worker VM'de çalışır (astro build + s3 sync);
+ * bitince `/api/deploy/callback` ile durum yazılır.
+ */
+async function enqueueBuild(
+	c: Parameters<typeof requireUser>[0],
+	db: NonNullable<ReturnType<typeof platform>["db"]>,
+	input: {
+		repo: string;
+		branch: string;
+		token: string;
+		slug: string;
+		projectId: string;
+		url: string | null;
+		previewUrl: string | null;
+	},
+): Promise<void> {
+	const jobId = crypto.randomUUID();
+	const now = new Date().toISOString();
+	await db
+		.prepare(
+			`INSERT INTO deploy_jobs
+				(id, project_id, repo_full_name, branch, target, status, url, preview_url, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, 'aws', 'queued', ?, ?, ?, ?)`,
+		)
+		.bind(jobId, input.projectId, input.repo, input.branch, input.url, input.previewUrl, now, now)
+		.run();
+
+	const base = c.env.DEPLOY_WORKER_URL || "http://127.0.0.1:8790";
+	const res = await fetch(`${base}/build`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({
+			jobId,
+			repo: input.repo,
+			branch: input.branch,
+			token: input.token,
+			slug: input.slug,
+			secret: c.env.DEPLOY_WORKER_SECRET ?? "",
+		}),
+	});
+	if (!res.ok) {
+		await db
+			.prepare("UPDATE deploy_jobs SET status = 'failed', error = ?, updated_at = ? WHERE id = ?")
+			.bind(`Deploy worker ${res.status}`, new Date().toISOString(), jobId)
+			.run();
+		throw new Error(`Deploy worker ${res.status}`);
+	}
+}
+
 build.post("/site", body(buildSiteSchema), async (c) => {
 	const user = await requireUser(c);
 	if (!user) return c.json({ error: "unauthenticated" }, 401);
@@ -242,24 +288,17 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		}
 	}
 
-	// Yayın hedefi: Cloudflare Pages. GitHub Actions kullanılmaz; proje
-	// oluşturulamazsa site URL'siz kalır (yanlış bir adres yazmayız).
-	let pagesTarget: Awaited<ReturnType<typeof ensurePagesProject>> | null = null;
-	if (pagesConfigured(c.env)) {
-		try {
-			pagesTarget = await ensurePagesProject(c.env, db, {
-				repoFullName: repo.fullName,
-				branch,
-			});
-		} catch (error) {
-			console.warn("[build] Cloudflare Pages projesi kurulamadı:", error);
-		}
-	}
-	const deployUrl: string | null = pagesTarget?.url ?? null;
-	// Admin önizlemesi aynı origin'deki proxy'den geçer (pages.dev bazı
-	// ağlarda engelli). Kanonik site adresi yine Pages URL'sidir.
+	// Yayın hedefi: AWS (ADR 0022). Müşteri hiçbir şey kurmaz; site
+	// `<slug>.sites.wuppycms.com` altında yayınlanır. Build VM'deki worker'da
+	// koşar, çıktı S3'e yazılır, CloudFront sunar.
+	//
+	// Önizleme her zaman aynı origin'deki proxy'den geçer; böylece müşteri
+	// domain bağlamasa da admin iframe'i ve paylaşılan link çalışır.
 	const previewOrigin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
-	const previewUrl = pagesTarget ? `${previewOrigin}/preview/${pagesTarget.projectName}/` : null;
+	const awsReady = awsDeployConfigured(c.env);
+	const slug = siteSlug(repo.fullName);
+	const deployUrl: string | null = awsReady ? awsSiteUrl(c.env, repo.fullName) : null;
+	const previewUrl = awsReady ? `${previewOrigin}/preview/${slug}/` : null;
 
 	// İçerik: brief + dinamik cevaplardan işe özel metinler üretilir. Model
 	// yoksa/başarısızsa şablonun kendi içeriği kalır (site yine kurulur).
@@ -404,8 +443,8 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 	try {
 		const configFile = await readTemplateFile(token, repo.fullName, "astro.config.mjs", branch);
 		let config = configFile.content;
-		if (pagesTarget) {
-			const siteLine = `site: ${JSON.stringify(pagesTarget.url)}`;
+		if (deployUrl) {
+			const siteLine = `site: ${JSON.stringify(deployUrl)}`;
 			if (/site:\s*["'][^"']*["']/.test(config)) {
 				config = config.replace(/site:\s*["'][^"']*["']/, siteLine);
 			} else {
@@ -471,12 +510,6 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		console.warn("[build] marka geçişi atlandı:", error);
 	}
 
-	// Cloudflare bağlı depoyu kendi build runner'ında derler; tetikleme
-	// başarısız olsa da push webhook'u bir sonraki fırsatta derler.
-	if (pagesTarget) {
-		await triggerPagesDeployment(c.env, db, pagesTarget.projectName, branch);
-	}
-
 	const existing = await db
 		.prepare("SELECT id FROM projects WHERE user_id = ? AND repo_full_name = ?")
 		.bind(user.id, repo.fullName)
@@ -497,6 +530,32 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 			.run();
 	}
 
+	// Yayın adresleri projeye yazılır; build kuyruğa girer ve worker bitince
+	// /api/deploy/callback durumu günceller.
+	if (deployUrl && previewUrl) {
+		await db
+			.prepare(
+				"UPDATE projects SET deploy_target = 'aws', deploy_url = ?, preview_url = ?, updated_at = datetime('now') WHERE id = ?",
+			)
+			.bind(deployUrl, previewUrl, projectId)
+			.run();
+	}
+	if (awsReady) {
+		try {
+			await enqueueBuild(c, db, {
+				repo: repo.fullName,
+				branch,
+				token,
+				slug,
+				projectId,
+				url: deployUrl,
+				previewUrl,
+			});
+		} catch (error) {
+			console.warn("[build] yayın kuyruğa alınamadı:", error);
+		}
+	}
+
 	return c.json({
 		id: projectId,
 		name: payload.siteName,
@@ -505,6 +564,7 @@ build.post("/site", body(buildSiteSchema), async (c) => {
 		color,
 		url: deployUrl,
 		previewUrl,
+		target: deployUrl ? "aws" : null,
 	});
 });
 

@@ -512,6 +512,15 @@ project:
   deploy: Redeploy
   deploying: Deploying…
   deployDone: "Deployed: {url}"
+  deployWhere: Where should we deploy?
+  deployAws: WuppyCMS infrastructure
+  deployAwsHint: AWS + CloudFront · no domain setup needed
+  deployCf: My own Cloudflare account
+  deployCfConnected: "Cloudflare: {account}"
+  deployCfHint: Domain settings stay in your Cloudflare dashboard
+  deployCfConnectHint: You will be redirected to Cloudflare for consent
+  deployCfUnavailable: Not available in this installation
+  deployQueued: Deployment queued; the preview will be ready shortly.
   deployFailed: Could not start the deployment.
   app:
     title: Install the GitHub App

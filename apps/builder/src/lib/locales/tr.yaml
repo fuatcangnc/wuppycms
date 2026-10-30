@@ -515,6 +515,15 @@ project:
   deploy: Yeniden yayınla
   deploying: Yayınlanıyor…
   deployDone: "Yayın hazır: {url}"
+  deployWhere: Nereye yayınlansın?
+  deployAws: WuppyCMS altyapısı
+  deployAwsHint: AWS + CloudFront · kendi domaininizi bağlamanız gerekmez
+  deployCf: Kendi Cloudflare hesabım
+  deployCfConnected: "Cloudflare: {account}"
+  deployCfHint: Domain ayarları Cloudflare panelinizde kalır
+  deployCfConnectHint: Bağlanmak için Cloudflare onayına yönlendirilirsiniz
+  deployCfUnavailable: Bu kurulumda kapalı
+  deployQueued: Yayın kuyruğa alındı; bitince önizleme hazır olacak.
   deployFailed: Yayın başlatılamadı.
   app:
     title: GitHub App'i kur

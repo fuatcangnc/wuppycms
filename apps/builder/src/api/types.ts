@@ -38,15 +38,29 @@ export interface AppEnv {
 	SITE_TEMPLATE_REPO?: string;
 	/** İlk sıradaki Karakas şablonunun public template repo'su. */
 	SITE_TEMPLATE_KARAKAS_REPO?: string;
-	/** Cloudflare Pages — üretilen sitelerin barındırma hesabı. */
-	CLOUDFLARE_ACCOUNT_ID?: string;
-	/** Tercih edilen: yalnız Pages:Edit kapsamlı API token'ı. */
-	CLOUDFLARE_API_TOKEN?: string;
-	/** API token yoksa wrangler OAuth yenileme token'ı (local/live). */
-	CLOUDFLARE_OAUTH_REFRESH_TOKEN?: string;
-	CLOUDFLARE_OAUTH_CLIENT_ID?: string;
 	/** OpenCode Go inference org kimliği (x-opencode-org-id). */
 	OPENCODE_ORG_ID?: string;
+
+	// --- AWS yayın (ADR 0022) -------------------------------------------------
+	/** S3'e yazma + CloudFront invalidation yapan IAM kimliği. */
+	AWS_ACCESS_KEY_ID?: string;
+	AWS_SECRET_ACCESS_KEY?: string;
+	/** Tüm sitelerin içinde yaşadığı tek bucket. */
+	AWS_S3_BUCKET?: string;
+	/** `*.sites.wuppycms.com` dağıtımı. */
+	AWS_CLOUDFRONT_DISTRIBUTION_ID?: string;
+	/** Alt alan adı tabanı (varsayılan: sites.wuppycms.com). */
+	AWS_SITES_DOMAIN?: string;
+	/** VM'deki build worker adresi (varsayılan http://127.0.0.1:8790). */
+	DEPLOY_WORKER_URL?: string;
+	/** Uygulama ↔ worker paylaşılan sırrı. */
+	DEPLOY_WORKER_SECRET?: string;
+	/**
+	 * Müşterinin kendi Cloudflare hesabını bağlaması için WuppyCMS OAuth
+	 * uygulaması (self-managed OAuth client).
+	 */
+	CLOUDFLARE_OAUTH_CLIENT_ID?: string;
+	CLOUDFLARE_OAUTH_CLIENT_SECRET?: string;
 	/**
 	 * R2 medya kitaplığı — kovası bağlıysa medya ekranında "R2" sekmesi açılır.
 	 * Site bazlı önek/public URL `.wuppycms/sites.jsonc` içinde tutulur.
