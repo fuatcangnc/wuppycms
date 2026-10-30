@@ -41,7 +41,7 @@ export function createAuth(env: AppEnv) {
 	}
 
 	return betterAuth({
-		database: env.DB,
+		database: (env as AppEnv & { SQLITE_RAW?: unknown }).SQLITE_RAW ?? env.DB,
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL,
 		basePath: "/api/auth",
