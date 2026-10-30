@@ -1,5 +1,8 @@
 ---
 export const prerender = false;
+Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 ---
 <html lang="tr">
 	<head><meta charset="utf-8" /><title>Nodepod Astro 7</title></head>
