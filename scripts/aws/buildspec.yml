@@ -5,7 +5,7 @@ version: 0.2
 
 env:
   variables:
-    PNPM_VERSION: "10"
+    PNPM_VERSION: "12.11.2"
     NODE_ENV: "production"
 
 phases:
@@ -22,7 +22,7 @@ phases:
       - echo "Cloning $REPO@$BRANCH"
       - git clone --depth 1 --branch "$BRANCH" "https://x-access-token:$GIT_TOKEN@github.com/$REPO.git" repo
       - cd repo
-      - pnpm install --prefer-offline
+      - pnpm install --prefer-offline --allow-build=esbuild --allow-build=sharp --allow-build=@tailwindcss/oxide --allow-build=workerd --allow-build=msw
 
   build:
     commands:

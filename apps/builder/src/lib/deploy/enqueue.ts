@@ -189,6 +189,7 @@ export async function enqueueDeploy(
 		previewUrl,
 	});
 	// AWS hedefi: CodeBuild yapılandırıldıysa VM worker yerine onu kullan.
+	console.log("[deploy] builder=", codeBuildConfigured(env) ? "codebuild" : "worker");
 	const queued = codeBuildConfigured(env)
 		? await startSiteBuild(env, {
 				repo: input.repo,

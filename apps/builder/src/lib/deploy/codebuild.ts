@@ -7,7 +7,7 @@
 import { AwsClient } from "aws4fetch";
 import type { AppEnv } from "../../api/types";
 
-const REGION = () => process.env.AWS_REGION ?? "us-east-1";
+
 
 export function codeBuildConfigured(env: AppEnv): boolean {
 	return Boolean(env.AWS_CODEBUILD_PROJECT && env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY);
@@ -30,7 +30,7 @@ export type CodeBuildInput = {
 export async function startSiteBuild(env: AppEnv, input: CodeBuildInput): Promise<void> {
 	const project = env.AWS_CODEBUILD_PROJECT;
 	if (!project) throw new Error("AWS_CODEBUILD_PROJECT tanımlı değil.");
-	const region = REGION();
+	const region = env.AWS_REGION ?? "us-east-1";
 	const body = {
 		projectName: project,
 		environmentVariablesOverride: [
