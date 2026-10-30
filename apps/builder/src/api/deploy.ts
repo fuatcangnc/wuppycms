@@ -220,8 +220,25 @@ deploy.post("/sync", body(syncSchema), async (c) => {
 		}
 	}
 
-	const rows = payload.full_name
-		? [{ repo_full_name: payload.full_name, default_branch: "main", id: null as string | null }]
+	const oneRepo = payload.full_name;
+	const rows = oneRepo
+		? await (async () => {
+				// Tek repo yayınında da proje kaydını bul: yayın adresi projeye
+				// yazılsın (yeniden yayınla → önizleme bağlantısı).
+				const project = await db
+					.prepare(
+						"SELECT id, default_branch FROM projects WHERE repo_full_name = ? AND user_id = ?",
+					)
+					.bind(oneRepo, user.id)
+					.first<{ id: string; default_branch: string }>();
+				return [
+					{
+						repo_full_name: oneRepo,
+						default_branch: project?.default_branch ?? "main",
+						id: project?.id ?? null,
+					},
+				];
+			})()
 		: ((
 				await db
 					.prepare(
