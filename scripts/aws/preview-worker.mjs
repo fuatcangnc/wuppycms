@@ -79,7 +79,19 @@ async function installDeps(session) {
 		// kurulum gerekli
 	}
 	log(`[${session.slug}] install`);
-	await run("pnpm", ["install", "--prefer-offline"], { cwd: session.dir, timeout: 300_000 });
+	await run(
+		"pnpm",
+		[
+			"install",
+			"--prefer-offline",
+			"--allow-build=esbuild",
+			"--allow-build=sharp",
+			"--allow-build=@tailwindcss/oxide",
+			"--allow-build=workerd",
+			"--allow-build=msw",
+		],
+		{ cwd: session.dir, timeout: 300_000 },
+	);
 	const handle = await openFile(marker, "w");
 	await handle.close();
 	return true;
@@ -178,7 +190,12 @@ async function openSession({ slug, repo, branch, token }) {
 		await startDev(session);
 		return session;
 	})();
-	await session.opening;
+	try {
+		await session.opening;
+	} catch (error) {
+		await stopSession(session);
+		throw error;
+	}
 	session.opening = null;
 	return session;
 }
