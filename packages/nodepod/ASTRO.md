@@ -1,90 +1,124 @@
 # Astro desteği
 
 Bu fork, Nodepod'un tarayıcı içinde **Astro dev sunucusu** çalıştırmasını
-destekler ve doğrulanmıştır.
+destekler. Astro 7 dahil doğrulanmıştır.
 
-## Doğrulanan sürüm
+## Doğrulanan sürümler
 
 | Bileşen | Sürüm | Durum |
 | --- | --- | --- |
-| Astro | **5.18.2** (Vite 6 / esbuild + rollup) | ✅ Çalışıyor |
-| Astro | 7.x (Vite 8 / Rolldown) | ❌ Rolldown WASM binding + `node:wasi` gerekli |
+| Astro | **7.4.4** (Vite 8 / Rolldown) | ✅ Çalışıyor (aşağıdaki 4 adım şart) |
+| Astro | 5.18.2 (Vite 6) | ✅ Çalışıyor (ek adım gerekmez) |
 | Node shim | 22.22.0 | ✅ (fork'ta güncellendi) |
 
-Tarayıcıda ölçüm: boot + `npm install` + `astro dev` + ilk istek **~80 sn**
-(cache'li kurulumda ~20 sn).
+Tarayıcıda ölçüm (Astro 7): boot + kurulum + 12 MB WASM indirme + dev + ilk
+istek **~124 sn**. WASM cache'lendikten sonra belirgin şekilde düşer.
 
-## Çalışan reçete
+## Astro 7 için çalışan reçete
+
+Astro 7, Vite 8'in **Rolldown** motorunu kullanır. Tarayıcıda çalışması için
+dört şart vardır:
+
+### 1. Cross-origin isolation (SharedArrayBuffer)
+
+Rolldown'un WASM binding'i `SharedArrayBuffer` ister. Sayfa şu başlıklarla
+servis edilmelidir:
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Resource-Policy: cross-origin
+```
+
+Astro sayfasında:
+
+```astro
+---
+Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+---
+```
+
+> Üretimde bu sayfa ayrı bir origin'de (ör. `sandbox.wuppycms.com`) tutulmalı;
+> COOP/COEP ana uygulamaya konursa üçüncü taraf gömüller bozulur.
+
+### 2. Rolldown WASM binding'ini elle yerleştir
+
+npm, `@rolldown/binding-wasm32-wasi` paketini **opsiyonel bağımlılık** olarak
+atlar (`os/cpu` alanları yüzünden). Bu yüzden paket dosyaları doğrudan VFS'e
+yazılır:
 
 ```ts
-import { Nodepod, createBrowserHost, setRuntimeHost } from "@wuppycms/nodepod";
+const dir = "/home/project/node_modules/@rolldown/binding-wasm32-wasi";
+await pod.fs.mkdir(dir, { recursive: true });
+for (const f of ["package.json", "rolldown-binding.wasi.cjs", "wasi-worker.mjs"]) {
+  const res = await fetch(`https://unpkg.com/@rolldown/binding-wasm32-wasi@1.2.16/${f}`);
+  await pod.fs.writeFile(`${dir}/${f}`, new Uint8Array(await res.arrayBuffer()));
+}
+const wasm = await fetch(
+  "https://unpkg.com/@rolldown/binding-wasm32-wasi@1.2.16/rolldown-binding.wasm32-wasi.wasm",
+);
+await pod.fs.writeFile(`${dir}/rolldown-binding.wasm32-wasi.wasm`, new Uint8Array(await wasm.arrayBuffer()));
+```
 
-// Host kaydı açıkça yapılır: üst düzey side-effect bazı bundler'larda düşüyor.
-setRuntimeHost(createBrowserHost());
+> Bu adım `npm install`'dan **sonra** yapılmalı (install dizini silebilir).
+> Üretimde dosyalar kendi CDN'imizden servis edilmeli; unpkg yalnızca prototip.
 
-const pod = await Nodepod.boot({
-  serviceWorker: false,
-  workdir: "/home/project",
-  files: {
-    "/home/project/package.json": JSON.stringify({
-      name: "site",
-      private: true,
-      type: "module",
-      dependencies: { astro: "^5.14.0" },
-    }),
-    // Vite 6 geliştirme sunucusu Host başlığı olmayan istekleri 403'ler.
-    "/home/project/astro.config.mjs":
-      `import { defineConfig } from "astro/config";\nexport default defineConfig({ vite: { server: { allowedHosts: true } } });\n`,
-    "/home/project/src/pages/index.astro":
-      `---\nconst msg = "Merhaba"\n---\n<html><body><h1>{msg}</h1></body></html>`,
-  },
-});
+### 3. WASI binding'ini zorla
 
-const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
-install.on("output", console.log);
-await install.completion;
+Alt süreçte:
 
-const dev = await pod.spawn("npm", ["run", "dev"]); // "astro dev --host 0.0.0.0 --port 4321"
-dev.on("output", console.log);
+```ts
+process.env.NAPI_RS_FORCE_WASI = "true";
+process.argv = ["node", "astro", "dev", "--host", "0.0.0.0", "--port", "4321"];
+await import("./node_modules/astro/bin/astro.mjs");
+```
 
-// HTTP köprüsü: Host başlığı ZORUNLU (Vite allowedHosts kontrolü).
+### 4. Vite host kontrolü
+
+Vite 6/8 geliştirme sunucusu `Host` başlığı olmayan istekleri 403'ler. Proje
+`astro.config.mjs`:
+
+```js
+import { defineConfig } from "astro/config";
+export default defineConfig({ vite: { server: { allowedHosts: true } } });
+```
+
+HTTP köprüsünde de başlık verilmelidir:
+
+```ts
 const res = await pod.request(4321, {
   path: "/",
   headers: { host: "localhost:4321" },
 });
-console.log(res.statusCode, new TextDecoder().decode(res.body));
 ```
 
-## Iframe / önizleme
+## Astro 5 için (daha hızlı)
 
-- `pod.request` programatik çalışır (yukarıdaki örnek).
-- Gerçek iframe önizlemesi için Nodepod'un service worker'ı gerekir:
-  - `Nodepod.boot({ serviceWorker: true })`
-  - `dist/__sw__.js` ve `dist/__worker__.js` aynı origin'den yayınlanmalı.
-  - Önizleme isteklerinde `Host` başlığını `localhost:<port>` yapan bir köprü
-    kullanılmalı; aksi halde Vite 403 döner.
+Astro 5 (Vite 6 / esbuild + rollup) WASM binding gerektirmez; sadece:
+
+1. `npm install`
+2. `process.argv = [...]; await import("./node_modules/astro/astro.js")`
+3. `allowedHosts: true` + `host` başlığı
+
+yeterlidir (~80 sn ilk açılış).
+
+## Doğrulama çıktısı (Astro 7)
+
+```
+probe: BINDING_OK 78
+dev: "running"
+REQ 200 ms=123805 hasH1=true
+```
 
 ## Fork'ta yapılan düzeltmeler
 
 1. `vite-plugin-top-level-await` kaldırıldı (Vite 8 / Rolldown ile uyumsuz;
    modern tarayıcılar TLA'yı yerel destekler).
-2. Node sürümü `22.22.0` yapıldı (Astro 7'nin minimum kontrolü için; Astro 5
-   zaten çalışıyor).
+2. Node sürümü `22.22.0` yapıldı (Astro 7'nin minimum kontrolü).
 3. Üst düzey host kaydına ek olarak `setRuntimeHost(createBrowserHost())`
    çağrısı belgelendi (bundle side-effect kaybına karşı).
-
-## Astro 7 için kalan iş
-
-Astro 7, Vite 8'in **Rolldown** motorunu kullanır. Tarayıcıda çalışması için:
-
-1. `@rolldown/binding-wasm32-wasi` paketinin npm opsiyonel bağımlılık
-   atlamasına takılmadan kurulması,
-2. `node:wasi` + `node:worker_threads` üzerinde WASM binding'in çalıştırılması,
-3. Muhtemelen `SharedArrayBuffer` (COOP/COEP) gereksinimi.
-
-Bu üç madde çözülene kadar tarayıcı önizlemesi için **Astro 5 (Vite 6)**
-önerilir. Üretim/derleme tarafı Astro 7 ile çalışmaya devam eder; yalnızca
-tarayıcı önizlemesi Astro 5'e sabitlenir.
 
 ## Lisans
 
