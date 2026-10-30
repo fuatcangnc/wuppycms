@@ -72,3 +72,22 @@ build'i CodeBuild'e vermek. Toplam ~10–15 $/ay.
 - Not: Cloudflare hedefi hâlâ VM worker'ında (`wrangler pages deploy`); AWS hedefi CodeBuild'de
 - [ ] B2a/B2b (Lambda/DynamoDB) — plan onayı bekliyor
 - [ ] Cloudflare hedefi: değişmedi (müşteri hesabı, direct upload)
+
+## Nihai durum (VM kapalı)
+
+| Bileşen | Nerede |
+| --- | --- |
+| Uygulama (`app.wuppycms.com`) | CloudFront E37GBK1PZTILH5 → Lambda `wuppycms-app` |
+| Pazarlama (`wuppycms.com`, www, docs, test) | CloudFront EJJN4Y43OMI8M → S3 `wuppycms-marketing` |
+| AWS site yayını | CodeBuild `wuppycms-build` → S3 `wuppycms-sites` → CloudFront |
+| Cloudflare yayını | CodeBuild `wuppycms-build` → müşteri hesabı (`wrangler pages deploy`) |
+| Veri | Lambda `/tmp` SQLite + Litestream → S3 `wuppycms-app-db-243581477449` |
+| AI | 9router, Lambda konteynerinde (127.0.0.1:20128) |
+| Cron | EventBridge `wuppycms-cron-5m` → Lambda `wuppycms-cron` → `/api/cron` |
+| Medya | S3 `wuppycms-media` |
+
+Lightsail `wuppycms` **stopped** (us-east-1). Disk + statik IP için küçük ücret
+devam eder; kalıcı sıfırlamak için `delete-instance` + `release-static-ip`.
+
+Doğrulama (VM kapalıyken): wuppycms.com 200, app health 200, sites 200,
+Cloudflare pages.dev 200 (CodeBuild ile).

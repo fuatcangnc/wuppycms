@@ -63,6 +63,7 @@ export async function startSiteBuild(env: AppEnv, input: CodeBuildInput): Promis
 	const res = await new AwsClient({
 		accessKeyId: env.AWS_ACCESS_KEY_ID!,
 		secretAccessKey: env.AWS_SECRET_ACCESS_KEY!,
+		sessionToken: env.AWS_SESSION_TOKEN,
 		service: "codebuild",
 		region,
 	}).fetch(`https://codebuild.${region}.amazonaws.com/`, {

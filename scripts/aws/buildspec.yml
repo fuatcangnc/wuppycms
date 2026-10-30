@@ -33,6 +33,8 @@ phases:
       - cd "$CODEBUILD_SRC_DIR/repo"
       - |
         if [ "$TARGET" = "cloudflare" ]; then
+          export CLOUDFLARE_API_TOKEN="$CF_TOKEN"
+          export CLOUDFLARE_ACCOUNT_ID="$CF_ACCOUNT_ID"
           npx --yes wrangler@4 pages deploy dist \
             --project-name "$CF_PROJECT" --branch "$BRANCH" --commit-dirty=true
         else

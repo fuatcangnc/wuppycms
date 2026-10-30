@@ -58,6 +58,7 @@ function client(env: AppEnv): AwsClient {
 	return new AwsClient({
 		accessKeyId: env.AWS_ACCESS_KEY_ID!,
 		secretAccessKey: env.AWS_SECRET_ACCESS_KEY!,
+		sessionToken: env.AWS_SESSION_TOKEN,
 		service: SERVICE,
 		region: REGION,
 	});
@@ -170,6 +171,7 @@ export async function invalidate(env: AppEnv, paths: string[] = ["/*"]): Promise
 	const res = await new AwsClient({
 		accessKeyId: env.AWS_ACCESS_KEY_ID!,
 		secretAccessKey: env.AWS_SECRET_ACCESS_KEY!,
+		sessionToken: env.AWS_SESSION_TOKEN,
 		service: "cloudfront",
 		region: REGION,
 	}).fetch(url, {

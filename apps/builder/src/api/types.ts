@@ -45,6 +45,8 @@ export interface AppEnv {
 	/** S3'e yazma + CloudFront invalidation yapan IAM kimliği. */
 	AWS_ACCESS_KEY_ID?: string;
 	AWS_SECRET_ACCESS_KEY?: string;
+	/** Lambda rolünde geçici kimlik oturum token'ı. */
+	AWS_SESSION_TOKEN?: string;
 	/** Tüm sitelerin içinde yaşadığı tek bucket. */
 	AWS_S3_BUCKET?: string;
 	/** `*.sites.wuppycms.com` dağıtımı. */
