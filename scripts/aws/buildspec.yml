@@ -42,4 +42,4 @@ phases:
       - |
         curl -sS -X POST "$CALLBACK_URL" \
           -H "content-type: application/json" \
-          -d "{\"jobId\":\"$JOB_ID\",\"status\":\"deployed\",\"slug\":\"$SLUG\",\"target\":\"aws\",\"secret\":\"$CALLBACK_SECRET\"}"
+          -d "{\"jobId\":\"$JOB_ID\",\"status\":\"deployed\",\"slug\":\"$SLUG\",\"target\":\"$TARGET\",\"secret\":\"$CALLBACK_SECRET\"}"
