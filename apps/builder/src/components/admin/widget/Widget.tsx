@@ -240,6 +240,10 @@ export default function AgentWidget() {
 	// Site başına yalnızca bir kez ısıt: aksi halde efekt her render'da
 	// yeniden çalışıp iframe'i sonsuz döngüde yeniler (kendi kendine F5).
 	const warmedPreview = useRef<string | null>(null);
+	// Widget kapanınca sıfırla: 20 dk boşta kalan dev sunucusu kapanmış olabilir.
+	useEffect(() => {
+		if (!open) warmedPreview.current = null;
+	}, [open]);
 
 	// Canlı önizlemeyi ısıt: dev sunucusu hazır olunca iframe'i bir kez yenile.
 	// İlk açılışta üretim (build'li) site gösterilir; dev hazır olunca geçilir.
