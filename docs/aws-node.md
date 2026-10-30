@@ -79,3 +79,19 @@ Dağıtım: `bash scripts/aws/deploy-lambda.sh` (Docker buildx + ECR + Lambda + 
 3. Ajan satır içi çalışma testi (`AGENT_INLINE=1`, 300 s timeout).
 4. Cloudflare Cron yerine EventBridge → `/api/cron`.
 5. Cutover sonrası Lightsail kapatılır; kalan maliyet Lambda + S3 + CodeBuild.
+
+## Cutover (tamamlandı)
+
+- `app.wuppycms.com` → CloudFront **E37GBK1PZTILH5** (`d2vj8axi4bbdfq.cloudfront.net`) → Lambda Function URL.
+- ACM sertifikası: `app.wuppycms.com` (us-east-1, ISSUED).
+- Route53 A/AAAA alias → CloudFront.
+- Veri taşıma: VM'deki D1 SQLite (`2 kullanıcı / 13 proje`) → Litestream ile S3'e replike edildi; Lambda cold start'ta restore etti.
+- Doğrulama: `https://app.wuppycms.com/api/health` 200, `admin@wuppycms.com` girişi 200.
+- Eski migration'lar mevcut şemada tekrar çalışmasın diye "legacy schema" koruması eklendi.
+- Litestream restore `-if-db-not-exists` ile sıcak ortamda güvenli.
+
+### Kalanlar
+- Medya (VM R2 ~56 KB) → S3 kopyası.
+- Ajan satır içi çalışma testi (gerçek AI turu).
+- EventBridge → `/api/cron`.
+- Pazarlama sitesi (`wuppycms.com`) ve Cloudflare build worker'ı hâlâ Lightsail'de; taşınınca VM kapatılabilir.

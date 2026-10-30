@@ -30,6 +30,22 @@ function runMigrations(db: Database.Database, dir: string): void {
 			(row) => row.name,
 		),
 	);
+	// D1'den taşınan mevcut şema: migration tablosu boş ama çekirdek tablolar var.
+	// Bu durumda migration'ları yeniden çalıştırmak "duplicate column" hatası verir.
+	const hasCore = db
+		.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user'")
+		.get();
+	if (applied.size === 0 && hasCore) {
+		const insert = db.prepare(
+			"INSERT OR IGNORE INTO _wuppycms_migrations (name, applied_at) VALUES (?, ?)",
+		);
+		const tx = db.transaction(() => {
+			for (const file of files) insert.run(file, new Date().toISOString());
+		});
+		tx();
+		console.log("[db] mevcut şema algılandı; migration'lar uygulanmış sayıldı");
+		return;
+	}
 	for (const file of files) {
 		if (applied.has(file)) continue;
 		const sql = readFileSync(join(dir, file), "utf8");
