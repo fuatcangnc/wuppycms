@@ -57,7 +57,7 @@ export const prerender = false;
 					for (let i = 0; i < 8; i++) {
 						await new Promise((r) => setTimeout(r, 5000));
 						try {
-							const res = await pod.request(4321, { path: "/" });
+							const res = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
 							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
 							log(`REQ ${res.statusCode} ${body.slice(0, 160).replace(/\s+/g, " ")}`);
 							if (res.statusCode === 200) break;
