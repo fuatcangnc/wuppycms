@@ -22,31 +22,51 @@ const AWS_SLUG_RE = /^[a-z0-9][a-z0-9-]{2,80}$/;
 const PAGES_SLUG_RE = /^wuppy-[a-z0-9][a-z0-9-]{2,57}$/;
 
 export function rewriteHtml(html: string, prefix: string): string {
+	const prefixed = (path: string) => path === prefix || path.startsWith(`${prefix}/`);
 	let out = html.replace(
-		/\b(href|src|action|poster)=(["'])\/(?!\/)/gi,
-		(_match, attr: string, quote: string) => `${attr}=${quote}${prefix}/`,
+		/\b(href|src|action|poster)=(["'])(\/(?!\/)[^"']*)/gi,
+		(match, attr: string, quote: string, path: string) =>
+			prefixed(path) ? match : `${attr}=${quote}${prefix}${path}`,
 	);
 	// Inline modül import'ları (`import('/scripts/...')`) mutlak yol kullanır;
 	// bunlar da öneklenmezse tema animasyonları çalışmaz ve sayfa boş kalır.
 	out = out.replace(
-		/\bimport\s*\(\s*(["'])\/(?!\/)/g,
-		(_match, quote: string) => `import(${quote}${prefix}/`,
+		/\bimport\s*\(\s*(["'])(\/(?!\/)[^"']*)\1/g,
+		(match, quote: string, path: string) =>
+			prefixed(path) ? match : `import(${quote}${prefix}${path}${quote}`,
 	);
 	// srcset: virgülle ayrılmış adaylar
 	out = out.replace(/\bsrcset=(["'])(.*?)\1/gis, (match, quote: string, value: string) => {
 		const rewritten = value
 			.split(",")
-			.map((part) => part.replace(/^(\s*)\/(?!\/)/, `$1${prefix}/`))
+			.map((part) =>
+				part.replace(/^(\s*)(\/(?!\/)[^\s,]*)/, (m, ws: string, path: string) =>
+					prefixed(path) ? m : `${ws}${prefix}${path}`,
+				),
+			)
 			.join(",");
 		return `srcset=${quote}${rewritten}${quote}`;
 	});
+	// Astro dev stil blokları `url(/images/...)` üretir; bunlar da öneklenmeli.
+	out = out.replace(
+		/<style([^>]*)>([\s\S]*?)<\/style>/gi,
+		(_match, attrs: string, css: string) => `<style${attrs}>${rewriteCss(css, prefix)}</style>`,
+	);
 	return out;
 }
 
 export function rewriteCss(css: string, prefix: string): string {
+	const prefixed = (path: string) => path === prefix || path.startsWith(`${prefix}/`);
 	return css
-		.replace(/url\((\s*)\/(?!\/)/gi, (_m, ws: string) => `url(${ws}${prefix}/`)
-		.replace(/@import\s+(["'])\/(?!\/)/gi, (_m, quote: string) => `@import ${quote}${prefix}/`);
+		.replace(
+			/url\((\s*)(\/(?!\/)[^)]*)\)/gi,
+			(match, ws: string, path: string) => (prefixed(path) ? match : `url(${ws}${prefix}${path})`),
+		)
+		.replace(
+			/@import\s+(["'])(\/(?!\/)[^"']*)\1/gi,
+			(match, quote: string, path: string) =>
+				prefixed(path) ? match : `@import ${quote}${prefix}${path}${quote}`,
+		);
 }
 
 /** Preview kimliği → upstream taban adresi. */
