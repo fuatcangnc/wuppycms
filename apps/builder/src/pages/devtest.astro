@@ -23,6 +23,7 @@ export const prerender = false;
 								name: "spike", private: true, type: "module",
 								dependencies: { astro: "^5.14.0" },
 							}),
+							"/home/project/astro.config.mjs": `import { defineConfig } from "astro/config";\nexport default defineConfig({ vite: { server: { allowedHosts: true } } });\n`,
 							"/home/project/src/pages/index.astro":
 								`---\nconst msg = "Astro in Nodepod"\n---\n<html><body><h1>{msg}</h1></body></html>`,
 							"/home/project/start.mjs":
