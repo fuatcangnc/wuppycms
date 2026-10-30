@@ -44,9 +44,9 @@ export const prerender = false;
 						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 220)}`);
 						try { p.kill && p.kill(); } catch {}
 					};
-					await run("paths", "node", ["-e", "const fs=require('fs');const j=p=>{try{return fs.existsSync(p)}catch(e){return 'err'}};console.log('proj',fs.readdirSync('/home/project').join(','));console.log('astro proj',j('/home/project/node_modules/astro'),'root',j('/node_modules/astro'));try{const pkg=JSON.parse(fs.readFileSync('/home/project/node_modules/astro/package.json','utf8'));console.log('bin',JSON.stringify(pkg.bin),'ver',pkg.version)}catch(e){console.log('pkg err',e.message)}"]);
-					await run("install-wasm", "npm", ["install", "@rolldown/binding-wasm32-wasi@1.2.16", "--no-audit", "--no-fund"]);
-					await run("astro-import2", "node", ["-e", "import('astro').then(m=>console.log('ok',Object.keys(m).length)).catch(e=>{console.error('ERR',e&&e.message);process.exit(2)})"]);
+					await run("wasi-import", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; import('astro').then(m=>console.log('ok',Object.keys(m).length)).catch(e=>{console.error('ERR',e&&e.message);process.exit(2)})"]);
+					await run("cli-version", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; process.argv=['node','astro','--version']; import('./node_modules/astro/bin/astro.mjs')"]);
+					await run("cli-dev", "node", ["-e", "process.env.NAPI_RS_FORCE_WASI='1'; process.argv=['node','astro','dev','--host','0.0.0.0','--port','4321']; import('./node_modules/astro/bin/astro.mjs')"]);
 					window.__state = "done";
 				} catch (error) {
 					log("ERR " + ((error && error.message) || String(error)));
