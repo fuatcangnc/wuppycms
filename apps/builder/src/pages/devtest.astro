@@ -11,6 +11,7 @@ export const prerender = false;
 			const log = (m) => { el.textContent += m + "\n"; };
 			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 260);
 			window.__state = "running";
+			const t0 = Date.now();
 			(async () => {
 				try {
 					const mod = await import("/nodepod/index.js");
@@ -59,7 +60,8 @@ export const prerender = false;
 						try {
 							const res = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
 							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
-							log(`REQ ${res.statusCode} ${body.slice(0, 160).replace(/\s+/g, " ")}`);
+							log(`REQ ${res.statusCode} ms=${Date.now()-t0} hasH1=${body.includes("Astro in Nodepod")} len=${body.length}`);
+							log("BODY " + body.slice(0, 900).replace(/\s+/g, " "));
 							if (res.statusCode === 200) break;
 						} catch (e) {
 							log("req err " + (e && e.message));
