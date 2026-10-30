@@ -14,6 +14,8 @@ export function codeBuildConfigured(env: AppEnv): boolean {
 }
 
 export type CodeBuildInput = {
+	target?: "aws" | "cloudflare";
+	cloudflare?: { accountId: string; projectName: string; accessToken: string };
 	repo: string;
 	branch: string;
 	token: string;
@@ -45,6 +47,10 @@ export async function startSiteBuild(env: AppEnv, input: CodeBuildInput): Promis
 				value: env.DEPLOY_WORKER_SECRET ?? "",
 				type: "PLAINTEXT",
 			},
+			{ name: "TARGET", value: input.target ?? "aws", type: "PLAINTEXT" },
+			{ name: "CF_ACCOUNT_ID", value: input.cloudflare?.accountId ?? "", type: "PLAINTEXT" },
+			{ name: "CF_PROJECT", value: input.cloudflare?.projectName ?? "", type: "PLAINTEXT" },
+			{ name: "CF_TOKEN", value: input.cloudflare?.accessToken ?? "", type: "PLAINTEXT" },
 			{ name: "BUCKET", value: env.AWS_S3_BUCKET ?? "", type: "PLAINTEXT" },
 			{
 				name: "DISTRIBUTION_ID",

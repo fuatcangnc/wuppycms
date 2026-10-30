@@ -157,8 +157,8 @@ async function enqueueBuild(
 	c: Parameters<typeof requireUser>[0],
 	input: EnqueueInput,
 ): Promise<{ ok: boolean; error?: string }> {
-	// AWS hedefi + CodeBuild yapılandırıldıysa VM worker'ı atla.
-	if (input.target === "aws" && codeBuildConfigured(c.env)) {
+	// CodeBuild yapılandırıldıysa VM worker'ı atla (AWS + Cloudflare).
+	if (codeBuildConfigured(c.env)) {
 		const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
 		try {
 			await startSiteBuild(c.env, {
@@ -167,6 +167,8 @@ async function enqueueBuild(
 				token: input.token,
 				slug: input.slug,
 				jobId: input.jobId,
+				target: input.target,
+				cloudflare: input.cloudflare,
 				callbackUrl: `${origin}/api/deploy/callback`,
 			});
 			return { ok: true };

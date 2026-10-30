@@ -31,8 +31,14 @@ phases:
   post_build:
     commands:
       - cd "$CODEBUILD_SRC_DIR/repo"
-      - aws s3 sync dist/ "s3://$BUCKET/sites/$SLUG/" --delete
-      - aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/sites/$SLUG/*"
+      - |
+        if [ "$TARGET" = "cloudflare" ]; then
+          npx --yes wrangler@4 pages deploy dist \
+            --project-name "$CF_PROJECT" --branch "$BRANCH" --commit-dirty=true
+        else
+          aws s3 sync dist/ "s3://$BUCKET/sites/$SLUG/" --delete
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/sites/$SLUG/*"
+        fi
       - |
         curl -sS -X POST "$CALLBACK_URL" \
           -H "content-type: application/json" \
