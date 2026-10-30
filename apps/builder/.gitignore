@@ -26,6 +26,7 @@ pnpm-debug.log*
 # wrangler files
 .wrangler
 .dev.vars*
+.deploy.vars*
 !.dev.vars.example
 !.env.example
 bench-results/
