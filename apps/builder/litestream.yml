@@ -1,0 +1,10 @@
+# Litestream — SQLite'ı S3'e sürekli replike eder (Lambda /tmp).
+# DB_BUCKET ve DB_PATH ortam değişkenlerinden okunur.
+dbs:
+  - path: ${DB_PATH}
+    replicas:
+      - type: s3
+        bucket: ${DB_BUCKET}
+        path: wuppycms.db
+        region: ${AWS_REGION}
+        sync-interval: 1s

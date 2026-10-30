@@ -53,6 +53,8 @@ export interface AppEnv {
 	AWS_SITES_DOMAIN?: string;
 	/** VM'deki build worker adresi (varsayılan http://127.0.0.1:8790). */
 	DEPLOY_WORKER_URL?: string;
+	/** Lambda'da ajan turu yanıt içinde tamamlanır (arka plan görevi donar). */
+	AGENT_INLINE?: string;
 	/** AWS CodeBuild projesi (varsa build VM yerine orada koşar). */
 	AWS_CODEBUILD_PROJECT?: string;
 	/** Uygulama ↔ worker paylaşılan sırrı. */

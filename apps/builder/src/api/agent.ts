@@ -216,9 +216,7 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 	const provider = resolveProvider(config);
 	const siteUrl = await readSiteUrl(token, fullName, branch);
 	const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
-	waitUntil(
-		c,
-		(async () => {
+	const agentTask = (async () => {
 			const result = await runAgent({
 				db,
 				provider,
@@ -267,8 +265,10 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 			} catch (error) {
 				console.warn("[agent] otomatik yayın kuyruğa alınamadı:", error);
 			}
-		})(),
-	);
+	})();
+	// Lambda'da yanıt döndükten sonra arka plan görevi donar; satır içi çalıştır.
+	if (c.env.AGENT_INLINE === "1") await agentTask;
+	else waitUntil(c, agentTask);
 
 	return c.json({ sessionId, runId });
 });

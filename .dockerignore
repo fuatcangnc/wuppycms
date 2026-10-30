@@ -1,0 +1,12 @@
+.git
+node_modules
+**/node_modules
+apps/builder/.dev.vars
+apps/builder/.deploy.vars
+scripts/aws/.preview.vars
+apps/builder/dist
+apps/builder/dist-node
+apps/builder/.wrangler
+packages/nodepod/dist
+**/.astro
+src/content

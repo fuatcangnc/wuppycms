@@ -56,3 +56,26 @@ DB_PATH=/tmp/wuppy.db MIGRATIONS_DIR=./db/migrations PORT=8100 \
 3. `app.wuppycms.com` → Lambda Function URL (CloudFront üzerinden).
 4. Cloudflare Cron yerine EventBridge Scheduler → `/api/cron` (zamanlanmış yayın).
 5. Uçtan uca test: kayıt → proje → AI düzenleme → CodeBuild → site.
+
+## Lambda + Litestream (canlı)
+
+| Adım | Sonuç |
+| --- | --- |
+| Fonksiyon | `wuppycms-app` (container, 2048 MB, 300 s, x86_64) |
+| URL | https://sbalbi5q4vc3snckzz5fu6f2ve0mqggy.lambda-url.us-east-1.on.aws/ |
+| Soğuk başlangıç | ~18 s (Litestream restore + Astro) |
+| `/api/health` | 200 |
+| `/login` | 200 |
+| Kayıt + oturum | 200 |
+| `/api/deploy/targets` | 200 (oturumlu) |
+| `/projects` | 200 (oturumlu) |
+| Litestream → S3 | `wuppycms-app-db-243581477449/wuppycms.db/generations/...` |
+
+Dağıtım: `bash scripts/aws/deploy-lambda.sh` (Docker buildx + ECR + Lambda + URL).
+
+### Kalan adımlar
+1. `app.wuppycms.com` → CloudFront + Function URL (ACM sertifikası + Route53).
+2. Medya yükleme testi (S3 `wuppycms-media`).
+3. Ajan satır içi çalışma testi (`AGENT_INLINE=1`, 300 s timeout).
+4. Cloudflare Cron yerine EventBridge → `/api/cron`.
+5. Cutover sonrası Lightsail kapatılır; kalan maliyet Lambda + S3 + CodeBuild.
