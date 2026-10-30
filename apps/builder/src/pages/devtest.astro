@@ -1,0 +1,87 @@
+---
+export const prerender = false;
+---
+<html lang="tr">
+	<head><meta charset="utf-8" /><title>Nodepod Astro 7</title></head>
+	<body style="font-family:system-ui;padding:20px">
+		<h1>Nodepod + Astro 7</h1>
+		<pre id="log" style="background:#111;color:#0f0;padding:12px;min-height:320px;white-space:pre-wrap"></pre>
+		<script is:inline>
+			const el = document.getElementById("log");
+			const log = (m) => { el.textContent += m + "\n"; };
+			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 300);
+			window.__state = "running";
+			const t0 = Date.now();
+			(async () => {
+				try {
+					const mod = await import("/nodepod/index.js");
+					mod.setRuntimeHost(mod.createBrowserHost());
+					const pod = await mod.Nodepod.boot({
+						serviceWorker: false,
+						workdir: "/home/project",
+						files: {
+							"/home/project/package.json": JSON.stringify({
+								name: "spike", private: true, type: "module",
+								dependencies: { astro: "^7.2.4" },
+							}),
+							"/home/project/astro.config.mjs":
+								`import { defineConfig } from "astro/config";\nexport default defineConfig({ vite: { server: { allowedHosts: true } } });\n`,
+							"/home/project/src/pages/index.astro":
+								`---\nconst msg = "Astro 7 in Nodepod"\n---\n<html><body><h1>{msg}</h1></body></html>`,
+							"/home/project/start.mjs":
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+							"/home/project/probe.mjs":
+								`process.env.NAPI_RS_FORCE_WASI = "true";\ntry { const b = require("@rolldown/binding-wasm32-wasi"); console.log("BINDING_OK", Object.keys(b).length); } catch (e) { console.error("BINDING_ERR", e && e.stack); process.exit(2); }\n`,
+						},
+					});
+					log("booted");
+					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
+					install.on("output", (t) => log("I:" + clean(t)));
+					await install.completion.catch((e) => log("install err " + (e && e.message)));
+					log("install done");
+
+					const dir = "/home/project/node_modules/@rolldown/binding-wasm32-wasi";
+					await pod.fs.mkdir(dir, { recursive: true });
+					for (const f of ["package.json", "rolldown-binding.wasi.cjs", "wasi-worker.mjs"]) {
+						const res = await fetch(`https://unpkg.com/@rolldown/binding-wasm32-wasi@1.2.16/${f}`);
+						await pod.fs.writeFile(`${dir}/${f}`, new Uint8Array(await res.arrayBuffer()));
+						log("wrote " + f);
+					}
+					const wasm = await fetch("https://unpkg.com/@rolldown/binding-wasm32-wasi@1.2.16/rolldown-binding.wasm32-wasi.wasm");
+					await pod.fs.writeFile(`${dir}/rolldown-binding.wasm32-wasi.wasm`, new Uint8Array(await wasm.arrayBuffer()));
+					log("wrote wasm (" + Math.round((Date.now() - t0) / 1000) + "s)");
+
+					const run = async (label, args, waitMs) => {
+						const p = await pod.spawn("node", args);
+						let out = "";
+						p.on("output", (t) => { out += clean(t); });
+						const res = await Promise.race([
+							p.completion.then((c) => c).catch((e) => ({ error: e.message })),
+							new Promise((r) => setTimeout(() => r("running"), waitMs)),
+						]);
+						log(`${label}: ${JSON.stringify(res)} OUT=${out.slice(0, 400)}`);
+						return p;
+					};
+					await run("probe", ["probe.mjs"], 40000);
+					const dev = await run("dev", ["start.mjs"], 60000);
+					for (let i = 0; i < 8; i++) {
+						await new Promise((r) => setTimeout(r, 5000));
+						try {
+							const res = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
+							const body = typeof res.body === "string" ? res.body : new TextDecoder().decode(res.body);
+							log(`REQ ${res.statusCode} ms=${Date.now() - t0} hasH1=${body.includes("Astro 7 in Nodepod")}`);
+							if (res.statusCode === 200) break;
+						} catch (e) {
+							log("req err " + (e && e.message));
+						}
+					}
+					try { dev.kill && dev.kill(); } catch {}
+					window.__state = "done";
+				} catch (error) {
+					log("ERR " + ((error && error.message) || String(error)));
+					window.__state = "error";
+				}
+			})();
+		</script>
+	</body>
+</html>
