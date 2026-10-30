@@ -6,18 +6,17 @@ export const prerender = false;
 	<body style="font-family:system-ui;padding:20px">
 		<h1>Nodepod + Astro testi</h1>
 		<pre id="log" style="background:#111;color:#0f0;padding:12px;min-height:240px;white-space:pre-wrap"></pre>
-		<script>
-			import { Nodepod, createBrowserHost, setRuntimeHost } from "@r1ck404/nodepod";
-
-			const el = document.getElementById("log") as HTMLPreElement;
-			const log = (m: string) => { el.textContent += m + "\n"; };
-			(window as any).__state = "running";
-
+		<script is:inline>
+			const el = document.getElementById("log");
+			const log = (m) => { el.textContent += m + "\n"; };
+			window.__state = "running";
 			(async () => {
 				try {
-					setRuntimeHost(createBrowserHost());
+					const mod = await import("/nodepod/index.js");
+					log("module loaded");
+					mod.setRuntimeHost(mod.createBrowserHost());
 					log("host set");
-					const pod = await Nodepod.boot({
+					const pod = await mod.Nodepod.boot({
 						serviceWorker: false,
 						workdir: "/home/project",
 						files: {
@@ -31,17 +30,17 @@ export const prerender = false;
 					});
 					log("booted");
 					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
-					install.on("output", (t: string) => log("I:" + String(t).slice(0, 140)));
-					await install.completion.catch((e: Error) => log("install err " + e?.message));
+					install.on("output", (t) => log("I:" + String(t).slice(0, 140)));
+					await install.completion.catch((e) => log("install err " + (e && e.message)));
 					log("install done");
 					const dev = await pod.spawn("npx", ["astro", "dev", "--host", "0.0.0.0", "--port", "4321"]);
-					dev.on("output", (t: string) => log("D:" + String(t).slice(0, 160)));
+					dev.on("output", (t) => log("D:" + String(t).slice(0, 160)));
 					await new Promise((r) => setTimeout(r, 35000));
-					try { (dev as any).kill?.(); } catch {}
-					(window as any).__state = "done";
+					try { dev.kill && dev.kill(); } catch {}
+					window.__state = "done";
 				} catch (error) {
-					log("ERR " + ((error as Error)?.message ?? String(error)));
-					(window as any).__state = "error";
+					log("ERR " + ((error && error.message) || String(error)));
+					window.__state = "error";
 				}
 			})();
 		</script>
