@@ -91,8 +91,9 @@ async function devUpstream(env: AppEnv, slug: string): Promise<string | null> {
 			signal: AbortSignal.timeout(1500),
 		});
 		if (!res.ok) return null;
-		const data = (await res.json()) as { running?: boolean; port?: number };
-		return data.running && data.port ? `http://127.0.0.1:${data.port}` : null;
+		const data = (await res.json()) as { running?: boolean; ready?: boolean; port?: number };
+		// Yalnızca tam hazır sunucuya git; yarım açılmışsa üretime düş.
+		return data.running && data.ready && data.port ? `http://127.0.0.1:${data.port}` : null;
 	} catch {
 		return null;
 	}

@@ -128,6 +128,9 @@ async function waitReady(session) {
 
 async function startDev(session) {
 	log(`[${session.slug}] astro dev :${session.port}`);
+	// Astro 7 dev sunucusu kendi PID dosyasını tutar; öncekini kapatmadan
+	// yenisi açılmaz ("Another astro dev server is already running").
+	await run("pnpm", ["exec", "astro", "dev", "stop"], { cwd: session.dir }).catch(() => undefined);
 	const out = await openFile(join(session.dir, ".wuppycms-preview.log"), "a");
 	session.proc = spawn(
 		"pnpm",
@@ -141,6 +144,7 @@ async function startDev(session) {
 			String(session.port),
 			"--base",
 			`/preview/${session.slug}/`,
+			"--force",
 		],
 		{
 			cwd: session.dir,
@@ -188,6 +192,8 @@ async function stopSession(session) {
 	}
 	session.ready = false;
 	sessions.delete(session.slug);
+	// Astro 7 PID dosyasını da temizle (süreç gruptan kaçmış olabilir).
+	await run("pnpm", ["exec", "astro", "dev", "stop"], { cwd: session.dir }).catch(() => undefined);
 	log(`[${session.slug}] stopped`);
 }
 
