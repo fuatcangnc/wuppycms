@@ -19,6 +19,8 @@ export const CLOUDFLARE_SCOPES = [
 	"account-settings.read",
 	"user-details.read",
 	"page.write",
+	// Refresh token için gerekli; client'ta Refresh Token grant'i açık.
+	"offline_access",
 ] as const;
 
 export type CloudflareAccount = {
