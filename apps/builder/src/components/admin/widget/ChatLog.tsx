@@ -1,5 +1,6 @@
 /** Sohbet transkripti: mesajlar, katlanmış araç grupları, akan metin. */
 
+import { useEffect, useRef } from "react";
 import type { StoredMessage } from "@/lib/agent/protocol";
 import { Icon } from "@/components/admin/parts";
 import { t } from "@/lib/i18n";
@@ -84,8 +85,29 @@ export function ChatLog({
 	onEdit,
 	onUndoChange,
 }: ChatLogProps) {
+	const listRef = useRef<HTMLDivElement | null>(null);
+	const stickToBottom = useRef(true);
+
+	// Kullanıcı yukarı kaydırıp geçmişi okuyorsa bölme; aksi halde hep en altta kal.
+	const onScroll = () => {
+		const el = listRef.current;
+		if (!el) return;
+		stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+	};
+
+	const rows = messages.length + tools.length + queued.length + (stream ? 1 : 0) + (note ? 1 : 0);
+	useEffect(() => {
+		const el = listRef.current;
+		if (!el || !stickToBottom.current) return;
+		el.scrollTop = el.scrollHeight;
+	}, [rows, stream, error, busy, elapsed]);
+
 	return (
-		<div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
+		<div
+			ref={listRef}
+			onScroll={onScroll}
+			className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4"
+		>
 			{error ? (
 				<div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
 					{error}

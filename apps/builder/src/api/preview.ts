@@ -103,6 +103,26 @@ async function handler(c: Context<{ Bindings: AppEnv }>) {
 			headers.delete("x-frame-options");
 			headers.set("cache-control", "no-store");
 			headers.set("x-wuppycms-preview", "dev");
+
+			// Dev HTML'indeki kök-göreli linkler (`/iletisim`) önek almazsa
+			// iframe admin'in köküne gidip 404 olur. Üretim yolundaki gibi
+			// HTML/CSS'i önekle yeniden yaz.
+			const devPrefix = `/preview/${id}`;
+			const devType = headers.get("content-type") ?? "";
+			if (devType.includes("text/html")) {
+				const html = await upstream.text();
+				return new Response(c.req.method === "HEAD" ? null : rewriteHtml(html, devPrefix), {
+					status: upstream.status,
+					headers,
+				});
+			}
+			if (devType.includes("text/css")) {
+				const css = await upstream.text();
+				return new Response(rewriteCss(css, devPrefix), {
+					status: upstream.status,
+					headers,
+				});
+			}
 			return new Response(c.req.method === "HEAD" ? null : upstream.body, {
 				status: upstream.status,
 				headers,
