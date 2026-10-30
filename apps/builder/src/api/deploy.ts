@@ -29,6 +29,7 @@ import {
 	ensurePagesProject,
 } from "../lib/deploy/cloudflare-pages";
 import { writeSiteUrls } from "../lib/deploy/site-url";
+import { codeBuildConfigured, startSiteBuild } from "../lib/deploy/codebuild";
 import { createInstallState, verifyInstallState } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveGitToken } from "./helpers";
@@ -156,6 +157,23 @@ async function enqueueBuild(
 	c: Parameters<typeof requireUser>[0],
 	input: EnqueueInput,
 ): Promise<{ ok: boolean; error?: string }> {
+	// AWS hedefi + CodeBuild yapılandırıldıysa VM worker'ı atla.
+	if (input.target === "aws" && codeBuildConfigured(c.env)) {
+		const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
+		try {
+			await startSiteBuild(c.env, {
+				repo: input.repo,
+				branch: input.branch,
+				token: input.token,
+				slug: input.slug,
+				jobId: input.jobId,
+				callbackUrl: `${origin}/api/deploy/callback`,
+			});
+			return { ok: true };
+		} catch (error) {
+			return { ok: false, error: error instanceof Error ? error.message : "CodeBuild başlatılamadı." };
+		}
+	}
 	const base = c.env.DEPLOY_WORKER_URL || "http://127.0.0.1:8790";
 	try {
 		const res = await fetch(`${base}/build`, {
