@@ -7,6 +7,7 @@ import type { ToolChip } from "../types";
 export type TextPatch =
 	| { kind: "replace"; find: string; replace: string }
 	| { kind: "insertAfter"; find: string; insert: string }
+	| { kind: "removeAfter"; find: string; remove: string }
 	| { kind: "remove"; find: string };
 
 /**
@@ -77,6 +78,12 @@ function patchFromPair(oldText: string, newText: string): TextPatch | null {
 	if (!added && removed && visible(removed)) {
 		return { kind: "remove", find: removed };
 	}
+	// Nokta/virgül gibi tek karakterlik silmede "ilk noktayı sil" yanlış
+	// olur; başlık metninin hemen ardındaki işareti hedefle.
+	if (!added && removed && removed.length <= 3 && /^[\p{P}\p{S}]+$/u.test(removed)) {
+		const anchor = oldText.slice(Math.max(0, prefix - 64), prefix).trim();
+		if (anchor) return { kind: "removeAfter", find: anchor, remove: removed };
+	}
 	if (added && !removed) {
 		const anchor = oldText.slice(Math.max(0, prefix - 48), prefix).trim();
 		if (anchor && visible(anchor)) {
@@ -146,6 +153,18 @@ export function applyPatches(doc: Document, patches: TextPatch[]): number {
 				if (!value.includes(patch.find)) continue;
 				// Yalnızca ilk eşleşme: aynı kelimenin sayfadaki diğer geçişlerini bozma.
 				text.nodeValue = value.replace(patch.find, patch.replace);
+				applied += 1;
+				break;
+			} else if (patch.kind === "removeAfter") {
+				const at = value.lastIndexOf(patch.find);
+				if (at < 0) continue;
+				const end = at + patch.find.length;
+				const tail = value.slice(end);
+				const spaces = tail.slice(0, tail.length - tail.trimStart().length);
+				if (!tail.slice(spaces.length).startsWith(patch.remove)) continue;
+				text.nodeValue =
+					value.slice(0, end + spaces.length) +
+					value.slice(end + spaces.length + patch.remove.length);
 				applied += 1;
 				break;
 			} else if (patch.kind === "remove") {
