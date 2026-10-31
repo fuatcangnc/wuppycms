@@ -21,6 +21,7 @@
 		"@astrojs/cloudflare": "^14.3.4",
 		"@astrojs/node": "^11.1.9",
 		"@aws-sdk/client-s3": "^3.1160.0",
+		"@aws-sdk/s3-request-presigner": "^3.1160.0",
 		"@data-slot/collapsible": "^1.1.2",
 		"@data-slot/command": "^1.1.2",
 		"@data-slot/dialog": "^1.1.2",

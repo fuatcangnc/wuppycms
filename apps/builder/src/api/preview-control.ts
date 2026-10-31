@@ -6,6 +6,8 @@
 
 import { Hono } from "hono";
 import { z } from "zod";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getRepo } from "../lib/git";
 import { siteSlug } from "../lib/deploy/aws";
 import type { AppEnv } from "./types";
@@ -123,5 +125,62 @@ previewControl.get("/status", async (c) => {
 		return c.json({ ok: res.ok, slug, ...data });
 	} catch {
 		return c.json({ ok: false, slug, running: false, ready: false });
+	}
+});
+
+/**
+ * GET /api/preview/bundle?full_name=owner/repo&branch=main
+ * Tarayıcı önizlemesi (Nodepod) için repoyu zip olarak akıtır. Token istemciye
+ * verilmez; GitHub App kurulum token'ı yalnız sunucuda kullanılır.
+ */
+previewControl.get("/bundle", async (c) => {
+	const user = await requireUser(c);
+	if (!user) return c.json({ error: "unauthenticated" }, 401);
+	const fullName = c.req.query("full_name") ?? "";
+	const branch = c.req.query("branch") ?? "main";
+	if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(fullName)) {
+		return c.json({ error: "invalid_repo" }, 400);
+	}
+	try {
+	const token = await resolveGitToken(c, fullName);
+	if (!token) return c.json({ error: "git_not_connected" }, 400);
+	const res = await fetch(
+		`https://api.github.com/repos/${fullName}/zipball/${encodeURIComponent(branch)}`,
+		{
+			headers: {
+				authorization: `Bearer ${token}`,
+				accept: "application/vnd.github+json",
+				"user-agent": "wuppycms-preview",
+			},
+			redirect: "follow",
+		},
+	);
+	if (!res.ok) {
+		return c.json({ error: "bundle_failed", status: res.status }, 502);
+	}
+	const zip = await res.arrayBuffer();
+	const bucket = c.env.MEDIA_BUCKET;
+	if (!bucket) return c.json({ error: "media_bucket_missing" }, 503);
+	const region = c.env.AWS_REGION || "us-east-1";
+	const s3 = new S3Client({ region });
+	const key = `preview-bundles/${fullName.replace("/", "-")}-${Date.now()}.zip`;
+	await s3.send(
+		new PutObjectCommand({
+			Bucket: bucket,
+			Key: key,
+			Body: new Uint8Array(zip),
+			ContentType: "application/zip",
+		}),
+	);
+	const url = await getSignedUrl(
+		s3,
+		new GetObjectCommand({ Bucket: bucket, Key: key }),
+		{ expiresIn: 900 },
+	);
+	console.log("[preview] bundle", fullName, zip.byteLength, "bytes →", key);
+	return c.json({ url, size: zip.byteLength, key });
+	} catch (error) {
+		console.error("[preview] bundle hatası:", error);
+		return c.json({ error: "bundle_failed", message: error instanceof Error ? error.message : String(error) }, 502);
 	}
 });
