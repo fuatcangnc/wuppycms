@@ -9,6 +9,41 @@ export type TextPatch =
 	| { kind: "insertAfter"; find: string; insert: string }
 	| { kind: "remove"; find: string };
 
+/**
+ * Kaynaktaki görünür parçaları sırayla çıkarır: string literalleri ve template
+ * literal içindeki sabit metinler. `${...}` içindeki literal de kendi
+ * parçasıdır; böylece `'başlık'` ile `` `${... 'başlık'}.` `` eşleşir.
+ */
+function visibleFragments(source: string): string[] {
+	const found: Array<{ index: number; text: string }> = [];
+	let rest = source;
+
+	for (const match of source.matchAll(/`([^`]*)`/g)) {
+		const content = match[1] ?? "";
+		let text = "";
+		let last = 0;
+		for (const inner of content.matchAll(/\$\{([^}]*)\}/g)) {
+			text += content.slice(last, inner.index);
+			const quoted = [...(inner[1] ?? "").matchAll(/'([^']*)'|"([^"]*)"/g)]
+				.map((q) => q[1] ?? q[2] ?? "")
+				.join(" ");
+			text += quoted;
+			last = inner.index + inner[0].length;
+		}
+		text += content.slice(last);
+		const clean = text.replace(/\s+/g, " ").trim();
+		if (clean) found.push({ index: match.index ?? 0, text: clean });
+		if (match.index !== undefined) rest = rest.replace(match[0], " ".repeat(match[0].length));
+	}
+
+	for (const match of rest.matchAll(/'([^']*)'|"([^"]*)"/g)) {
+		const text = (match[1] ?? match[2] ?? "").replace(/\s+/g, " ").trim();
+		if (text) found.push({ index: match.index ?? 0, text });
+	}
+
+	return found.sort((a, b) => a.index - b.index).map((item) => item.text);
+}
+
 function commonPrefix(a: string, b: string): number {
 	let i = 0;
 	while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
@@ -31,31 +66,50 @@ function visible(text: string): boolean {
 	return /[A-Za-zÇĞİÖŞÜçğıöşü0-9]/.test(text);
 }
 
-/** Tek bir old→new çiftinden DOM yaması üretir. */
-export function patchFromStrings(oldString: string, newString: string): TextPatch | null {
-	if (oldString === newString) return null;
-	const prefix = commonPrefix(oldString, newString);
-	const suffix = commonSuffix(oldString, newString, prefix);
-	const removed = oldString.slice(prefix, oldString.length - suffix);
-	const added = newString.slice(prefix, newString.length - suffix);
+/** Tek bir görünür metin çiftinden DOM yaması üretir. */
+function patchFromPair(oldText: string, newText: string): TextPatch | null {
+	if (oldText === newText) return null;
+	const prefix = commonPrefix(oldText, newText);
+	const suffix = commonSuffix(oldText, newText, prefix);
+	const removed = oldText.slice(prefix, oldText.length - suffix);
+	const added = newText.slice(prefix, newText.length - suffix);
 
-	// Silme: çıkarılan parça görünür metinse.
 	if (!added && removed && visible(removed)) {
 		return { kind: "remove", find: removed };
 	}
-	// Ekleme: önceki bağlamın son parçasını çapa al.
 	if (added && !removed) {
-		const anchor = oldString.slice(Math.max(0, prefix - 48), prefix).trim();
-		if (anchor && visible(anchor) && visible(added)) {
+		const anchor = oldText.slice(Math.max(0, prefix - 48), prefix).trim();
+		if (anchor && visible(anchor)) {
 			return { kind: "insertAfter", find: anchor, insert: added };
 		}
 		return null;
 	}
-	// Değiştirme: görünür metin parçaları.
 	if (removed && added && visible(removed) && visible(added)) {
 		return { kind: "replace", find: removed, replace: added };
 	}
 	return null;
+}
+
+/** old→new kaynak çiftinden, eşleşen görünür parçaların farkını çıkarır. */
+export function patchFromStrings(oldSource: string, newSource: string): TextPatch | null {
+	if (oldSource === newSource) return null;
+	const before = visibleFragments(oldSource);
+	const after = visibleFragments(newSource);
+
+	if (before.length && before.length === after.length) {
+		for (let i = 0; i < before.length; i += 1) {
+			if (before[i] === after[i]) continue;
+			const patch = patchFromPair(before[i], after[i]);
+			if (patch) return patch;
+		}
+		return null;
+	}
+
+	// Parça çıkmadıysa (düz metin) veya sayılar farklıysa ham metni dene.
+	const oldText = (before.join(" ") || oldSource).trim();
+	const newText = (after.join(" ") || newSource).trim();
+	if (!oldText || !newText) return null;
+	return patchFromPair(oldText, newText);
 }
 
 export function patchesFromTools(tools: ToolChip[]): TextPatch[] {
@@ -90,18 +144,26 @@ export function applyPatches(doc: Document, patches: TextPatch[]): number {
 			const value = text.nodeValue ?? "";
 			if (patch.kind === "replace") {
 				if (!value.includes(patch.find)) continue;
-				text.nodeValue = value.split(patch.find).join(patch.replace);
+				// Yalnızca ilk eşleşme: aynı kelimenin sayfadaki diğer geçişlerini bozma.
+				text.nodeValue = value.replace(patch.find, patch.replace);
 				applied += 1;
+				break;
 			} else if (patch.kind === "remove") {
 				if (!value.includes(patch.find)) continue;
-				text.nodeValue = value.split(patch.find).join("");
+				text.nodeValue = value.replace(patch.find, "");
 				applied += 1;
+				break;
 			} else {
 				const at = value.lastIndexOf(patch.find);
 				if (at < 0) continue;
 				const end = at + patch.find.length;
-				text.nodeValue = value.slice(0, end) + patch.insert + value.slice(end);
+				// Noktalama işareti araya boşlukla girmesin.
+				const insert = /^[.,!?:;]/.test(patch.insert.trimStart())
+					? patch.insert.trimStart()
+					: patch.insert;
+				text.nodeValue = value.slice(0, end) + insert + value.slice(end);
 				applied += 1;
+				break;
 			}
 		}
 	}
