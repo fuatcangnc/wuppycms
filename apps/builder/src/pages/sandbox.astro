@@ -82,8 +82,9 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					// Rolldown WASM binding (npm opsiyonel bağımlılığı atlıyor).
 					const dir = "/home/project/node_modules/@rolldown/binding-wasm32-wasi";
 					await pod.fs.mkdir(dir, { recursive: true });
-					for (const f of ["package.json", "rolldown-binding.wasi.cjs", "wasi-worker.mjs", "rolldown-binding.wasm32-wasi.wasm"]) {
-						const b = new Uint8Array(await (await fetch("/nodepod/binding/" + f)).arrayBuffer());
+					const binding = await (await fetch("/api/preview/binding")).json();
+					for (const [f, url] of Object.entries(binding.files || {})) {
+						const b = new Uint8Array(await (await fetch(url)).arrayBuffer());
 						await pod.fs.writeFile(dir + "/" + f, b);
 					}
 					log("binding yazıldı");
@@ -108,7 +109,8 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 							const r = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
 							if (r.statusCode === 200) {
 								ready = true;
-								log("dev hazır (" + Math.round((Date.now() - t0) / 1000) + "s)");
+								const html = new TextDecoder().decode(r.body);
+								log("dev hazır (" + Math.round((Date.now() - t0) / 1000) + "s) html=" + html.length + " h1=" + html.includes("<h1"));
 								break;
 							}
 						} catch {
@@ -118,7 +120,9 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					if (!ready) throw new Error("astro dev zaman aşımı");
 					logEl.classList.add("hidden");
 					frame.style.display = "block";
-					frame.src = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321/";
+					frame.src = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
+					log("SW controller: " + (navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : "yok"));
+					setTimeout(() => { try { frame.src = frame.src; } catch {} }, 2000);
 					statusEl.textContent = "canlı";
 					frame.addEventListener("load", () => {
 						try { frame.contentWindow.postMessage({ type: "wuppycms:hello" }, location.origin); } catch {}

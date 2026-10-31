@@ -184,3 +184,31 @@ previewControl.get("/bundle", async (c) => {
 		return c.json({ error: "bundle_failed", message: error instanceof Error ? error.message : String(error) }, 502);
 	}
 });
+
+/**
+ * GET /api/preview/binding — Rolldown WASM binding dosyaları için presigned
+ * URL'ler. 12 MB'lık wasm Lambda'nın 6 MB yanıt limitini aştığı için S3'ten
+ * doğrudan indirilir.
+ */
+previewControl.get("/binding", async (c) => {
+	const user = await requireUser(c);
+	if (!user) return c.json({ error: "unauthenticated" }, 401);
+	const bucket = c.env.MEDIA_BUCKET;
+	if (!bucket) return c.json({ error: "media_bucket_missing" }, 503);
+	const s3 = new S3Client({ region: c.env.AWS_REGION || "us-east-1" });
+	const names = [
+		"package.json",
+		"rolldown-binding.wasi.cjs",
+		"wasi-worker.mjs",
+		"rolldown-binding.wasm32-wasi.wasm",
+	];
+	const files: Record<string, string> = {};
+	for (const name of names) {
+		files[name] = await getSignedUrl(
+			s3,
+			new GetObjectCommand({ Bucket: bucket, Key: `preview-assets/binding/${name}` }),
+			{ expiresIn: 900 },
+		);
+	}
+	return c.json({ files });
+});
