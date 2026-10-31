@@ -100,6 +100,19 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 						log("dosyalar yazıldı: " + written);
 					}
 
+					if (params.get("mode") === "vfs") {
+						const checks = ["src/pages/index.astro", "src/data/content.json", "src/components/SiteHeader.astro", "astro.config.mjs", "package.json"];
+						for (const file of checks) {
+							log("VFS " + file + "=" + (await pod.fs.exists("/home/project/" + file)));
+						}
+						try {
+							const idx = await pod.fs.readFile("/home/project/src/pages/index.astro", "utf8");
+							log("INDEX " + String(idx).slice(0, 400).replace(/\s+/g, " "));
+						} catch (e) { log("INDEX_ERR " + e.message); }
+						statusEl.textContent = "vfs";
+						return;
+					}
+
 					statusEl.textContent = "npm install…";
 					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
 					install.on("output", (t) => log("I:" + clean(t)));
@@ -156,6 +169,13 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 
 					const html = new TextDecoder().decode(serverUrl.body);
 					log("HTML " + html.length + " h1=" + html.includes("<h1") + " hero=" + html.includes("HIZLI VE GÜVENİLİR") + " main=" + html.includes("<main"));
+					log("VFS index=" + (await pod.fs.exists("/home/project/src/pages/index.astro")) + " content=" + (await pod.fs.exists("/home/project/src/data/content.json")));
+					try {
+						const idx = await pod.fs.readFile("/home/project/src/pages/index.astro", "utf8");
+						log("INDEX " + String(idx).slice(0, 260).replace(/\s+/g, " "));
+					} catch (e) { log("INDEX_ERR " + e.message); }
+					const bi = html.indexOf("<body");
+					log("BODY " + html.slice(bi, bi + 500).replace(/\s+/g, " "));
 					(window as any).__devHtml = html;
 					const prefix = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
 					logEl.classList.add("hidden");
