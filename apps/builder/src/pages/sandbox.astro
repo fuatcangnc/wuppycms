@@ -154,7 +154,8 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					if (!serverUrl) throw new Error("sunucu zaman aşımı");
 
 					const html = new TextDecoder().decode(serverUrl.body);
-					log("HTML " + html.length + " h1=" + html.includes("<h1"));
+					log("HTML " + html.length + " h1=" + html.includes("<h1") + " hero=" + html.includes("HIZLI VE GÜVENİLİR") + " main=" + html.includes("<main"));
+					(window as any).__devHtml = html;
 					const prefix = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
 					logEl.classList.add("hidden");
 					frame.style.display = "block";
