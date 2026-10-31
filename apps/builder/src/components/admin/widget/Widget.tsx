@@ -313,11 +313,11 @@ export default function AgentWidget() {
 	}, [picker]);
 
 	const toolsRef = useRef<ToolChip[]>([]);
-	const onContentChanged = useCallback(() => {
+	const onContentChanged = useCallback((tools?: ToolChip[]) => {
 		// İyimser yama: build beklemeden metin değişikliklerini göster.
 		const doc = frameRef.current?.contentDocument;
 		if (doc) {
-			const patches = patchesFromTools(toolsRef.current);
+			const patches = patchesFromTools(tools ?? toolsRef.current);
 			if (patches.length && applyPatches(doc, patches) > 0) return;
 		}
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her

@@ -30,7 +30,7 @@ export interface AgentChatOptions {
 	selections: PickedElement[];
 	model: ModelChoice | null;
 	insertMode: boolean;
-	onContentChanged(): void;
+	onContentChanged(tools?: ToolChip[]): void;
 	onClearSelections(): void;
 	/** Prompt gerçekten başladığında (kuyruktan çıkınca da) çağrılır. */
 	onPromptStart?(context: AgentChatOptions): void;
@@ -66,6 +66,8 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 	const [messages, setMessages] = useState<StoredMessage[]>([]);
 	const [stream, setStream] = useState("");
 	const [tools, setTools] = useState<ToolChip[]>([]);
+	// State render beklemeden, aynı turda güncel araç listesi (iyimser yama için).
+	const toolsRef = useRef<ToolChip[]>([]);
 	const [note, setNote] = useState("");
 	const [error, setError] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -154,10 +156,12 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 		const applyEvent = (event: AgentEvent) => {
 			if (event.type === "assistant_text_delta") setStream((current) => current + event.text);
 			else if (event.type === "tool_started") {
-				setTools((current) => [
-					...current,
+				const next = [
+					...toolsRef.current,
 					{ callId: event.callId, name: event.name, args: event.args, running: true },
-				]);
+				];
+				toolsRef.current = next;
+				setTools(next);
 			} else if (event.type === "tool_done") {
 				if (event.ok && (event.name === "content_publish" || event.name === "content_unpublish")) {
 					contentChanged.current = true;
@@ -172,13 +176,13 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 				) {
 					filesChanged.current = true;
 				}
-				setTools((current) =>
-					current.map((chip) =>
-						chip.callId === event.callId
-							? { ...chip, running: false, ok: event.ok, summary: event.summary }
-							: chip,
-					),
+				const next = toolsRef.current.map((chip) =>
+					chip.callId === event.callId
+						? { ...chip, running: false, ok: event.ok, summary: event.summary }
+						: chip,
 				);
+				toolsRef.current = next;
+				setTools(next);
 			} else if (event.type === "run_error") setError(event.message);
 		};
 
@@ -211,7 +215,7 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 					if (contentChanged.current || filesChanged.current) {
 						contentChanged.current = false;
 						filesChanged.current = false;
-						live.current.onContentChanged();
+						live.current.onContentChanged(toolsRef.current);
 					}
 					client
 						.getAgentSession(id)
@@ -376,6 +380,7 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 			setQueued([]);
 			setBusy(false);
 			setStream("");
+			toolsRef.current = [];
 			setTools([]);
 			setError("");
 			setNote("");
