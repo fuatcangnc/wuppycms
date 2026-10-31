@@ -3,6 +3,7 @@
 // Ajan brief'i istemcide saklanır; burada yalnızca iskelet + token'lar kurulur.
 
 import { Hono } from "hono";
+import { codeBuildConfigured, startSiteBuild } from "../lib/deploy/codebuild";
 import { commitFiles, getFile, getRepo, listTree } from "../lib/git";
 import { getInstallationToken } from "../lib/git/github/app";
 import { awsDeployConfigured, siteSlug, siteUrl as awsSiteUrl } from "../lib/deploy/aws";
@@ -154,6 +155,29 @@ async function enqueueBuild(
 		)
 		.bind(jobId, input.projectId, input.repo, input.branch, input.url, input.previewUrl, now, now)
 		.run();
+
+	// AWS hedefi: CodeBuild yapılandırıldıysa VM worker yerine onu kullan.
+	if (codeBuildConfigured(c.env)) {
+		const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
+		try {
+			await startSiteBuild(c.env, {
+				repo: input.repo,
+				branch: input.branch,
+				token: input.token,
+				slug: input.slug,
+				jobId,
+				target: "aws",
+				callbackUrl: `${origin}/api/deploy/callback`,
+			});
+			return;
+		} catch (error) {
+			await db
+				.prepare("UPDATE deploy_jobs SET status = 'failed', error = ?, updated_at = ? WHERE id = ?")
+				.bind(error instanceof Error ? error.message : "CodeBuild hatası", new Date().toISOString(), jobId)
+				.run();
+			throw error;
+		}
+	}
 
 	const base = c.env.DEPLOY_WORKER_URL || "http://127.0.0.1:8790";
 	const res = await fetch(`${base}/build`, {
