@@ -23,7 +23,7 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 		</style>
 	</head>
 	<body>
-		<div id="bar"><b>WuppyCMS</b> · tarayıcı önizleme <span id="status" style="color:#a3a3a3"></span></div>
+		<div id="bar"><b>WuppyCMS</b> · tarayıcı önizleme <span id="status" style="color:#a3a3a3"></span><button id="pick" style="margin-left:auto;background:#27272a;color:#e5e5e5;border:1px solid #3f3f46;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">Element seç</button></div>
 		<pre id="log"></pre>
 		<iframe id="frame" title="Önizleme"></iframe>
 		<script is:inline>
@@ -120,6 +120,29 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					frame.style.display = "block";
 					frame.src = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321/";
 					statusEl.textContent = "canlı";
+					frame.addEventListener("load", () => {
+						try { frame.contentWindow.postMessage({ type: "wuppycms:hello" }, location.origin); } catch {}
+					});
+					let picking = false;
+					const pickBtn = document.getElementById("pick");
+					pickBtn.addEventListener("click", () => {
+						picking = !picking;
+						pickBtn.textContent = picking ? "Seçimi bitir" : "Element seç";
+						try { frame.contentWindow.postMessage({ type: "wuppycms:pick-mode", on: picking }, location.origin); } catch {}
+					});
+					window.addEventListener("message", (event) => {
+						const data = event.data;
+						if (!data || typeof data.type !== "string") return;
+						if (data.type === "wuppycms:pick" && data.selection) {
+							try {
+								window.opener &&
+									window.opener.postMessage(
+										{ type: "wuppycms:sandbox:pick", selection: data.selection },
+										location.origin,
+									);
+							} catch {}
+						}
+					});
 				} catch (error) {
 					statusEl.textContent = "hata";
 					log("HATA " + (error && error.message ? error.message : error));

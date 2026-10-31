@@ -286,6 +286,19 @@ export default function AgentWidget() {
 		};
 	}, [open, site, branch, siteUrl]);
 
+	// Tarayıcı önizleme sekmesinden gelen element seçimlerini sohbete ekle.
+	useEffect(() => {
+		const onSandboxPick = (event: MessageEvent) => {
+			if (event.origin !== window.location.origin) return;
+			const data = event.data as { type?: string; selection?: PickedElement } | null;
+			if (data?.type === "wuppycms:sandbox:pick" && data.selection) {
+				picker.toggleSelection(data.selection);
+			}
+		};
+		window.addEventListener("message", onSandboxPick);
+		return () => window.removeEventListener("message", onSandboxPick);
+	}, [picker]);
+
 	const onContentChanged = useCallback(() => {
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her
 		// yazma sonrası iframe F5 olmaz, scroll korunur.
@@ -705,7 +718,6 @@ export default function AgentWidget() {
 						window.open(
 							`/sandbox?full_name=${encodeURIComponent(site)}&branch=${encodeURIComponent(branch)}`,
 							"_blank",
-							"noopener",
 						)
 					}
 					onBack={() => picker.command("back")}
