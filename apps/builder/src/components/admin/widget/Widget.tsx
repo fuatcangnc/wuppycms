@@ -220,8 +220,21 @@ export default function AgentWidget() {
 	}, [status, models, modelId]);
 
 	const onNavigate = useCallback((href: string) => {
-		setTabs((current) => current.map((tab) => (tab.url === activeUrl ? { ...tab, url: href } : tab)));
-		setActiveUrl(href);
+		// Köprü, iframe içindeki kök-göreli linkleri mutlak URL'e çevirirken
+		// `/preview/<slug>/` önekini kaybedebiliyor. Önizleme sekmesinde kal.
+		let next = href;
+		try {
+			const base = new URL(activeUrl, window.location.origin);
+			const target = new URL(href, window.location.origin);
+			const baseMatch = /^\/preview\/([^/]+)/.exec(base.pathname);
+			if (baseMatch && target.origin === window.location.origin && !target.pathname.startsWith("/preview/")) {
+				next = `/preview/${baseMatch[1]}${target.pathname}${target.search}${target.hash}`;
+			}
+		} catch {
+			// göreli/geçersiz URL — olduğu gibi
+		}
+		setTabs((current) => current.map((tab) => (tab.url === activeUrl ? { ...tab, url: next } : tab)));
+		setActiveUrl(next);
 	}, [activeUrl]);
 
 	const picker = useElementPicker({
