@@ -95,7 +95,7 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					);
 					await pod.fs.writeFile(
 						"/home/project/sandbox-start.mjs",
-						`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+						`process.env.NAPI_RS_FORCE_WASI = "true";\nimport { existsSync } from "node:fs";\nif (existsSync("./scripts/build-entries.mjs")) { await import("./scripts/build-entries.mjs"); }\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
 					);
 
 					statusEl.textContent = "astro dev…";
@@ -120,9 +120,18 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					if (!ready) throw new Error("astro dev zaman aşımı");
 					logEl.classList.add("hidden");
 					frame.style.display = "block";
-					frame.src = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
+					const prefix = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
+					const home = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
+					let html = new TextDecoder().decode(home.body);
+					log("dev HTML: " + html.length + " h1=" + html.includes("<h1") + " err=" + (html.includes("astro-error") || html.includes("Internal Server Error")));
+					log("BODY " + html.slice(html.indexOf("<body"), html.indexOf("<body") + 700).replace(/\s+/g, " "));
+					html = html
+						.replace(/\b(href|src|action|poster)=(["'])\/(?!\/)/gi, (_m, a, q) => a + "=" + q + prefix + "/")
+						.replace(/\bimport\s*\(\s*(["'])\/(?!\/)/g, (_m, q) => "import(" + q + prefix + "/")
+						.replace(/\bsrcset=(["'])(.*?)\1/gis, (m, q, v) => "srcset=" + q + v.split(",").map((part) => part.replace(/^(\s*)\/(?!\/)/, "$1" + prefix + "/")).join(",") + q)
+						.replace(/url\(\s*\/(?!\/)/gi, "url(" + prefix + "/");
+					frame.srcdoc = html;
 					log("SW controller: " + (navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : "yok"));
-					setTimeout(() => { try { frame.src = frame.src; } catch {} }, 2000);
 					statusEl.textContent = "canlı";
 					frame.addEventListener("load", () => {
 						try { frame.contentWindow.postMessage({ type: "wuppycms:hello" }, location.origin); } catch {}
