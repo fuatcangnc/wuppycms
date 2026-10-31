@@ -15,8 +15,20 @@ export type DeployJob = {
 
 export type DeployStatusData = { job: DeployJob | null };
 
+function previewSlug(url: string): string | null {
+	try {
+		const path = url.startsWith("http") ? new URL(url).pathname : url;
+		const match = /^\/preview\/([^/?#]+)(?:\/|$)/.exec(path);
+		return match?.[1] ?? null;
+	} catch {
+		return null;
+	}
+}
+
 async function fetchDeployStatus(url: string): Promise<DeployStatusData> {
-	const res = await fetch(`/api/deploy/status?url=${encodeURIComponent(url)}`, {
+	const slug = previewSlug(url);
+	const query = slug ? `slug=${encodeURIComponent(slug)}` : `url=${encodeURIComponent(url)}`;
+	const res = await fetch(`/api/deploy/status?${query}`, {
 		headers: { accept: "application/json" },
 	});
 	if (!res.ok) return { job: null };

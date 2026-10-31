@@ -466,6 +466,7 @@ deploy.get("/status", async (c) => {
 	if (!db) return c.json({ jobs: [] });
 	const repo = c.req.query("full_name");
 	const siteUrl = c.req.query("url");
+	const slug = c.req.query("slug");
 	const rows = await db
 		.prepare(
 			repo
@@ -474,10 +475,13 @@ deploy.get("/status", async (c) => {
 				: siteUrl
 					? `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
 					   FROM deploy_jobs WHERE url = ? ORDER BY created_at DESC LIMIT 1`
-					: `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
-					   FROM deploy_jobs ORDER BY created_at DESC LIMIT 20`,
+					: slug
+						? `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
+						   FROM deploy_jobs WHERE url LIKE ? ORDER BY created_at DESC LIMIT 1`
+						: `SELECT id, repo_full_name, status, url, preview_url, error, updated_at
+						   FROM deploy_jobs ORDER BY created_at DESC LIMIT 20`,
 		)
-		.bind(...(repo ? [repo] : siteUrl ? [siteUrl] : []))
+		.bind(...(repo ? [repo] : siteUrl ? [siteUrl] : slug ? [`https://${slug}.%`] : []))
 		.all();
 
 	// Worker kuyruğu bellekte tutar; servis yeniden başlarsa iş "queued" kalır.
