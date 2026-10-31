@@ -3,10 +3,11 @@
 // Anahtar tarayıcıya dönmez, loglanmaz.
 
 import { Hono } from "hono";
+import { AwsClient } from "aws4fetch";
 import { decryptToken } from "../lib/crypto";
 import { commitFiles, getFile, getRepo, listTree } from "../lib/git";
 import { BackendError } from "../lib/git/backend";
-import type { ProviderConfig } from "../lib/agent/protocol";
+import type { ProviderConfig, SelectionContext } from "../lib/agent/protocol";
 import { MODEL_CATALOG, PROVIDER_DEFAULTS, resolveProvider } from "../lib/agent/providers";
 import { runAgent } from "../lib/agent/loop";
 import { enqueueDeploy } from "../lib/deploy/enqueue";
@@ -104,6 +105,31 @@ export async function resolveAiConfig(
 			PROVIDER_DEFAULTS[provider].model,
 		apiKey,
 	};
+}
+
+
+/** Lambda Invoke (Event) ile ajan işçisini asenkron başlatır. */
+async function invokeAgentWorker(env: AppEnv, payload: unknown): Promise<void> {
+	const fn = env.AGENT_WORKER_FUNCTION;
+	if (!fn) throw new Error("AGENT_WORKER_FUNCTION tanımlı değil.");
+	const region = env.AWS_REGION ?? "us-east-1";
+	const res = await new AwsClient({
+		accessKeyId: env.AWS_ACCESS_KEY_ID!,
+		secretAccessKey: env.AWS_SECRET_ACCESS_KEY!,
+		sessionToken: env.AWS_SESSION_TOKEN,
+		service: "lambda",
+		region,
+	}).fetch(
+		`https://lambda.${region}.amazonaws.com/2015-03-31/functions/${encodeURIComponent(fn)}/invocations`,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json", "x-amz-invocation-type": "Event" },
+			body: JSON.stringify(payload),
+		},
+	);
+	if (!res.ok) {
+		throw new Error(`Ajan işçisi başlatılamadı (${res.status})`);
+	}
 }
 
 function waitUntil(c: Parameters<typeof requireUser>[0], promise: Promise<unknown>): void {
@@ -216,6 +242,25 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 	const provider = resolveProvider(config);
 	const siteUrl = await readSiteUrl(token, fullName, branch);
 	const origin = (c.env.BETTER_AUTH_URL ?? new URL(c.req.url).origin).replace(/\/+$/, "");
+	// Lambda: uzun ajan turları CloudFront'un 60 sn limitini aşar. İşi ayrı bir
+	// Lambda çağrısına devret, isteği hemen yanıtla; istemci olayları poll eder.
+	if (c.env.AGENT_WORKER_FUNCTION) {
+		await invokeAgentWorker(c.env, {
+			userId: user.id,
+			repoFullName: fullName,
+			branch,
+			sessionId,
+			runId,
+			gitToken: token,
+			provider: config,
+			origin,
+			userText: payload.message,
+			document: payload.context?.document ?? null,
+			pagePath: payload.context?.pagePath ?? null,
+			selections,
+		});
+		return c.json({ sessionId, runId });
+	}
 	const agentTask = (async () => {
 			const result = await runAgent({
 				db,
@@ -271,6 +316,61 @@ agent.post("/prompt", body(agentPromptSchema), async (c) => {
 	else waitUntil(c, agentTask);
 
 	return c.json({ sessionId, runId });
+});
+
+
+// POST /api/agent/execute — ajan işçisinin çağırdığı iç uç (paylaşılan sır).
+agent.post("/execute", async (c) => {
+	const secret = c.req.header("x-agent-secret") ?? "";
+	if (!c.env.DEPLOY_WORKER_SECRET || secret !== c.env.DEPLOY_WORKER_SECRET) {
+		return c.json({ error: "unauthorized" }, 401);
+	}
+	const db = platform(c).db;
+	if (!db) return c.json({ error: "not_configured" }, 503);
+	const p = (await c.req.json()) as {
+		userId: string;
+		repoFullName: string;
+		branch: string;
+		sessionId: string;
+		runId: string;
+		gitToken: string;
+		provider: ProviderConfig;
+		origin: string;
+		userText: string;
+		document?: { collection: string; path: string } | null;
+		pagePath?: string | null;
+		selections?: SelectionContext[];
+	};
+	const provider = resolveProvider(p.provider);
+	const result = await runAgent({
+		db,
+		provider,
+		runId: p.runId,
+		sessionId: p.sessionId,
+		userId: p.userId,
+		token: p.gitToken,
+		fullName: p.repoFullName,
+		branch: p.branch,
+		siteUrl: null,
+		document: p.document ?? null,
+		pagePath: p.pagePath ?? null,
+		selections: p.selections ?? [],
+		userText: p.userText,
+	});
+	if (result.changes) {
+		try {
+			await enqueueDeploy(c.env, db, {
+				userId: p.userId,
+				repo: p.repoFullName,
+				branch: p.branch,
+				token: p.gitToken,
+				origin: p.origin,
+			});
+		} catch (error) {
+			console.warn("[agent] otomatik yayın kuyruğa alınamadı:", error);
+		}
+	}
+	return c.json({ ok: true, changes: result.changes });
 });
 
 // GET /api/agent/events?sessionId=…&runId=…&cursor=0 — polling.

@@ -57,6 +57,8 @@ export interface AppEnv {
 	DEPLOY_WORKER_URL?: string;
 	/** Lambda'da ajan turu yanıt içinde tamamlanır (arka plan görevi donar). */
 	AGENT_INLINE?: string;
+	/** Lambda: ajan turunu asenkron çalıştıran işçi fonksiyonu. */
+	AGENT_WORKER_FUNCTION?: string;
 	/** AWS CodeBuild projesi (varsa build VM yerine orada koşar). */
 	AWS_CODEBUILD_PROJECT?: string;
 	/** Uygulama ↔ worker paylaşılan sırrı. */
