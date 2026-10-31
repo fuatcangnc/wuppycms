@@ -44,7 +44,7 @@ export function useDeployStatus(url: string | null) {
 		staleTime: 2000,
 		// Yalnızca kuyrukta/derleniyorken sık sor; durunca sorgu durur.
 		refetchInterval: (query) =>
-			query.state.data?.job?.status === "queued" ? 4000 : false,
+			query.state.data?.job?.status === "queued" ? 3000 : 15000,
 		refetchOnWindowFocus: true,
 	});
 }
