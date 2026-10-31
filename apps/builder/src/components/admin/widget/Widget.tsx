@@ -312,7 +312,14 @@ export default function AgentWidget() {
 		return () => window.removeEventListener("message", onSandboxPick);
 	}, [picker]);
 
+	const toolsRef = useRef<ToolChip[]>([]);
 	const onContentChanged = useCallback(() => {
+		// İyimser yama: build beklemeden metin değişikliklerini göster.
+		const doc = frameRef.current?.contentDocument;
+		if (doc) {
+			const patches = patchesFromTools(toolsRef.current);
+			if (patches.length && applyPatches(doc, patches) > 0) return;
+		}
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her
 		// yazma sonrası iframe F5 olmaz, scroll korunur.
 		const target = lastTarget.current;
@@ -347,6 +354,7 @@ export default function AgentWidget() {
 			}
 		},
 	});
+	toolsRef.current = chat.tools;
 
 	const sendWithSkeleton = useCallback(() => {
 		chat.send();
