@@ -16,7 +16,8 @@ import { ChatLog } from "./ChatLog";
 import { Composer } from "./Composer";
 import { useAgentChat } from "./hooks/useAgentChat";
 import { useElementPicker } from "./hooks/useElementPicker";
-import type { ModelChoice, PageItem, PickedElement, Tab } from "./types";
+import type { ModelChoice, PageItem, PickedElement, Tab, ToolChip } from "./types";
+import { applyPatches, patchesFromTools } from "./lib/optimistic-patch";
 
 const KEY_OPEN = "wuppycms:agent:open";
 const KEY_WIDTH = "wuppycms:agent:width";
@@ -317,8 +318,17 @@ export default function AgentWidget() {
 		// İyimser yama: build beklemeden metin değişikliklerini göster.
 		const doc = frameRef.current?.contentDocument;
 		if (doc) {
-			const patches = patchesFromTools(tools ?? toolsRef.current);
-			if (patches.length && applyPatches(doc, patches) > 0) return;
+			const list = tools ?? toolsRef.current;
+			const patches = patchesFromTools(list);
+			const applied = patches.length ? applyPatches(doc, patches) : 0;
+			console.info("[preview-patch]", {
+				tools: list.map((tool) => `${tool.name}:${tool.ok}`),
+				patches,
+				applied,
+			});
+			if (applied > 0) return;
+		} else {
+			console.info("[preview-patch] contentDocument yok");
 		}
 		// Köprü yoksa tam reload; varsa main'i yumuşak yenile. Böylece her
 		// yazma sonrası iframe F5 olmaz, scroll korunur.

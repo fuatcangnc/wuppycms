@@ -86,6 +86,8 @@ vars.update({
     "DB_PATH": "/tmp/wuppycms.db",
     "DB_BUCKET": db_bucket,
     "MEDIA_BUCKET": media_bucket,
+    "AGENT_STORE": "s3",
+    "AGENT_BUCKET": db_bucket,
     "AGENT_INLINE": "1",
     "PORT": "8080",
     "MIGRATIONS_DIR": "/app/apps/builder/db/migrations",

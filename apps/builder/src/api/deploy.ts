@@ -29,7 +29,7 @@ import {
 	ensurePagesProject,
 } from "../lib/deploy/cloudflare-pages";
 import { writeSiteUrls } from "../lib/deploy/site-url";
-import { codeBuildConfigured, startSiteBuild } from "../lib/deploy/codebuild";
+import { codeBuildConfigured, latestBuildForSlug, startSiteBuild } from "../lib/deploy/codebuild";
 import { createInstallState, verifyInstallState } from "../lib/git/github/app";
 import type { AppEnv } from "./types";
 import { platform, requireUser, resolveGitToken } from "./helpers";
@@ -484,11 +484,46 @@ deploy.get("/status", async (c) => {
 		.bind(...(repo ? [repo] : siteUrl ? [siteUrl] : slug ? [`https://${slug}.%`] : []))
 		.all();
 
+	// Durum gerçeği CodeBuild'de: deploy_jobs satırı örnek başına SQLite'ta
+	// kaldığı için eski "queued" satırı sonsuza dek "yayınlanıyor" gösterebiliyordu.
+	type StatusRow = {
+		id: string;
+		repo_full_name: string;
+		status: string;
+		url: string | null;
+		preview_url: string | null;
+		error: string | null;
+		updated_at: string;
+	};
+	let results = (rows.results ?? []) as unknown as StatusRow[];
+	if (slug && codeBuildConfigured(c.env)) {
+		try {
+			const build = await latestBuildForSlug(c.env, slug);
+			if (build) {
+				const current = results[0];
+				results = [
+					{
+						id: build.id,
+						repo_full_name: build.repo ?? current?.repo_full_name ?? "",
+						status: build.status,
+						url: current?.url ?? null,
+						preview_url: current?.preview_url ?? null,
+						error: build.status === "failed" ? `Build ${build.rawStatus}` : null,
+						updated_at: build.endTime ?? build.startTime ?? new Date().toISOString(),
+					},
+					...results.filter((row) => row.id !== build.id),
+				];
+			}
+		} catch (error) {
+			console.warn("[deploy] CodeBuild durumu okunamadı:", error);
+		}
+	}
+
 	// Worker kuyruğu bellekte tutar; servis yeniden başlarsa iş "queued" kalır.
 	// 10 dakikadan eski kuyruk satırlarını başarısız göster ki UI sonsuza dek
 	// "yayınlanıyor" demesin ve kullanıcı yeniden yayınlayabilsin.
 	const staleMs = 10 * 60_000;
-	const jobs = (rows.results ?? []).map((job) => {
+	const jobs = results.map((job) => {
 		const row = job as { status?: string; updated_at?: string };
 		if (row.status !== "queued" || !row.updated_at) return job;
 		const age = Date.now() - Date.parse(row.updated_at);

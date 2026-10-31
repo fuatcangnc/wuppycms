@@ -213,6 +213,10 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 					setStream("");
 					sessionStore(KEY_RUN, null);
 					if (contentChanged.current || filesChanged.current) {
+						console.info("[agent-done]", {
+							filesChanged: filesChanged.current,
+							tools: toolsRef.current.map((tool) => `${tool.name}:${tool.ok}:${Boolean(tool.args)}`),
+						});
 						contentChanged.current = false;
 						filesChanged.current = false;
 						live.current.onContentChanged(toolsRef.current);
@@ -227,6 +231,12 @@ export function useAgentChat(options: AgentChatOptions): AgentChatApi {
 					refreshSessions();
 				})
 				.catch((err: Error) => {
+					// Meşgul Lambda 429/502/504 ya da ağ hatası dönebilir; çalışma
+					// bitince poll devam etmeli. 180 sn zaman aşımı üstteki kontrolde.
+					const status = err instanceof client.AgentApiError ? err.status : null;
+					const transient =
+						status === null || status === 429 || status === 502 || status === 503 || status === 504;
+					if (transient) return;
 					stopPoll();
 					setBusy(false);
 					setError(err.message);

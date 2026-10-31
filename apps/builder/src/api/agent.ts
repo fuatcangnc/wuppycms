@@ -498,8 +498,8 @@ agent.post("/undo", body(agentUndoSchema), async (c) => {
 			`AI: ${change.path} geri alındı (via WuppyCMS)`,
 		);
 	}
-	await markChangeReverted(db, change.id);
-	await removeChangeIdFromMessages(db, change.id);
+	await markChangeReverted(db, change.id, user.id, payload.full_name);
+	await removeChangeIdFromMessages(db, change.id, user.id, payload.full_name);
 	try {
 		await enqueueDeploy(c.env, db, {
 			userId: user.id,
