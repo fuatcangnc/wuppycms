@@ -668,6 +668,7 @@ widget:
   pagesEmpty: Sayfa bulunamadı.
   back: Geri
   forward: İleri
+  browserPreview: Tarayıcı önizleme (anlık)
   reloadShort: Yenile
   bridgeOn: köprü ✓
   bridgeOff: köprü yok

@@ -701,6 +701,13 @@ export default function AgentWidget() {
 					}}
 					onSelectPage={selectPage}
 					onReload={reloadCanvas}
+					onBrowserPreview={() =>
+						window.open(
+							`/sandbox?full_name=${encodeURIComponent(site)}&branch=${encodeURIComponent(branch)}`,
+							"_blank",
+							"noopener",
+						)
+					}
 					onBack={() => picker.command("back")}
 					onForward={() => picker.command("forward")}
 					onFocusComposer={() => textareaRef.current?.focus()}

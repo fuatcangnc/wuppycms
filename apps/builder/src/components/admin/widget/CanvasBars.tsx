@@ -25,6 +25,7 @@ export interface CanvasBarsProps {
 	onOpenPages(): void;
 	onSelectPage(url: string, title: string): void;
 	onReload(): void;
+	onBrowserPreview(): void;
 	onBack(): void;
 	onForward(): void;
 	onFocusComposer(): void;
@@ -82,6 +83,7 @@ export function CanvasBars({
 	onOpenPages,
 	onSelectPage,
 	onReload,
+	onBrowserPreview,
 	onBack,
 	onForward,
 	onFocusComposer,
@@ -180,6 +182,9 @@ export function CanvasBars({
 				</Button>
 				<Button type="button" variant="ghost" size="icon-sm" title={t("widget.reloadShort")} aria-label={t("widget.reloadShort")} onClick={onReload}>
 					<Icon name="refresh" className="size-4" />
+				</Button>
+				<Button type="button" variant="ghost" size="icon-sm" title={t("widget.browserPreview")} aria-label={t("widget.browserPreview")} onClick={onBrowserPreview}>
+					<Icon name="external" className="size-4" />
 				</Button>
 				<DropdownMenu className="mx-1 flex min-w-0 flex-1" onOpenChange={loadPagesOnOpen}>
 					<DropdownMenuTrigger

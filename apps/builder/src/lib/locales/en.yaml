@@ -665,6 +665,7 @@ widget:
   pagesEmpty: No pages found.
   back: Back
   forward: Forward
+  browserPreview: Browser preview (instant)
   reloadShort: Reload
   bridgeOn: bridge ✓
   bridgeOff: no bridge
