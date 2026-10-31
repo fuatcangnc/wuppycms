@@ -1,0 +1,1684 @@
+import { C as L, c as Z, t as J } from "./config-CDCaUbLv.js";
+import { a as ee, n as te } from "./cdn-urls-BV1eSMdl.js";
+var _ = "__NODEPOD_CREATE_BROWSER_HOST__", m = null, P = null;
+function re() {
+  try {
+    const e = globalThis[_];
+    return typeof e == "function" ? e : null;
+  } catch {
+    return null;
+  }
+}
+function Ne(e) {
+  P = e;
+  try {
+    const t = globalThis;
+    e ? t[_] = e : delete t[_];
+  } catch {
+  }
+}
+function Fe(e) {
+  m = e;
+}
+function H() {
+  return P ?? re();
+}
+function R() {
+  if (!m) {
+    const e = H();
+    if (!e) throw new Error("[Nodepod] No RuntimeHost registered. Import @r1ck404/nodepod or @r1ck404/nodepod/headless.");
+    P = e, m = e();
+  }
+  return m;
+}
+async function He() {
+  if (m) return m;
+  for (let e = 0; e < 50; e++) {
+    const t = H();
+    if (t)
+      return P = t, m = t(), m;
+    await new Promise((r) => setTimeout(r, 0));
+  }
+  return R();
+}
+function Ve() {
+  m?.disposeGlobalResources?.(), m = null;
+}
+var V = /* @__PURE__ */ Symbol("Comlink.proxy"), se = /* @__PURE__ */ Symbol("Comlink.endpoint"), ne = /* @__PURE__ */ Symbol("Comlink.releaseProxy"), O = /* @__PURE__ */ Symbol("Comlink.finalizer"), A = /* @__PURE__ */ Symbol("Comlink.thrown"), z = (e) => typeof e == "object" && e !== null || typeof e == "function", $ = /* @__PURE__ */ new Map([["proxy", {
+  canHandle: (e) => z(e) && e[V],
+  serialize(e) {
+    const { port1: t, port2: r } = new MessageChannel();
+    return K(e, t), [r, [r]];
+  },
+  deserialize(e) {
+    return e.start(), q(e);
+  }
+}], ["throw", {
+  canHandle: (e) => z(e) && A in e,
+  serialize({ value: e }) {
+    let t;
+    return e instanceof Error ? t = {
+      isError: !0,
+      value: {
+        message: e.message,
+        name: e.name,
+        stack: e.stack
+      }
+    } : t = {
+      isError: !1,
+      value: e
+    }, [t, []];
+  },
+  deserialize(e) {
+    throw e.isError ? Object.assign(new Error(e.value.message), e.value) : e.value;
+  }
+}]]);
+function ae(e, t) {
+  for (const r of e)
+    if (t === r || r === "*" || r instanceof RegExp && r.test(t)) return !0;
+  return !1;
+}
+function K(e, t = globalThis, r = ["*"]) {
+  t.addEventListener("message", function s(a) {
+    if (!a || !a.data) return;
+    if (!ae(r, a.origin)) {
+      console.warn(`Invalid origin '${a.origin}' for comlink proxy`);
+      return;
+    }
+    const { id: n, type: i, path: o } = Object.assign({ path: [] }, a.data), l = (a.data.argumentList || []).map(g);
+    let c;
+    try {
+      const u = o.slice(0, -1).reduce((d, v) => d[v], e), h = o.reduce((d, v) => d[v], e);
+      switch (i) {
+        case "GET":
+          c = h;
+          break;
+        case "SET":
+          u[o.slice(-1)[0]] = g(a.data.value), c = !0;
+          break;
+        case "APPLY":
+          c = h.apply(u, l);
+          break;
+        case "CONSTRUCT":
+          c = ue(new h(...l));
+          break;
+        case "ENDPOINT":
+          {
+            const { port1: d, port2: v } = new MessageChannel();
+            K(e, v), c = Y(d, [d]);
+          }
+          break;
+        case "RELEASE":
+          c = void 0;
+          break;
+        default:
+          return;
+      }
+    } catch (u) {
+      c = {
+        value: u,
+        [A]: 0
+      };
+    }
+    Promise.resolve(c).catch((u) => ({
+      value: u,
+      [A]: 0
+    })).then((u) => {
+      const [h, d] = I(u);
+      t.postMessage(Object.assign(Object.assign({}, h), { id: n }), d), i === "RELEASE" && (t.removeEventListener("message", s), G(t), O in e && typeof e[O] == "function" && e[O]());
+    }).catch((u) => {
+      const [h, d] = I({
+        value: /* @__PURE__ */ new TypeError("Unserializable return value"),
+        [A]: 0
+      });
+      t.postMessage(Object.assign(Object.assign({}, h), { id: n }), d);
+    });
+  }), t.start && t.start();
+}
+function ie(e) {
+  return e.constructor.name === "MessagePort";
+}
+function G(e) {
+  ie(e) && e.close();
+}
+function q(e, t) {
+  const r = /* @__PURE__ */ new Map();
+  return e.addEventListener("message", function(a) {
+    const { data: n } = a;
+    if (!n || !n.id) return;
+    const i = r.get(n.id);
+    if (i)
+      try {
+        i(n);
+      } finally {
+        r.delete(n.id);
+      }
+  }), U(e, r, [], t);
+}
+function S(e) {
+  if (e) throw new Error("Proxy has been released and is not useable");
+}
+function X(e) {
+  return w(e, /* @__PURE__ */ new Map(), { type: "RELEASE" }).then(() => {
+    G(e);
+  });
+}
+var T = /* @__PURE__ */ new WeakMap(), x = "FinalizationRegistry" in globalThis && new FinalizationRegistry((e) => {
+  const t = (T.get(e) || 0) - 1;
+  T.set(e, t), t === 0 && X(e);
+});
+function oe(e, t) {
+  const r = (T.get(t) || 0) + 1;
+  T.set(t, r), x && x.register(e, t, e);
+}
+function le(e) {
+  x && x.unregister(e);
+}
+function U(e, t, r = [], s = function() {
+}) {
+  let a = !1;
+  const n = new Proxy(s, {
+    get(i, o) {
+      if (S(a), o === ne) return () => {
+        le(n), X(e), t.clear(), a = !0;
+      };
+      if (o === "then") {
+        if (r.length === 0) return { then: () => n };
+        const l = w(e, t, {
+          type: "GET",
+          path: r.map((c) => c.toString())
+        }).then(g);
+        return l.then.bind(l);
+      }
+      return U(e, t, [...r, o]);
+    },
+    set(i, o, l) {
+      S(a);
+      const [c, u] = I(l);
+      return w(e, t, {
+        type: "SET",
+        path: [...r, o].map((h) => h.toString()),
+        value: c
+      }, u).then(g);
+    },
+    apply(i, o, l) {
+      S(a);
+      const c = r[r.length - 1];
+      if (c === se) return w(e, t, { type: "ENDPOINT" }).then(g);
+      if (c === "bind") return U(e, t, r.slice(0, -1));
+      const [u, h] = W(l);
+      return w(e, t, {
+        type: "APPLY",
+        path: r.map((d) => d.toString()),
+        argumentList: u
+      }, h).then(g);
+    },
+    construct(i, o) {
+      S(a);
+      const [l, c] = W(o);
+      return w(e, t, {
+        type: "CONSTRUCT",
+        path: r.map((u) => u.toString()),
+        argumentList: l
+      }, c).then(g);
+    }
+  });
+  return oe(n, e), n;
+}
+function ce(e) {
+  return Array.prototype.concat.apply([], e);
+}
+function W(e) {
+  const t = e.map(I);
+  return [t.map((r) => r[0]), ce(t.map((r) => r[1]))];
+}
+var Q = /* @__PURE__ */ new WeakMap();
+function Y(e, t) {
+  return Q.set(e, t), e;
+}
+function ue(e) {
+  return Object.assign(e, { [V]: !0 });
+}
+function I(e) {
+  for (const [t, r] of $) if (r.canHandle(e)) {
+    const [s, a] = r.serialize(e);
+    return [{
+      type: "HANDLER",
+      name: t,
+      value: s
+    }, a];
+  }
+  return [{
+    type: "RAW",
+    value: e
+  }, Q.get(e) || []];
+}
+function g(e) {
+  switch (e.type) {
+    case "HANDLER":
+      return $.get(e.name).deserialize(e.value);
+    case "RAW":
+      return e.value;
+  }
+}
+function w(e, t, r, s) {
+  return new Promise((a) => {
+    const n = de();
+    t.set(n, a), e.start && e.start(), e.postMessage(Object.assign({ id: n }, r), s);
+  });
+}
+function de() {
+  return new Array(4).fill(0).map(() => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16)).join("-");
+}
+var fe = `
+"use strict";
+
+// CDN URLs injected at build time
+const ESBUILD_ESM_URL = "${ee}";
+const ESBUILD_WASM_URL = "${te}";
+const PAKO_URL = "${J}";
+
+const cdnImport = new Function("url", "return import(url)");
+
+let esbuildEngine = null;
+let pakoModule = null;
+let _initialized = false;
+
+// minimal Comlink-compatible expose() — implements the wire protocol that comlink.wrap() speaks on the main thread
+function miniExpose(obj) {
+  self.addEventListener("message", function handler(ev) {
+    if (!ev || !ev.data || !ev.data.id) return;
+    const { id, type, path } = { path: [], ...ev.data };
+
+    const args = (ev.data.argumentList || []).map(function(a) {
+      return (a && a.type === "RAW") ? a.value : a;
+    });
+
+    let returnValue;
+    try {
+      const parent = path.length > 1
+        ? path.slice(0, -1).reduce(function(o, p) { return o[p]; }, obj)
+        : obj;
+      const target = path.reduce(function(o, p) { return o[p]; }, obj);
+
+      switch (type) {
+        case "GET":
+          returnValue = target;
+          break;
+        case "SET":
+          parent[path[path.length - 1]] = (ev.data.value && ev.data.value.type === "RAW")
+            ? ev.data.value.value
+            : ev.data.value;
+          returnValue = true;
+          break;
+        case "APPLY":
+          returnValue = target.apply(parent, args);
+          break;
+        case "CONSTRUCT":
+          returnValue = new target(...args);
+          break;
+        case "RELEASE":
+          returnValue = undefined;
+          break;
+        default:
+          return;
+      }
+    } catch (err) {
+      self.postMessage({
+        id: id,
+        type: "HANDLER",
+        name: "throw",
+        value: {
+          isError: true,
+          value: { message: (err && err.message) || String(err), name: (err && err.name) || "Error", stack: (err && err.stack) || "" }
+        }
+      });
+      return;
+    }
+
+    Promise.resolve(returnValue)
+      .then(function(result) {
+        const transferables = [];
+        if (result && Array.isArray(result.files)) {
+          for (const file of result.files) {
+            if (file && file.data instanceof Uint8Array && file.data.buffer instanceof ArrayBuffer) {
+              transferables.push(file.data.buffer);
+            }
+          }
+        }
+        if (result && result.tarballBytes instanceof ArrayBuffer) {
+          transferables.push(result.tarballBytes);
+        }
+        self.postMessage({ id: id, type: "RAW", value: result }, transferables);
+      })
+      .catch(function(err) {
+        self.postMessage({
+          id: id,
+          type: "HANDLER",
+          name: "throw",
+          value: {
+            isError: true,
+            value: { message: (err && err.message) || String(err), name: (err && err.name) || "Error", stack: (err && err.stack) || "" }
+          }
+        });
+      });
+  });
+}
+
+const SEGMENT_SIZE = 8192;
+
+function uint8ToBase64(data) {
+  const segments = [];
+  for (let offset = 0; offset < data.length; offset += SEGMENT_SIZE) {
+    segments.push(
+      String.fromCharCode.apply(
+        null,
+        Array.from(data.subarray(offset, offset + SEGMENT_SIZE))
+      )
+    );
+  }
+  return btoa(segments.join(""));
+}
+
+const headerDecoder = new TextDecoder();
+
+function readNullTerminated(buf, start, len) {
+  const section = buf.subarray(start, start + len);
+  const zeroPos = section.indexOf(0);
+  const effLen = zeroPos >= 0 ? zeroPos : section.byteLength;
+  // header fields are nearly always ASCII: no decoder call for those
+  let ascii = "";
+  let i = 0;
+  for (; i < effLen; i++) {
+    const c = section[i];
+    if (c > 127) break;
+    ascii += String.fromCharCode(c);
+  }
+  if (i === effLen) return ascii;
+  // TextDecoder rejects SharedArrayBuffer-backed views, copy first
+  const copy = new Uint8Array(effLen);
+  copy.set(section.subarray(0, effLen));
+  return headerDecoder.decode(copy);
+}
+
+function isZeroBlock(header) {
+  for (let i = 0; i < header.length; i++) if (header[i] !== 0) return false;
+  return true;
+}
+
+function readOctalField(buf, start, len) {
+  const raw = readNullTerminated(buf, start, len).trim();
+  return parseInt(raw, 8) || 0;
+}
+
+function classifyTypeFlag(flag) {
+  switch (flag) {
+    case "0": case "\\0": case "": return "file";
+    case "5": return "directory";
+    case "1": case "2": return "link";
+    default: return "other";
+  }
+}
+
+function* parseTar(raw) {
+  const BLOCK = 512;
+  let cursor = 0;
+  while (cursor + BLOCK <= raw.length) {
+    const header = raw.slice(cursor, cursor + BLOCK);
+    cursor += BLOCK;
+    if (isZeroBlock(header)) break;
+    const nameField = readNullTerminated(header, 0, 100);
+    if (!nameField) continue;
+    const byteSize = readOctalField(header, 124, 12);
+    const typeChar = String.fromCharCode(header[156]);
+    const prefixField = readNullTerminated(header, 345, 155);
+    const filepath = prefixField ? prefixField + "/" + nameField : nameField;
+    const kind = classifyTypeFlag(typeChar);
+    let payload;
+    if (kind === "file") {
+      payload = byteSize > 0 ? raw.slice(cursor, cursor + byteSize) : new Uint8Array(0);
+      if (byteSize > 0) cursor += Math.ceil(byteSize / BLOCK) * BLOCK;
+    }
+    yield { filepath: filepath, kind: kind, byteSize: byteSize, payload: payload };
+  }
+}
+
+class ByteQueue {
+  constructor() { this.chunks = []; this.offset = 0; this.available = 0; }
+  push(chunk) {
+    if (!chunk.byteLength) return;
+    this.chunks.push(chunk);
+    this.available += chunk.byteLength;
+  }
+  take(length) {
+    if (length > this.available) throw new Error("tar stream underflow");
+    const output = new Uint8Array(length);
+    let written = 0;
+    while (written < length) {
+      const first = this.chunks[0];
+      const count = Math.min(length - written, first.byteLength - this.offset);
+      output.set(first.subarray(this.offset, this.offset + count), written);
+      written += count;
+      this.offset += count;
+      this.available -= count;
+      if (this.offset === first.byteLength) {
+        this.chunks.shift();
+        this.offset = 0;
+      }
+    }
+    return output;
+  }
+  // padding: dropped without being copied anywhere
+  skip(length) {
+    if (length > this.available) throw new Error("tar stream underflow");
+    let left = length;
+    while (left > 0) {
+      const first = this.chunks[0];
+      const count = Math.min(left, first.byteLength - this.offset);
+      left -= count;
+      this.offset += count;
+      this.available -= count;
+      if (this.offset === first.byteLength) {
+        this.chunks.shift();
+        this.offset = 0;
+      }
+    }
+  }
+}
+
+function parseTarHeader(header) {
+  if (isZeroBlock(header)) return null;
+  const nameField = readNullTerminated(header, 0, 100);
+  if (!nameField) return null;
+  const byteSize = readOctalField(header, 124, 12);
+  const typeChar = String.fromCharCode(header[156]);
+  const prefixField = readNullTerminated(header, 345, 155);
+  return {
+    filepath: prefixField ? prefixField + "/" + nameField : nameField,
+    kind: classifyTypeFlag(typeChar),
+    byteSize: byteSize,
+  };
+}
+
+async function* parseCompressedTar(compressed) {
+  if (typeof DecompressionStream === "undefined") {
+    if (!pakoModule) {
+      const pakoMod = await cdnImport(PAKO_URL);
+      pakoModule = pakoMod.default || pakoMod;
+    }
+    yield* parseTar(pakoModule.inflate(compressed));
+    return;
+  }
+  const reader = new Blob([compressed]).stream()
+    .pipeThrough(new DecompressionStream("gzip")).getReader();
+  const queue = new ByteQueue();
+  let current = null;
+  while (true) {
+    const chunk = await reader.read();
+    if (!chunk.done) queue.push(chunk.value);
+    while (true) {
+      if (!current) {
+        if (queue.available < 512) break;
+        current = parseTarHeader(queue.take(512));
+        if (!current) return;
+      }
+      const padded = Math.ceil(current.byteSize / 512) * 512;
+      if (queue.available < padded) break;
+      const payload = current.byteSize > 0 ? queue.take(current.byteSize) : new Uint8Array(0);
+      if (padded > current.byteSize) queue.skip(padded - current.byteSize);
+      yield {
+        filepath: current.filepath,
+        kind: current.kind,
+        byteSize: current.byteSize,
+        payload: current.kind === "file" ? payload : undefined,
+      };
+      current = null;
+    }
+    if (chunk.done) break;
+  }
+  if (current || queue.available > 0) throw new Error("Truncated tar archive");
+}
+
+function detectJsx(source) {
+  if (/<[A-Z][a-zA-Z0-9.]*[\\s/>]/.test(source)) return true;
+  if (/<\\/[a-zA-Z]/.test(source)) return true;
+  if (/\\/>/.test(source)) return true;
+  if (/<>|<\\/>/.test(source)) return true;
+  if (/React\\.createElement\\b/.test(source)) return true;
+  if (/jsx\\(|jsxs\\(|jsxDEV\\(/.test(source)) return true;
+  return false;
+}
+
+const DEFAULT_DEFINE = {
+  "import.meta.url": "import_meta.url",
+  "import.meta.dirname": "import_meta.dirname",
+  "import.meta.filename": "import_meta.filename",
+  "import.meta": "import_meta",
+};
+
+// esbuild (~10MB) loads lazily on the first transform/build task — warm-up
+// only pulls pako, which every extract task needs. With lazy install
+// transforms most pool workers never fetch esbuild at all.
+let _esbuildInitPromise = null;
+
+function ensureEsbuild() {
+  if (esbuildEngine) return Promise.resolve();
+  if (_esbuildInitPromise) return _esbuildInitPromise;
+  _esbuildInitPromise = (async function () {
+    const esbuildMod = await cdnImport(ESBUILD_ESM_URL);
+    const engine = esbuildMod.default || esbuildMod;
+    try {
+      await engine.initialize({ wasmURL: ESBUILD_WASM_URL });
+    } catch (err) {
+      if (!(err instanceof Error && err.message.includes('Cannot call "initialize" more than once'))) {
+        throw err;
+      }
+    }
+    esbuildEngine = engine;
+  })();
+  _esbuildInitPromise.catch(function () { _esbuildInitPromise = null; });
+  return _esbuildInitPromise;
+}
+
+const endpoint = {
+  async init() {
+    if (_initialized) return;
+
+    _initialized = true;
+  },
+
+  async transform(task) {
+    await ensureEsbuild();
+    if (!esbuildEngine) throw new Error("Worker not initialized");
+
+    const opts = task.options || {};
+    let loader = opts.loader || "js";
+    const format = opts.format || "cjs";
+    const define = opts.define || DEFAULT_DEFINE;
+
+    if (loader === "js" && detectJsx(task.source)) loader = "jsx";
+
+    const transformOpts = {
+      loader: loader,
+      format: format,
+      target: opts.target || "esnext",
+      platform: opts.platform || "neutral",
+      define: define,
+    };
+
+    try {
+      const output = await esbuildEngine.transform(task.source, transformOpts);
+      return {
+        type: "transform",
+        id: task.id,
+        code: output.code,
+        warnings: (output.warnings || []).map(function(w) { return w.text || String(w); }),
+      };
+    } catch (err) {
+      const fallbacks = loader === "js" ? ["jsx", "tsx", "ts"] : loader === "jsx" ? ["tsx"] : [];
+      for (let i = 0; i < fallbacks.length; i++) {
+        try {
+          const output = await esbuildEngine.transform(task.source, Object.assign({}, transformOpts, { loader: fallbacks[i] }));
+          return { type: "transform", id: task.id, code: output.code, warnings: [] };
+        } catch (e) { /* try next */ }
+      }
+      if (err && err.message && err.message.includes("Top-level await")) {
+        try {
+          const output = await esbuildEngine.transform(task.source, Object.assign({}, transformOpts, { format: "esm" }));
+          return { type: "transform", id: task.id, code: output.code, warnings: [] };
+        } catch (e) { /* fall through */ }
+      }
+      return { type: "transform", id: task.id, code: task.source, warnings: [(err && err.message) || "transform failed"] };
+    }
+  },
+
+  async transformBatch(task) {
+    var results = await Promise.all(task.files.map(async function(file) {
+      var result = await endpoint.transform({
+        type: "transform",
+        id: task.id,
+        source: file.source,
+        filePath: file.filePath,
+        options: Object.assign({}, task.options || {}, { loader: file.loader }),
+        priority: task.priority,
+      });
+      return { filePath: file.filePath, code: result.code, warnings: result.warnings };
+    }));
+    return { type: "transformBatch", id: task.id, results: results };
+  },
+
+  async extract(task) {
+    if (!_initialized) throw new Error("Worker not initialized");
+
+    // main thread passes cached tarball bytes on warm runs — skip the fetch
+    let compressed;
+    if (task.tarballBytes && task.tarballBytes.byteLength > 0) {
+      compressed = new Uint8Array(task.tarballBytes);
+    } else {
+      const response = await fetch(task.tarballUrl);
+      if (!response.ok) {
+        throw new Error("Archive download failed (HTTP " + response.status + "): " + task.tarballUrl);
+      }
+      compressed = new Uint8Array(await response.arrayBuffer());
+    }
+    if (task.expectedShasum) {
+      const hashInput = new Uint8Array(compressed.byteLength);
+      hashInput.set(compressed);
+      const hashBuffer = await crypto.subtle.digest("SHA-1", hashInput);
+      const hashHex = Array.from(new Uint8Array(hashBuffer))
+        .map(function(b) { return b.toString(16).padStart(2, "0"); })
+        .join("");
+      if (hashHex !== task.expectedShasum) {
+        throw new Error("Integrity check failed for " + task.tarballUrl + ": expected shasum " + task.expectedShasum + ", got " + hashHex);
+      }
+    }
+    const files = [];
+    for await (const entry of parseCompressedTar(compressed)) {
+      if (entry.kind !== "file" && entry.kind !== "directory") continue;
+      let relative = entry.filepath;
+      if (task.stripComponents > 0) {
+        const segments = relative.split("/").filter(Boolean);
+        if (segments.length <= task.stripComponents) continue;
+        relative = segments.slice(task.stripComponents).join("/");
+      }
+      if (entry.kind === "file" && entry.payload) {
+        const file = { path: relative, data: entry.payload, isBinary: true };
+        if (task.streamPort) {
+          task.streamPort.postMessage({ type: "file", file: file }, [file.data.buffer]);
+        } else {
+          files.push(file);
+        }
+      }
+    }
+
+    if (task.streamPort) {
+      task.streamPort.postMessage({ type: "done" });
+      task.streamPort.close();
+    }
+    const result = { type: "extract", id: task.id, files: files, streamed: !!task.streamPort };
+    // hand the compressed bytes back so main can persist them (tarball cache)
+    if (task.wantTarball) {
+      result.tarballBytes = compressed.buffer.byteLength === compressed.byteLength
+        ? compressed.buffer
+        : compressed.slice().buffer;
+    }
+    return result;
+  },
+
+  async build(task) {
+    await ensureEsbuild();
+    if (!esbuildEngine) throw new Error("Worker not initialized");
+
+    const fileMap = new Map();
+    const entries = Object.entries(task.files);
+    for (let i = 0; i < entries.length; i++) {
+      fileMap.set(entries[i][0], entries[i][1]);
+    }
+
+    const volumePlugin = {
+      name: "offload-volume",
+      setup: function(build) {
+        build.onLoad({ filter: /.*/ }, function(args) {
+          const content = fileMap.get(args.path);
+          if (content === undefined) return null;
+          const ext = args.path.substring(args.path.lastIndexOf("."));
+          const loaderMap = { ".ts": "ts", ".tsx": "tsx", ".js": "js", ".mjs": "js", ".cjs": "js", ".jsx": "jsx", ".json": "json", ".css": "css" };
+          return { contents: content, loader: loaderMap[ext] || undefined };
+        });
+      },
+    };
+
+    try {
+      const result = await esbuildEngine.build({
+        entryPoints: task.entryPoints,
+        stdin: task.stdin,
+        bundle: task.bundle !== false,
+        format: task.format || "esm",
+        platform: task.platform || "browser",
+        target: task.target || "esnext",
+        minify: !!task.minify,
+        external: task.external,
+        write: false,
+        plugins: [volumePlugin],
+        absWorkingDir: task.absWorkingDir || "/",
+      });
+
+      return {
+        type: "build",
+        id: task.id,
+        outputFiles: (result.outputFiles || []).map(function(f) {
+          let text = f.text;
+          if (!text && f.contents) {
+            const c = f.contents;
+            const decodable = (typeof SharedArrayBuffer !== "undefined" && c.buffer instanceof SharedArrayBuffer)
+              ? (function () { const copy = new Uint8Array(c.byteLength); copy.set(c); return copy; })()
+              : c;
+            text = new TextDecoder().decode(decodable);
+          }
+          return { path: f.path, text: text };
+        }),
+        errors: (result.errors || []).map(function(e) { return e.text || String(e); }),
+        warnings: (result.warnings || []).map(function(w) { return w.text || String(w); }),
+      };
+    } catch (err) {
+      return {
+        type: "build",
+        id: task.id,
+        outputFiles: [],
+        errors: [(err && err.message) || "build failed"],
+        warnings: [],
+      };
+    }
+  },
+
+  ping: function() {
+    return true;
+  },
+};
+
+miniExpose(endpoint);
+`;
+function he() {
+  try {
+    const e = R();
+    return e.canCreateWorkers() ? e.createWorker({
+      type: "source",
+      source: fe
+    }) : null;
+  } catch {
+    return null;
+  }
+}
+function pe() {
+  try {
+    R().disposeGlobalResources?.();
+  } catch {
+  }
+}
+var me = class {
+  workers = [];
+  waitQueue = [];
+  nextId = 0;
+  config;
+  idleTimer = null;
+  disposed = !1;
+  broken = !1;
+  constructor(e = {}) {
+    const t = typeof navigator < "u" && navigator.hardwareConcurrency || 4;
+    this.config = {
+      minWorkers: e.minWorkers ?? 1,
+      maxWorkers: e.maxWorkers ?? Math.min(t, Z.MAX_WORKERS_CAP),
+      idleTimeoutMs: e.idleTimeoutMs ?? L.WORKER_IDLE_TIMEOUT,
+      warmUpOnCreate: e.warmUpOnCreate ?? !0
+    }, this.idleTimer = setInterval(() => this.reapIdle(), L.WORKER_REAP_INTERVAL);
+  }
+  async acquire() {
+    if (this.disposed) throw new Error("WorkerPool is disposed");
+    if (this.broken) throw new Error("WorkerPool is broken — Workers unavailable");
+    const e = this.workers.find((t) => !t.busy && t.initialized);
+    if (e)
+      return e.busy = !0, e.lastUsed = Date.now(), {
+        worker: e,
+        release: () => this.release(e)
+      };
+    if (this.workers.length < this.config.maxWorkers) {
+      const t = this.tryCreateWorker();
+      if (!t)
+        throw this.broken = !0, this.rejectAllWaiters(), new Error("WorkerPool is broken — Worker construction failed");
+      if (t.busy = !0, !t.initialized && t.initPromise) try {
+        await t.initPromise;
+      } catch (r) {
+        throw this.terminateWorker(t), this.broken = !0, this.rejectAllWaiters(), new Error(`WorkerPool is broken — Worker init failed: ${r instanceof Error ? r.message : r}`);
+      }
+      return t.lastUsed = Date.now(), {
+        worker: t,
+        release: () => this.release(t)
+      };
+    }
+    return new Promise((t, r) => {
+      this.waitQueue.push({
+        resolve: t,
+        reject: r
+      });
+    });
+  }
+  dispose() {
+    this.disposed = !0, this.idleTimer && (clearInterval(this.idleTimer), this.idleTimer = null);
+    for (const e of [...this.workers]) this.terminateWorker(e);
+    this.rejectAllWaiters(), pe();
+  }
+  stats() {
+    return {
+      total: this.workers.length,
+      busy: this.workers.filter((e) => e.busy).length,
+      idle: this.workers.filter((e) => !e.busy).length,
+      initialized: this.workers.filter((e) => e.initialized).length
+    };
+  }
+  rejectAllWaiters() {
+    for (const e of this.waitQueue) e.reject(/* @__PURE__ */ new Error("WorkerPool is no longer available"));
+    this.waitQueue.length = 0;
+  }
+  release(e) {
+    if (e.busy = !1, e.lastUsed = Date.now(), this.waitQueue.length > 0) {
+      const t = this.waitQueue.shift();
+      e.busy = !0, e.lastUsed = Date.now(), t.resolve({
+        worker: e,
+        release: () => this.release(e)
+      });
+    }
+  }
+  tryCreateWorker() {
+    const e = he();
+    if (!e) return null;
+    try {
+      const t = q(e), r = this.nextId++, s = {
+        thread: e,
+        endpoint: t,
+        busy: !1,
+        initialized: !1,
+        initPromise: null,
+        lastUsed: Date.now(),
+        id: r
+      };
+      if (this.config.warmUpOnCreate) {
+        const a = L.WORKER_INIT_TIMEOUT, n = t.init(), i = new Promise((o, l) => setTimeout(() => l(/* @__PURE__ */ new Error("Worker init timed out")), a));
+        s.initPromise = Promise.race([n, i]).then(() => {
+          s.initialized = !0, s.initPromise = null;
+        }).catch((o) => {
+          throw this.terminateWorker(s), o;
+        });
+      }
+      return this.workers.push(s), s;
+    } catch {
+      try {
+        e.terminate();
+      } catch {
+      }
+      return null;
+    }
+  }
+  reapIdle() {
+    const e = Date.now(), t = this.workers.filter((a) => !a.busy && a.initialized && e - a.lastUsed > this.config.idleTimeoutMs), r = Math.max(0, this.workers.length - this.config.minWorkers), s = t.slice(0, r);
+    for (const a of s) this.terminateWorker(a);
+  }
+  terminateWorker(e) {
+    const t = this.workers.indexOf(e);
+    t >= 0 && this.workers.splice(t, 1);
+    try {
+      e.thread.terminate();
+    } catch {
+    }
+  }
+}, ye = 1e5, ge = 1e4, we = 50, be = 500, D = 1024, ke = 32, ve = 100, C = [
+  0.1,
+  0.5,
+  1,
+  2,
+  5,
+  10,
+  25,
+  50,
+  100,
+  250,
+  500,
+  1e3,
+  1 / 0
+], Se = [
+  "boot",
+  "packages",
+  "filesystem",
+  "modules",
+  "workers",
+  "processes",
+  "snapshots",
+  "http",
+  "browser"
+];
+function p() {
+  const e = typeof performance < "u" ? performance : void 0;
+  if (e && typeof e.now == "function") {
+    const t = e.now();
+    return (typeof e.timeOrigin == "number" ? e.timeOrigin : Date.now() - t) + t;
+  }
+  return Date.now();
+}
+function f(e) {
+  return Math.round(e * 100) / 100;
+}
+function M(e, t, r, s) {
+  return e === void 0 || !Number.isFinite(e) ? t : Math.min(s, Math.max(r, e));
+}
+function Me() {
+  return typeof window < "u" ? "browser" : typeof process < "u" && process.versions?.node ? "node" : "unknown";
+}
+function j(e) {
+  return typeof crypto < "u" && typeof crypto.randomUUID == "function" ? `${e}-${crypto.randomUUID()}` : `${e}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function Ee(e, t = "") {
+  let r = 2166136261;
+  const s = `${t}:${e}`;
+  for (let a = 0; a < s.length; a++)
+    r ^= s.charCodeAt(a), r = Math.imul(r, 16777619);
+  return `h${(r >>> 0).toString(16).padStart(8, "0")}`;
+}
+function Ae(e) {
+  const t = e.replace(/\\/g, "/").replace(/\/+$/, "");
+  return t.slice(t.lastIndexOf("/") + 1) || "/";
+}
+function N(e, t, r = "") {
+  if (!e) return;
+  const s = {};
+  for (const [a, n] of Object.entries(e)) {
+    if (Object.keys(s).length >= ke) break;
+    if (n === void 0) continue;
+    const i = a.toLowerCase(), o = i.includes("url"), l = i.includes("path") || i === "file" || i.endsWith("file");
+    if (o) {
+      if (!t.includeUrls || typeof n != "string") continue;
+      s[a] = n.split(/[?#]/, 1)[0].slice(0, 512);
+      continue;
+    }
+    if (l && typeof n == "string") {
+      if (t.pathDetail === "none") continue;
+      t.pathDetail === "basename" ? s[a] = Ae(n) : t.pathDetail === "hash" ? s[a] = Ee(n, r) : s[a] = n.slice(0, 1024);
+      continue;
+    }
+    typeof n == "string" ? s[a] = n.slice(0, 512) : s[a] = n;
+  }
+  return Object.keys(s).length > 0 ? s : void 0;
+}
+var B = class {
+  count = 0;
+  totalMs = 0;
+  minMs = 1 / 0;
+  maxMs = 0;
+  buckets = new Array(C.length).fill(0);
+  record(e) {
+    const t = Math.max(0, e);
+    this.count++, this.totalMs += t, this.minMs = Math.min(this.minMs, t), this.maxMs = Math.max(this.maxMs, t);
+    const r = C.findIndex((s) => t <= s);
+    this.buckets[r === -1 ? this.buckets.length - 1 : r]++;
+  }
+  percentile(e) {
+    if (this.count === 0) return 0;
+    const t = Math.max(1, Math.ceil(this.count * e));
+    let r = 0;
+    for (let s = 0; s < this.buckets.length; s++)
+      if (r += this.buckets[s], r >= t) return C[s];
+    return this.maxMs;
+  }
+  snapshot() {
+    return {
+      count: this.count,
+      totalMs: f(this.totalMs),
+      minMs: this.count === 0 ? 0 : f(this.minMs),
+      maxMs: f(this.maxMs),
+      p50Ms: f(this.percentile(0.5)),
+      p95Ms: f(this.percentile(0.95)),
+      p99Ms: f(this.percentile(0.99))
+    };
+  }
+}, Te = class {
+  id;
+  startedAt;
+  profiler;
+  options;
+  nameValue;
+  spansById = /* @__PURE__ */ new Map();
+  spanAggregates = /* @__PURE__ */ new Map();
+  categoryAggregates = /* @__PURE__ */ new Map();
+  countersMap = /* @__PURE__ */ new Map();
+  gaugesMap = /* @__PURE__ */ new Map();
+  sampleList = [];
+  warningList = [];
+  memorySamples = [];
+  hashSalt = j("path");
+  nextSpanId = 1;
+  droppedSpansValue = 0;
+  droppedSamplesValue = 0;
+  busyDurationMs = 0;
+  longTaskCount = 0;
+  longTaskTotalMs = 0;
+  longTaskLongestMs = 0;
+  droppedMetricKeys = 0;
+  memoryTimer = null;
+  memorySamplePromises = /* @__PURE__ */ new Set();
+  memoryCapabilityWarningIssued = !1;
+  memorySampleWarningIssued = !1;
+  observer = null;
+  stopping = null;
+  reportValue = null;
+  constructor(e, t) {
+    this.profiler = e, this.nameValue = t, this.id = j("profile"), this.startedAt = p(), this.options = e.options, e.enabled && this.startObservers();
+  }
+  get name() {
+    return this.nameValue;
+  }
+  startObservers() {
+    if (this.options.captureLongTasks && typeof PerformanceObserver < "u") try {
+      this.observer = new PerformanceObserver((e) => {
+        for (const t of e.getEntries()) this.addLongTask((performance.timeOrigin || this.startedAt) + t.startTime, t.duration, t.name);
+      }), this.observer.observe({
+        type: "longtask",
+        buffered: !0
+      });
+    } catch {
+      this.warning("long-task-unsupported", "Long-task observation is unavailable in this environment.");
+    }
+    else this.options.captureLongTasks && this.warning("long-task-unsupported", "Long-task observation is unavailable in this environment.");
+    this.options.captureMemory && (this.scheduleMemorySample(), this.memoryTimer = setInterval(() => {
+      this.scheduleMemorySample();
+    }, this.options.memorySampleIntervalMs), this.memoryTimer.unref?.call(this.memoryTimer));
+  }
+  scheduleMemorySample() {
+    const e = this.addMemorySample();
+    this.memorySamplePromises.add(e), e.then(() => this.memorySamplePromises.delete(e), () => this.memorySamplePromises.delete(e));
+  }
+  begin(e, t = {}) {
+    if (this.options.level === "counters") return null;
+    const r = t.category ?? "filesystem", s = p();
+    return {
+      id: this.nextSpanId++,
+      startedAt: s,
+      name: e,
+      category: r,
+      thread: t.thread ?? "main",
+      processId: t.processId,
+      parentId: t.parentId,
+      metadata: N(t.metadata, this.options, this.hashSalt)
+    };
+  }
+  end(e) {
+    if (!e || e.ended) return 0;
+    e.ended = !0;
+    const t = Math.max(0, p() - e.startedAt);
+    return this.recordCompletedSpan(e, t), t;
+  }
+  recordSpan(e, t, r, s = {}) {
+    if (this.options.level === "counters") return;
+    r < t && this.warning("clock-skew", `The ${e} span ended before it started; its duration was clamped to zero.`);
+    const a = {
+      id: this.nextSpanId++,
+      startedAt: t,
+      name: e,
+      category: s.category ?? "workers",
+      thread: s.thread ?? "main",
+      processId: s.processId,
+      parentId: s.parentId,
+      metadata: N(s.metadata, this.options, this.hashSalt),
+      ended: !0
+    };
+    this.recordCompletedSpan(a, Math.max(0, r - t));
+  }
+  recordCompletedSpan(e, t) {
+    this.busyDurationMs += t;
+    const r = `${e.category}:${e.name}`, s = this.spanAggregates.get(r) ?? new B();
+    s.record(t), this.spanAggregates.set(r, s);
+    const a = this.categoryAggregates.get(e.category) ?? new B();
+    a.record(t), this.categoryAggregates.set(e.category, a);
+    const n = {
+      id: e.id,
+      parentId: e.parentId,
+      name: e.name,
+      category: e.category,
+      startTime: e.startedAt,
+      durationMs: f(t),
+      thread: e.thread,
+      processId: e.processId,
+      metadata: e.metadata
+    };
+    if (this.spansById.size < this.options.maxSpans) this.spansById.set(n.id, n);
+    else {
+      const i = [...this.spansById.values()].reduce((o, l) => l.durationMs < o.durationMs ? l : o);
+      t >= this.options.slowSpanThresholdMs && t > i.durationMs ? (this.spansById.delete(i.id), this.spansById.set(n.id, n), this.droppedSpansValue++) : this.droppedSpansValue++;
+    }
+  }
+  count(e, t = 1) {
+    if (!this.countersMap.has(e) && this.countersMap.size >= D) {
+      this.droppedMetricKeys++;
+      return;
+    }
+    this.countersMap.set(e, (this.countersMap.get(e) ?? 0) + t);
+  }
+  gauge(e, t) {
+    if (!this.gaugesMap.has(e) && this.gaugesMap.size >= D) {
+      this.droppedMetricKeys++;
+      return;
+    }
+    this.gaugesMap.set(e, t);
+  }
+  sample(e) {
+    if (this.sampleList.length >= this.options.maxSamples) {
+      this.droppedSamplesValue++;
+      return;
+    }
+    this.sampleList.push(e), e.type === "memory" && this.memorySamples.push(e);
+  }
+  warning(e, t) {
+    this.warningList.length >= ve || this.warningList.push({
+      code: e,
+      message: t,
+      timestamp: p()
+    });
+  }
+  addLongTask(e, t, r) {
+    const s = [...this.spansById.values()].filter((n) => n.startTime < e + t && n.startTime + n.durationMs > e).map((n) => n.id), a = {
+      type: "long-task",
+      timestamp: e,
+      durationMs: f(t),
+      name: r,
+      overlapSpanIds: s.length > 0 ? s : void 0
+    };
+    this.longTaskCount++, this.longTaskTotalMs += t, this.longTaskLongestMs = Math.max(this.longTaskLongestMs, t), this.sample(a);
+  }
+  async addMemorySample() {
+    const e = p();
+    let t = {};
+    try {
+      t = this.profiler.memoryProvider?.() ?? {};
+    } catch {
+      this.warning("memory-provider-failed", "The deterministic memory provider failed and was omitted.");
+    }
+    const r = {
+      type: "memory",
+      timestamp: e,
+      deterministic: t
+    }, s = typeof performance < "u" ? performance : null;
+    try {
+      if (typeof s?.measureUserAgentSpecificMemory == "function") {
+        const a = await s.measureUserAgentSpecificMemory();
+        r.browserHeap = {
+          bytes: Number(a.bytes),
+          source: "measureUserAgentSpecificMemory",
+          confidence: "estimated"
+        };
+      } else s?.memory ? r.browserHeap = {
+        usedBytes: Number(s.memory.usedJSHeapSize),
+        totalBytes: Number(s.memory.totalJSHeapSize),
+        limitBytes: Number(s.memory.jsHeapSizeLimit),
+        source: "performance.memory",
+        confidence: "estimated"
+      } : this.memoryCapabilityWarningIssued || (this.warning("memory-browser-api-unsupported", "No browser heap measurement API is available; deterministic Nodepod memory data was retained."), this.memoryCapabilityWarningIssued = !0);
+    } catch {
+      s?.memory ? r.browserHeap = {
+        usedBytes: Number(s.memory.usedJSHeapSize),
+        totalBytes: Number(s.memory.totalJSHeapSize),
+        limitBytes: Number(s.memory.jsHeapSizeLimit),
+        source: "performance.memory",
+        confidence: "estimated"
+      } : this.memorySampleWarningIssued || (this.warning("memory-sample-failed", "The browser memory measurement failed and was omitted."), this.memorySampleWarningIssued = !0);
+    }
+    this.sample(r);
+  }
+  async stop() {
+    return this.reportValue ? this.reportValue : this.stopping ? this.stopping : (this.stopping = this.finish(), this.stopping);
+  }
+  async finish() {
+    this.memoryTimer && (clearInterval(this.memoryTimer), this.memoryTimer = null), this.observer?.disconnect(), this.observer = null, this.options.captureMemory && this.profiler.enabled && (await Promise.allSettled([...this.memorySamplePromises]), await this.addMemorySample());
+    const e = p();
+    this.droppedMetricKeys > 0 && this.warning("metric-key-limit", `${this.droppedMetricKeys} metric updates were dropped after the metric-key limit was reached.`);
+    const t = {};
+    for (const i of Se) t[i] = (this.categoryAggregates.get(i) ?? new B()).snapshot();
+    const r = {};
+    for (const [i, o] of this.spanAggregates) r[i] = o.snapshot();
+    const s = [...this.spansById.values()].sort((i, o) => i.startTime - o.startTime), a = this.memorySamples.reduce((i, o) => (o.browserHeap?.bytes ?? o.browserHeap?.usedBytes ?? 0) > (i?.browserHeap?.bytes ?? i?.browserHeap?.usedBytes ?? 0) ? o : i, void 0), n = xe({
+      id: this.id,
+      name: this.nameValue,
+      startedAt: this.startedAt,
+      durationMs: Math.max(0, e - this.startedAt),
+      environment: this.profiler.environment,
+      summary: {
+        wallDurationMs: f(Math.max(0, e - this.startedAt)),
+        instrumentedBusyDurationMs: f(this.busyDurationMs),
+        categories: t,
+        operations: r,
+        topSpans: [...s].sort((i, o) => o.durationMs - i.durationMs).slice(0, 20),
+        droppedSpans: this.droppedSpansValue,
+        droppedSamples: this.droppedSamplesValue,
+        longTasks: {
+          count: this.longTaskCount,
+          totalMs: f(this.longTaskTotalMs),
+          longestMs: f(this.longTaskLongestMs)
+        },
+        peakMemory: a
+      },
+      spans: s,
+      counters: Object.fromEntries(this.countersMap),
+      gauges: Object.fromEntries(this.gaugesMap),
+      samples: this.sampleList,
+      warnings: this.warningList
+    });
+    return this.reportValue = n, this.profiler.finish(this), n;
+  }
+};
+function xe(e) {
+  const t = {
+    version: 1,
+    ...e
+  };
+  return Object.freeze({
+    ...t,
+    spans: Object.freeze([...e.spans]),
+    samples: Object.freeze([...e.samples]),
+    warnings: Object.freeze([...e.warnings]),
+    export(r) {
+      if (r === "json") return JSON.stringify(t, null, 2);
+      const s = e.startedAt, a = e.spans.map((n) => ({
+        name: n.name,
+        cat: `nodepod.${n.category}`,
+        ph: "X",
+        ts: Math.round((n.startTime - s) * 1e3),
+        dur: Math.round(n.durationMs * 1e3),
+        pid: n.processId ?? 1,
+        tid: n.thread,
+        args: n.metadata ?? {}
+      }));
+      for (const n of e.samples) n.type === "long-task" && a.push({
+        name: n.name ?? "browser.long-task",
+        cat: "nodepod.browser",
+        ph: "X",
+        ts: Math.round((n.timestamp - s) * 1e3),
+        dur: Math.round(n.durationMs * 1e3),
+        pid: 1,
+        tid: "main",
+        args: { overlapSpanIds: n.overlapSpanIds ?? [] }
+      });
+      for (const [n, i] of Object.entries(e.gauges)) a.push({
+        name: `nodepod.gauge.${n}`,
+        cat: "nodepod.metrics",
+        ph: "C",
+        ts: Math.round((e.startedAt - s) * 1e3),
+        pid: 1,
+        tid: "main",
+        args: { [n]: i }
+      });
+      for (const n of e.warnings) a.push({
+        name: n.code,
+        cat: "nodepod.warning",
+        ph: "i",
+        s: "t",
+        ts: Math.round(((n.timestamp ?? e.startedAt) - s) * 1e3),
+        pid: 1,
+        tid: "main",
+        args: { message: n.message }
+      });
+      return JSON.stringify({ traceEvents: a }, null, 2);
+    }
+  });
+}
+var $e = class {
+  enabled;
+  level;
+  options;
+  environment;
+  memoryProvider = null;
+  active = null;
+  constructor(e = {}) {
+    this.enabled = e.enabled === !0, this.level = e.level ?? "timings", this.options = {
+      enabled: this.enabled,
+      level: this.level,
+      maxSpans: M(e.maxSpans, ye, 1, 1e6),
+      maxSamples: M(e.maxSamples, ge, 1, 1e5),
+      slowSpanThresholdMs: M(e.slowSpanThresholdMs, we, 0, 6e4),
+      memorySampleIntervalMs: M(e.memorySampleIntervalMs, be, 50, 6e4),
+      captureMemory: e.captureMemory === !0,
+      captureLongTasks: e.captureLongTasks === !0,
+      pathDetail: e.pathDetail ?? "basename",
+      includeUrls: e.includeUrls === !0
+    }, this.environment = {
+      host: Me(),
+      userAgent: typeof navigator < "u" ? navigator.userAgent : void 0,
+      hardwareConcurrency: typeof navigator < "u" ? navigator.hardwareConcurrency : void 0,
+      crossOriginIsolated: typeof crossOriginIsolated == "boolean" ? crossOriginIsolated : void 0,
+      sharedArrayBuffer: typeof SharedArrayBuffer < "u",
+      level: this.level
+    };
+  }
+  setMemoryProvider(e) {
+    this.memoryProvider = e;
+  }
+  start(e) {
+    if (this.active) throw new Error("Nodepod profiler already has an active session");
+    const t = new Te(this, e);
+    return this.active = t, this.enabled ? this.level !== "counters" && t.warning("busy-duration-overlap", "Instrumented busy durations may overlap and must not be interpreted as CPU time.") : t.warning("profiler-disabled", "Profiling is disabled; this session contains no instrumentation data."), this.options.pathDetail === "full" && t.warning("unredacted-paths", "This report may contain unredacted file paths."), t;
+  }
+  profile(e, t) {
+    const r = this.start(e);
+    return Promise.resolve().then(t).then(async (s) => ({
+      result: s,
+      report: await r.stop()
+    })).finally(async () => {
+      await r.stop();
+    });
+  }
+  begin(e, t) {
+    return this.active && this.enabled ? this.active.begin(e, t) : null;
+  }
+  end(e) {
+    return this.active && this.enabled ? this.active.end(e) : 0;
+  }
+  recordSpan(e, t, r, s) {
+    this.active && this.enabled && this.active.recordSpan(e, t, r, s);
+  }
+  count(e, t = 1) {
+    this.active && this.enabled && this.active.count(e, t);
+  }
+  gauge(e, t) {
+    this.active && this.enabled && this.active.gauge(e, t);
+  }
+  sample(e) {
+    this.active && this.enabled && this.active.sample(e);
+  }
+  finish(e) {
+    this.active === e && (this.active = null);
+  }
+}, Ie = class {
+  queue = [];
+  pool;
+  dispatching = !1;
+  constructor(e) {
+    this.pool = e;
+  }
+  submit(e) {
+    return new Promise((t, r) => {
+      const s = {
+        task: e,
+        resolve: t,
+        reject: r,
+        cancelled: !1
+      }, a = this.queue.findIndex((n) => n.task.priority > e.priority);
+      a === -1 ? this.queue.push(s) : this.queue.splice(a, 0, s), this.dispatch();
+    });
+  }
+  submitBatch(e) {
+    return Promise.all(e.map((t) => this.submit(t)));
+  }
+  cancel(e) {
+    const t = this.queue.findIndex((r) => r.task.id === e && !r.cancelled);
+    if (t >= 0) {
+      const r = this.queue[t];
+      return r.cancelled = !0, r.reject(/* @__PURE__ */ new Error(`Task ${e} cancelled`)), this.queue.splice(t, 1), !0;
+    }
+    return !1;
+  }
+  get pending() {
+    return this.queue.length;
+  }
+  async dispatch() {
+    if (!this.dispatching) {
+      this.dispatching = !0;
+      try {
+        for (; this.queue.length > 0; ) {
+          const e = this.queue.shift();
+          if (e.cancelled) continue;
+          let t, r;
+          try {
+            const s = await this.pool.acquire();
+            t = s.worker, r = s.release;
+          } catch (s) {
+            const a = s instanceof Error ? s : new Error(String(s));
+            e.reject(a), this.rejectAll(a);
+            return;
+          }
+          this.executeTask(t.endpoint, e, t.id).finally(() => {
+            r(), this.queue.length > 0 && (this.dispatching = !1, this.dispatch());
+          });
+        }
+      } finally {
+        this.dispatching = !1;
+      }
+    }
+  }
+  rejectAll(e) {
+    const t = this.queue.splice(0);
+    for (const r of t) r.cancelled || r.reject(e);
+  }
+  async executeTask(e, t, r) {
+    if (!t.cancelled)
+      try {
+        const s = t.task.profiling, a = s ? p() : void 0;
+        s && a !== void 0 && (s.dispatchedAt = a);
+        const n = s ? p() : void 0;
+        s && n !== void 0 && (s.startedAt = n, s.workerId = r);
+        let i;
+        switch (t.task.type) {
+          case "transform":
+            i = await e.transform(t.task);
+            break;
+          case "transformBatch":
+            i = await e.transformBatch(t.task);
+            break;
+          case "extract":
+            i = await e.extract(t.task.streamPort ? Y(t.task, [t.task.streamPort]) : t.task);
+            break;
+          case "build":
+            i = await e.build(t.task);
+            break;
+          default:
+            throw new Error(`Unknown task type: ${t.task.type}`);
+        }
+        if (s) {
+          const o = p();
+          s.completedAt = o, s.receivedAt = o, i.profiling = { ...s };
+        }
+        t.cancelled || t.resolve(i);
+      } catch (s) {
+        t.cancelled || t.reject(s instanceof Error ? s : new Error(String(s)));
+      }
+  }
+}, Ke = /* @__PURE__ */ (function(e) {
+  return e[e.HIGH = 0] = "HIGH", e[e.NORMAL = 1] = "NORMAL", e[e.LOW = 2] = "LOW", e;
+})({}), y = null, b = null, k = !1, Pe, E = 1;
+function Le() {
+  return typeof Worker < "u" && typeof Blob < "u" && typeof URL < "u" && typeof URL.createObjectURL == "function";
+}
+function Oe() {
+  if (b) return b;
+  if (!Le())
+    throw k = !0, new Error("Workers not available");
+  return y = new me(Pe), b = new Ie(y), b;
+}
+async function Ce(e) {
+  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-BCO7XmrB.js").then((n) => n.n);
+  await s();
+  const a = r(await t(e.source, e.filePath));
+  return {
+    type: "transform",
+    id: e.id,
+    code: a,
+    warnings: []
+  };
+}
+async function Be(e) {
+  const { convertFileDirect: t, patchBuiltinImports: r, prepareTransformer: s } = await import("./module-transformer-BCO7XmrB.js").then((n) => n.n);
+  await s();
+  const a = await Promise.all(e.files.map(async (n) => {
+    try {
+      const i = r(await t(n.source, n.filePath));
+      return {
+        filePath: n.filePath,
+        code: i,
+        warnings: []
+      };
+    } catch (i) {
+      return {
+        filePath: n.filePath,
+        code: n.source,
+        warnings: [i instanceof Error ? i.message : String(i)]
+      };
+    }
+  }));
+  return {
+    type: "transformBatch",
+    id: e.id,
+    results: a
+  };
+}
+async function _e(e) {
+  if (typeof DecompressionStream == "function") try {
+    const t = new Blob([e]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return new Uint8Array(await new Response(t).arrayBuffer());
+  } catch {
+  }
+  return (await import("./fast-pako-BwXotfTx.js").then((t) => t.n)).inflate(e);
+}
+async function Ue(e) {
+  const { parseTarArchive: t } = await import("./archive-extractor-DntmdCI9.js").then((i) => i.t);
+  let r;
+  if (e.tarballBytes && e.tarballBytes.byteLength > 0) r = new Uint8Array(e.tarballBytes);
+  else {
+    const i = await fetch(e.tarballUrl);
+    if (!i.ok) throw new Error(`Archive download failed (HTTP ${i.status}): ${e.tarballUrl}`);
+    r = new Uint8Array(await i.arrayBuffer());
+  }
+  const s = await _e(r), a = [];
+  for (const i of t(s)) {
+    if (i.kind !== "file" || !i.payload) continue;
+    let o = i.filepath;
+    if (e.stripComponents === 1 && o.charCodeAt(0) !== 47 && !o.endsWith("/") && !o.includes("//")) {
+      const l = o.indexOf("/");
+      if (l === -1) continue;
+      o = o.slice(l + 1);
+    } else if (e.stripComponents > 0) {
+      const l = o.split("/").filter(Boolean);
+      if (l.length <= e.stripComponents) continue;
+      o = l.slice(e.stripComponents).join("/");
+    }
+    a.push({
+      path: o,
+      data: i.payload,
+      isBinary: !0
+    });
+  }
+  const n = {
+    type: "extract",
+    id: e.id,
+    files: a
+  };
+  return e.wantTarball && (n.tarballBytes = r.buffer instanceof ArrayBuffer && r.byteLength === r.buffer.byteLength ? r.buffer : r.slice().buffer), n;
+}
+async function Re(e) {
+  const t = await import("./nodepod-x22a8Pmu.js").then((r) => r.X);
+  try {
+    const r = await t.build({
+      entryPoints: e.entryPoints,
+      stdin: e.stdin,
+      bundle: e.bundle,
+      format: e.format,
+      platform: e.platform,
+      target: e.target,
+      minify: e.minify,
+      external: e.external,
+      write: !1,
+      absWorkingDir: e.absWorkingDir
+    });
+    return {
+      type: "build",
+      id: e.id,
+      outputFiles: (r.outputFiles || []).map((s) => ({
+        path: s.path,
+        text: s.text || new TextDecoder().decode(s.contents)
+      })),
+      errors: (r.errors || []).map((s) => s.text || String(s)),
+      warnings: (r.warnings || []).map((s) => s.text || String(s))
+    };
+  } catch (r) {
+    return {
+      type: "build",
+      id: e.id,
+      outputFiles: [],
+      errors: [r?.message || "build failed"],
+      warnings: []
+    };
+  }
+}
+function Ge() {
+  const e = E;
+  return E = E >= Number.MAX_SAFE_INTEGER ? 1 : E + 1, e;
+}
+async function ze(e) {
+  if (k) return F(e);
+  try {
+    return await Oe().submit(e);
+  } catch (t) {
+    return k || console.debug("[offload] Falling back to main thread:", t instanceof Error ? t.message : t), We(), F(e);
+  }
+}
+async function qe(e, t) {
+  const r = t.begin(`workers.${e.type}`, {
+    category: "workers",
+    metadata: { taskId: e.id }
+  }), s = {
+    ...e,
+    profiling: { createdAt: p() }
+  };
+  try {
+    const a = await ze(s);
+    t.count("workers.tasks");
+    const n = a.profiling;
+    return n?.dispatchedAt !== void 0 && t.recordSpan("workers.queue", n.createdAt, n.dispatchedAt, {
+      category: "workers",
+      thread: `worker-${n.workerId ?? "unknown"}`
+    }), n?.startedAt !== void 0 && n.completedAt !== void 0 && t.recordSpan("workers.execution", n.startedAt, n.completedAt, {
+      category: "workers",
+      thread: `worker-${n.workerId ?? "unknown"}`
+    }), n?.dispatchedAt !== void 0 && n.startedAt !== void 0 && t.recordSpan("workers.transfer.to", n.dispatchedAt, n.startedAt, {
+      category: "workers",
+      thread: `worker-${n.workerId ?? "unknown"}`
+    }), n?.completedAt !== void 0 && n.receivedAt !== void 0 && t.recordSpan("workers.transfer.from", n.completedAt, n.receivedAt, {
+      category: "workers",
+      thread: `worker-${n.workerId ?? "unknown"}`
+    }), a;
+  } finally {
+    t.end(r);
+  }
+}
+function We() {
+  k = !0, y && (y.dispose(), y = null), b = null;
+}
+async function F(e) {
+  switch (e.type) {
+    case "transform":
+      return Ce(e);
+    case "transformBatch":
+      return Be(e);
+    case "extract":
+      return Ue(e);
+    case "build":
+      return Re(e);
+    default:
+      throw new Error(`Unknown task type: ${e.type}`);
+  }
+}
+function Xe() {
+  return {
+    ...y?.stats() ?? {
+      total: 0,
+      busy: 0,
+      idle: 0,
+      initialized: 0
+    },
+    fallback: k
+  };
+}
+function Qe() {
+  b = null, y?.dispose(), y = null, k = !1;
+}
+export {
+  Ge as a,
+  ue as c,
+  R as d,
+  Ne as f,
+  qe as i,
+  q as l,
+  Fe as m,
+  ze as n,
+  Ke as o,
+  Ve as p,
+  Xe as r,
+  $e as s,
+  Qe as t,
+  He as u
+};
+
+//# sourceMappingURL=offload-DgyAYqvz.js.map

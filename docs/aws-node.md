@@ -95,3 +95,18 @@ Dağıtım: `bash scripts/aws/deploy-lambda.sh` (Docker buildx + ECR + Lambda + 
 - Ajan satır içi çalışma testi (gerçek AI turu).
 - EventBridge → `/api/cron`.
 - Pazarlama sitesi (`wuppycms.com`) ve Cloudflare build worker'ı hâlâ Lightsail'de; taşınınca VM kapatılabilir.
+
+## Tarayıcı önizlemesi (Nodepod) — canlı
+
+- `/sandbox?full_name=owner/repo&branch=main` (COOP/COEP, cross-origin isolated).
+- Repo zip'i `/api/preview/bundle` → S3 presigned (68 MB test edildi).
+- Nodepod Astro 7 dev sunucusunu tarayıcıda çalıştırır (`NAPI_RS_FORCE_WASI`,
+  Rolldown WASM binding kendi origin'imizden).
+- Önizleme: `/__virtual__/<instanceId>/4321/` (service worker).
+- Ölçüm: 68 MB repo, soğuk ~192 sn / sıcak ~127 sn.
+- Not: admin arayüzünde buton henüz yok; URL doğrudan açılıyor. Sıradaki adım
+  widget'a "Tarayıcı önizleme" bağlantısı + yükleme göstergesi.
+
+### Statik varlıklar
+Node/Lambda girişi `dist/client` altını kendisi servis eder (public + `_astro`).
+Bu olmadan admin JS/CSS ve `/nodepod` varlıkları 404 veriyordu.

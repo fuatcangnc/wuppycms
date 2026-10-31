@@ -1,0 +1,124 @@
+---
+// Tarayıcı önizlemesi (Nodepod) — cross-origin isolated sandbox.
+// Repo zip'i /api/preview/bundle'dan (presigned S3) alınır, Nodepod içinde
+// Astro 7 dev sunucusu çalıştırılır ve önizleme /__virtual__/ üzerinden gösterilir.
+export const prerender = false;
+Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+---
+
+<html lang="tr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>WuppyCMS — Tarayıcı önizleme</title>
+		<style>
+			html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #0b0b0c; color: #e5e5e5; }
+			#bar { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid #262626; font-size: 13px; }
+			#bar b { color: #fff; }
+			#log { position: absolute; inset: 48px 0 0 0; margin: 0; padding: 12px 14px; overflow: auto; font: 12px/1.5 ui-monospace, monospace; color: #9ae6b4; white-space: pre-wrap; }
+			#frame { position: absolute; inset: 48px 0 0 0; width: 100%; height: calc(100% - 48px); border: 0; background: #fff; display: none; }
+			.hidden { display: none !important; }
+		</style>
+	</head>
+	<body>
+		<div id="bar"><b>WuppyCMS</b> · tarayıcı önizleme <span id="status" style="color:#a3a3a3"></span></div>
+		<pre id="log"></pre>
+		<iframe id="frame" title="Önizleme"></iframe>
+		<script is:inline>
+			const params = new URLSearchParams(location.search);
+			const fullName = params.get("full_name") || "";
+			const branch = params.get("branch") || "main";
+			const logEl = document.getElementById("log");
+			const statusEl = document.getElementById("status");
+			const frame = document.getElementById("frame");
+			const log = (m) => { logEl.textContent += m + "\n"; logEl.scrollTop = logEl.scrollHeight; };
+			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 300);
+			const t0 = Date.now();
+
+			(async () => {
+				try {
+					if (!fullName) throw new Error("full_name parametresi gerekli");
+					statusEl.textContent = "başlatılıyor…";
+					const mod = await import("/nodepod/index.js");
+					mod.setRuntimeHost(mod.createBrowserHost());
+					const pod = await mod.Nodepod.boot({ serviceWorker: true, workdir: "/home/project" });
+					log("booted (" + Math.round((Date.now() - t0) / 1000) + "s)");
+
+					const res = await fetch(`/api/preview/bundle?full_name=${encodeURIComponent(fullName)}&branch=${encodeURIComponent(branch)}`);
+					if (!res.ok) throw new Error("bundle: " + res.status);
+					const info = await res.json();
+					log("bundle hazır: " + Math.round(info.size / 1024 / 1024) + " MB");
+					const zip = new Uint8Array(await (await fetch(info.url)).arrayBuffer());
+					const fflate = await import("https://esm.sh/fflate@0.8.2");
+					const files = fflate.unzipSync(zip);
+					const names = Object.keys(files);
+					const prefix = names[0].includes("/") ? names[0].split("/")[0] + "/" : "";
+					let written = 0;
+					for (const [path, data] of Object.entries(files)) {
+						if (path.endsWith("/")) continue;
+						const rel = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
+						const full = "/home/project/" + rel;
+						const dir = full.slice(0, full.lastIndexOf("/"));
+						await pod.fs.mkdir(dir, { recursive: true });
+						await pod.fs.writeFile(full, data);
+						written++;
+					}
+					log("dosyalar yazıldı: " + written);
+
+					statusEl.textContent = "npm install…";
+					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
+					install.on("output", (t) => log("I:" + clean(t)));
+					await install.completion;
+					log("install tamam (" + Math.round((Date.now() - t0) / 1000) + "s)");
+
+					// Rolldown WASM binding (npm opsiyonel bağımlılığı atlıyor).
+					const dir = "/home/project/node_modules/@rolldown/binding-wasm32-wasi";
+					await pod.fs.mkdir(dir, { recursive: true });
+					for (const f of ["package.json", "rolldown-binding.wasi.cjs", "wasi-worker.mjs", "rolldown-binding.wasm32-wasi.wasm"]) {
+						const b = new Uint8Array(await (await fetch("/nodepod/binding/" + f)).arrayBuffer());
+						await pod.fs.writeFile(dir + "/" + f, b);
+					}
+					log("binding yazıldı");
+
+					await pod.fs.writeFile(
+						"/home/project/sandbox.config.mjs",
+						`import base from "./astro.config.mjs";\nexport default { ...base, vite: { ...(base.vite ?? {}), server: { ...(base.vite?.server ?? {}), allowedHosts: true } } };\n`,
+					);
+					await pod.fs.writeFile(
+						"/home/project/sandbox-start.mjs",
+						`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+					);
+
+					statusEl.textContent = "astro dev…";
+					const dev = await pod.spawn("node", ["sandbox-start.mjs"]);
+					dev.on("output", (t) => log("D:" + clean(t)));
+
+					let ready = false;
+					for (let i = 0; i < 70; i++) {
+						await new Promise((r) => setTimeout(r, 3000));
+						try {
+							const r = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
+							if (r.statusCode === 200) {
+								ready = true;
+								log("dev hazır (" + Math.round((Date.now() - t0) / 1000) + "s)");
+								break;
+							}
+						} catch {
+							// henüz hazır değil
+						}
+					}
+					if (!ready) throw new Error("astro dev zaman aşımı");
+					logEl.classList.add("hidden");
+					frame.style.display = "block";
+					frame.src = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321/";
+					statusEl.textContent = "canlı";
+				} catch (error) {
+					statusEl.textContent = "hata";
+					log("HATA " + (error && error.message ? error.message : error));
+				}
+			})();
+		</script>
+	</body>
+</html>
