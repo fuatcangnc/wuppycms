@@ -1,7 +1,7 @@
 ---
 // Tarayıcı önizlemesi (Nodepod) — cross-origin isolated sandbox.
-// Repo zip'i /api/preview/bundle'dan (presigned S3) alınır, Nodepod içinde
-// Astro 7 dev sunucusu çalıştırılır ve önizleme /__virtual__/ üzerinden gösterilir.
+// Repo zip'i /api/preview/bundle'dan alınır, Nodepod içinde Astro 7 build
+// edilir ve dist/ statik olarak sunulur. Build başarısız olursa dev'e düşer.
 export const prerender = false;
 Astro.response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
 Astro.response.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
@@ -37,6 +37,29 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 			const clean = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, "").slice(0, 300);
 			const t0 = Date.now();
 
+			async function waitPort(pod, attemptCount) {
+				for (let i = 0; i < attemptCount; i++) {
+					await new Promise((r) => setTimeout(r, 3000));
+					try {
+						const r = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
+						if (r.statusCode === 200) return r;
+					} catch {
+						// henüz hazır değil
+					}
+				}
+				return null;
+			}
+
+			function rewrite(html, prefix) {
+				return html
+					.replace(/\b(href|src|action|poster)=(["'])\/(?!\/)/gi, (_m, a, q) => a + "=" + q + prefix + "/")
+					.replace(/\bimport\s*\(\s*(["'])\/(?!\/)/g, (_m, q) => "import(" + q + prefix + "/")
+					.replace(/\bsrcset=(["'])(.*?)\1/gis, (m, q, v) =>
+						"srcset=" + q + v.split(",").map((part) => part.replace(/^(\s*)\/(?!\/)/, "$1" + prefix + "/")).join(",") + q,
+					)
+					.replace(/url\(\s*\/(?!\/)/gi, "url(" + prefix + "/");
+			}
+
 			(async () => {
 				try {
 					if (!fullName) throw new Error("full_name parametresi gerekli");
@@ -44,7 +67,12 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					const mod = await import("/nodepod/index.js");
 					mod.setRuntimeHost(mod.createBrowserHost());
 					const wsId = "wuppycms-" + fullName.replace(/[^a-z0-9]+/gi, "-") + "-" + branch;
-					const pod = await mod.Nodepod.boot({ serviceWorker: true, workdir: "/home/project", persistence: { id: wsId } });
+					const pod = await mod.Nodepod.boot({
+						serviceWorker: true,
+						workdir: "/home/project",
+						persistence: { id: wsId },
+						env: { NAPI_RS_FORCE_WASI: "true" },
+					});
 					log("booted (" + Math.round((Date.now() - t0) / 1000) + "s)");
 
 					const cached = await pod.fs.exists("/home/project/package.json");
@@ -65,8 +93,7 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 							if (path.endsWith("/")) continue;
 							const rel = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
 							const full = "/home/project/" + rel;
-							const dir = full.slice(0, full.lastIndexOf("/"));
-							await pod.fs.mkdir(dir, { recursive: true });
+							await pod.fs.mkdir(full.slice(0, full.lastIndexOf("/")), { recursive: true });
 							await pod.fs.writeFile(full, data);
 							written++;
 						}
@@ -79,7 +106,6 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					await install.completion;
 					log("install tamam (" + Math.round((Date.now() - t0) / 1000) + "s)");
 
-					// Rolldown WASM binding (npm opsiyonel bağımlılığı atlıyor).
 					const dir = "/home/project/node_modules/@rolldown/binding-wasm32-wasi";
 					await pod.fs.mkdir(dir, { recursive: true });
 					const binding = await (await fetch("/api/preview/binding")).json();
@@ -91,51 +117,50 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 
 					await pod.fs.writeFile(
 						"/home/project/sandbox.config.mjs",
-						`import base from "./astro.config.mjs";\nexport default { ...base, vite: { ...(base.vite ?? {}), server: { ...(base.vite?.server ?? {}), allowedHosts: true } } };\n`,
-					);
-					await pod.fs.writeFile(
-						"/home/project/sandbox-start.mjs",
-						`process.env.NAPI_RS_FORCE_WASI = "true";\nimport { existsSync } from "node:fs";\nif (existsSync("./scripts/build-entries.mjs")) { await import("./scripts/build-entries.mjs"); }\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+						`import base from "./astro.config.mjs";\nexport default {\n  ...base,\n  image: { service: { entrypoint: "astro/assets/services/noop" } },\n  vite: { ...(base.vite ?? {}), server: { ...(base.vite?.server ?? {}), allowedHosts: true } },\n};\n`,
 					);
 
-					statusEl.textContent = "astro dev…";
-					const dev = await pod.spawn("node", ["sandbox-start.mjs"]);
-					dev.on("output", (t) => log("D:" + clean(t)));
-
-					let ready = false;
-					for (let i = 0; i < 70; i++) {
+					statusEl.textContent = "build…";
+					const build = await pod.spawn("npm", ["run", "build"], { env: { NAPI_RS_FORCE_WASI: "true" } });
+					build.on("output", (t) => log("B:" + clean(t)));
+					let built = false;
+					for (let i = 0; i < 140; i++) {
 						await new Promise((r) => setTimeout(r, 3000));
-						try {
-							const r = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
-							if (r.statusCode === 200) {
-								ready = true;
-								const html = new TextDecoder().decode(r.body);
-								log("dev hazır (" + Math.round((Date.now() - t0) / 1000) + "s) html=" + html.length + " h1=" + html.includes("<h1"));
-								break;
-							}
-						} catch {
-							// henüz hazır değil
-						}
+						if (await pod.fs.exists("/home/project/dist/index.html")) { built = true; break; }
 					}
-					if (!ready) throw new Error("astro dev zaman aşımı");
+					log("build " + (built ? "tamam" : "zaman aşımı") + " (" + Math.round((Date.now() - t0) / 1000) + "s)");
+
+					let serverUrl = null;
+					if (built) {
+						await pod.fs.writeFile(
+							"/home/project/preview-start.mjs",
+							`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "preview", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+						);
+						const srv = await pod.spawn("node", ["preview-start.mjs"]);
+						srv.on("output", (t) => log("P:" + clean(t)));
+						serverUrl = await waitPort(pod, 40);
+					}
+
+					if (!serverUrl) {
+						statusEl.textContent = "dev (yedek)…";
+						await pod.fs.writeFile(
+							"/home/project/sandbox-start.mjs",
+							`process.env.NAPI_RS_FORCE_WASI = "true";\nimport { existsSync } from "node:fs";\nif (existsSync("./scripts/build-entries.mjs")) { await import("./scripts/build-entries.mjs"); }\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+						);
+						const dev = await pod.spawn("node", ["sandbox-start.mjs"]);
+						dev.on("output", (t) => log("D:" + clean(t)));
+						serverUrl = await waitPort(pod, 60);
+					}
+					if (!serverUrl) throw new Error("sunucu zaman aşımı");
+
+					const html = new TextDecoder().decode(serverUrl.body);
+					log("HTML " + html.length + " h1=" + html.includes("<h1"));
+					const prefix = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
 					logEl.classList.add("hidden");
 					frame.style.display = "block";
-					const prefix = "/__virtual__/" + encodeURIComponent(pod.instanceId) + "/4321";
-					const home = await pod.request(4321, { path: "/", headers: { host: "localhost:4321" } });
-					let html = new TextDecoder().decode(home.body);
-					log("dev HTML: " + html.length + " h1=" + html.includes("<h1") + " err=" + (html.includes("astro-error") || html.includes("Internal Server Error")));
-					log("BODY " + html.slice(html.indexOf("<body"), html.indexOf("<body") + 700).replace(/\s+/g, " "));
-					html = html
-						.replace(/\b(href|src|action|poster)=(["'])\/(?!\/)/gi, (_m, a, q) => a + "=" + q + prefix + "/")
-						.replace(/\bimport\s*\(\s*(["'])\/(?!\/)/g, (_m, q) => "import(" + q + prefix + "/")
-						.replace(/\bsrcset=(["'])(.*?)\1/gis, (m, q, v) => "srcset=" + q + v.split(",").map((part) => part.replace(/^(\s*)\/(?!\/)/, "$1" + prefix + "/")).join(",") + q)
-						.replace(/url\(\s*\/(?!\/)/gi, "url(" + prefix + "/");
-					frame.srcdoc = html;
-					log("SW controller: " + (navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : "yok"));
-					statusEl.textContent = "canlı";
-					frame.addEventListener("load", () => {
-						try { frame.contentWindow.postMessage({ type: "wuppycms:hello" }, location.origin); } catch {}
-					});
+					frame.srcdoc = rewrite(html, prefix);
+					statusEl.textContent = "canlı (" + Math.round((Date.now() - t0) / 1000) + "s)";
+
 					let picking = false;
 					const pickBtn = document.getElementById("pick");
 					pickBtn.addEventListener("click", () => {
@@ -149,10 +174,7 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 						if (data.type === "wuppycms:pick" && data.selection) {
 							try {
 								window.opener &&
-									window.opener.postMessage(
-										{ type: "wuppycms:sandbox:pick", selection: data.selection },
-										location.origin,
-									);
+									window.opener.postMessage({ type: "wuppycms:sandbox:pick", selection: data.selection }, location.origin);
 							} catch {}
 						}
 					});
