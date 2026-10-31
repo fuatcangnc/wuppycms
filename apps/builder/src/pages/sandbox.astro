@@ -43,29 +43,35 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 					statusEl.textContent = "başlatılıyor…";
 					const mod = await import("/nodepod/index.js");
 					mod.setRuntimeHost(mod.createBrowserHost());
-					const pod = await mod.Nodepod.boot({ serviceWorker: true, workdir: "/home/project" });
+					const wsId = "wuppycms-" + fullName.replace(/[^a-z0-9]+/gi, "-") + "-" + branch;
+					const pod = await mod.Nodepod.boot({ serviceWorker: true, workdir: "/home/project", persistence: { id: wsId } });
 					log("booted (" + Math.round((Date.now() - t0) / 1000) + "s)");
 
-					const res = await fetch(`/api/preview/bundle?full_name=${encodeURIComponent(fullName)}&branch=${encodeURIComponent(branch)}`);
-					if (!res.ok) throw new Error("bundle: " + res.status);
-					const info = await res.json();
-					log("bundle hazır: " + Math.round(info.size / 1024 / 1024) + " MB");
-					const zip = new Uint8Array(await (await fetch(info.url)).arrayBuffer());
-					const fflate = await import("https://esm.sh/fflate@0.8.2");
-					const files = fflate.unzipSync(zip);
-					const names = Object.keys(files);
-					const prefix = names[0].includes("/") ? names[0].split("/")[0] + "/" : "";
-					let written = 0;
-					for (const [path, data] of Object.entries(files)) {
-						if (path.endsWith("/")) continue;
-						const rel = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
-						const full = "/home/project/" + rel;
-						const dir = full.slice(0, full.lastIndexOf("/"));
-						await pod.fs.mkdir(dir, { recursive: true });
-						await pod.fs.writeFile(full, data);
-						written++;
+					const cached = await pod.fs.exists("/home/project/package.json");
+					if (cached) {
+						log("workspace cache'ten yüklendi (bundle atlandı)");
+					} else {
+						const res = await fetch(`/api/preview/bundle?full_name=${encodeURIComponent(fullName)}&branch=${encodeURIComponent(branch)}`);
+						if (!res.ok) throw new Error("bundle: " + res.status);
+						const info = await res.json();
+						log("bundle hazır: " + Math.round(info.size / 1024 / 1024) + " MB");
+						const zip = new Uint8Array(await (await fetch(info.url)).arrayBuffer());
+						const fflate = await import("https://esm.sh/fflate@0.8.2");
+						const files = fflate.unzipSync(zip);
+						const names = Object.keys(files);
+						const prefix = names[0].includes("/") ? names[0].split("/")[0] + "/" : "";
+						let written = 0;
+						for (const [path, data] of Object.entries(files)) {
+							if (path.endsWith("/")) continue;
+							const rel = prefix && path.startsWith(prefix) ? path.slice(prefix.length) : path;
+							const full = "/home/project/" + rel;
+							const dir = full.slice(0, full.lastIndexOf("/"));
+							await pod.fs.mkdir(dir, { recursive: true });
+							await pod.fs.writeFile(full, data);
+							written++;
+						}
+						log("dosyalar yazıldı: " + written);
 					}
-					log("dosyalar yazıldı: " + written);
 
 					statusEl.textContent = "npm install…";
 					const install = await pod.spawn("npm", ["install", "--no-audit", "--no-fund"]);
