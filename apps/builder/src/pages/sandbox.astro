@@ -120,29 +120,30 @@ Astro.response.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 						`import base from "./astro.config.mjs";\nexport default {\n  ...base,\n  image: { service: { entrypoint: "astro/assets/services/noop" } },\n  vite: { ...(base.vite ?? {}), server: { ...(base.vite?.server ?? {}), allowedHosts: true } },\n};\n`,
 					);
 
-					statusEl.textContent = "build…";
-					const build = await pod.spawn("npm", ["run", "build"], { env: { NAPI_RS_FORCE_WASI: "true" } });
-					build.on("output", (t) => log("B:" + clean(t)));
-					let built = false;
-					for (let i = 0; i < 140; i++) {
-						await new Promise((r) => setTimeout(r, 3000));
-						if (await pod.fs.exists("/home/project/dist/index.html")) { built = true; break; }
-					}
-					log("build " + (built ? "tamam" : "zaman aşımı") + " (" + Math.round((Date.now() - t0) / 1000) + "s)");
-
+					const mode = params.get("mode") || "dev";
 					let serverUrl = null;
-					if (built) {
-						await pod.fs.writeFile(
-							"/home/project/preview-start.mjs",
-							`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "preview", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
-						);
-						const srv = await pod.spawn("node", ["preview-start.mjs"]);
-						srv.on("output", (t) => log("P:" + clean(t)));
-						serverUrl = await waitPort(pod, 40);
+					if (mode === "build") {
+						statusEl.textContent = "build…";
+						const build = await pod.spawn("npm", ["run", "build"], { env: { NAPI_RS_FORCE_WASI: "true" } });
+						build.on("output", (t) => log("B:" + clean(t)));
+						let built = false;
+						for (let i = 0; i < 200; i++) {
+							await new Promise((r) => setTimeout(r, 3000));
+							if (await pod.fs.exists("/home/project/dist/index.html")) { built = true; break; }
+						}
+						log("build " + (built ? "tamam" : "zaman aşımı") + " (" + Math.round((Date.now() - t0) / 1000) + "s)");
+						if (built) {
+							await pod.fs.writeFile(
+								"/home/project/preview-start.mjs",
+								`process.env.NAPI_RS_FORCE_WASI = "true";\nprocess.argv = ["node", "astro", "preview", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
+							);
+							const srv = await pod.spawn("node", ["preview-start.mjs"]);
+							srv.on("output", (t) => log("P:" + clean(t)));
+							serverUrl = await waitPort(pod, 40);
+						}
 					}
-
 					if (!serverUrl) {
-						statusEl.textContent = "dev (yedek)…";
+						statusEl.textContent = "astro dev…";
 						await pod.fs.writeFile(
 							"/home/project/sandbox-start.mjs",
 							`process.env.NAPI_RS_FORCE_WASI = "true";\nimport { existsSync } from "node:fs";\nif (existsSync("./scripts/build-entries.mjs")) { await import("./scripts/build-entries.mjs"); }\nprocess.argv = ["node", "astro", "dev", "--config", "sandbox.config.mjs", "--host", "0.0.0.0", "--port", "4321"];\nawait import("./node_modules/astro/bin/astro.mjs");\n`,
